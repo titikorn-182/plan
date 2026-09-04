@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-04T18:52:01.6579985+07:00",
+  "title": "Design System: ระบบบริหารแผน — Executive Command Center",
+  "extensions": {
+    "colorMeta": {
+      "command-orange": {
+        "role": "primary",
+        "displayName": "Command Orange",
+        "canonical": "#ee4f16",
+        "tonalRamp": ["hsl(16 86% 15%)", "hsl(16 86% 25%)", "hsl(16 86% 35%)", "hsl(16 86% 45%)", "hsl(16 86% 55%)", "hsl(16 86% 65%)", "hsl(16 86% 80%)", "hsl(16 86% 95%)"]
+      },
+      "command-orange-deep": {
+        "role": "primary",
+        "displayName": "Command Orange Deep",
+        "canonical": "#d83b0b",
+        "tonalRamp": ["hsl(14 89% 15%)", "hsl(14 89% 25%)", "hsl(14 89% 35%)", "hsl(14 89% 45%)", "hsl(14 89% 55%)", "hsl(14 89% 65%)", "hsl(14 89% 80%)", "hsl(14 89% 95%)"]
+      },
+      "command-orange-vivid": {
+        "role": "primary",
+        "displayName": "Command Orange Vivid",
+        "canonical": "#f45a24",
+        "tonalRamp": ["hsl(16 90% 15%)", "hsl(16 90% 25%)", "hsl(16 90% 35%)", "hsl(16 90% 45%)", "hsl(16 90% 55%)", "hsl(16 90% 65%)", "hsl(16 90% 80%)", "hsl(16 90% 95%)"]
+      },
+      "operation-orange": {
+        "role": "primary",
+        "displayName": "Operation Orange",
+        "canonical": "#cf430c",
+        "tonalRamp": ["hsl(16 89% 15%)", "hsl(16 89% 25%)", "hsl(16 89% 35%)", "hsl(16 89% 45%)", "hsl(16 89% 55%)", "hsl(16 89% 65%)", "hsl(16 89% 80%)", "hsl(16 89% 95%)"]
+      },
+      "operation-orange-hover": {
+        "role": "primary",
+        "displayName": "Operation Orange Hover",
+        "canonical": "#ad3507",
+        "tonalRamp": ["hsl(16 92% 15%)", "hsl(16 92% 25%)", "hsl(16 92% 35%)", "hsl(16 92% 45%)", "hsl(16 92% 55%)", "hsl(16 92% 65%)", "hsl(16 92% 80%)", "hsl(16 92% 95%)"]
+      },
+      "orange-wash": {
+        "role": "primary",
+        "displayName": "Selected Orange Wash",
+        "canonical": "#fff3ea",
+        "tonalRamp": ["hsl(26 100% 15%)", "hsl(26 100% 25%)", "hsl(26 100% 35%)", "hsl(26 100% 45%)", "hsl(26 100% 55%)", "hsl(26 100% 65%)", "hsl(26 100% 80%)", "hsl(26 100% 95%)"]
+      },
+      "orange-hover": {
+        "role": "primary",
+        "displayName": "Queue Hover Orange",
+        "canonical": "#fff8f4",
+        "tonalRamp": ["hsl(20 100% 15%)", "hsl(20 100% 25%)", "hsl(20 100% 35%)", "hsl(20 100% 45%)", "hsl(20 100% 55%)", "hsl(20 100% 65%)", "hsl(20 100% 80%)", "hsl(20 100% 95%)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White Working Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": ["hsl(0 0% 15%)", "hsl(0 0% 25%)", "hsl(0 0% 35%)", "hsl(0 0% 45%)", "hsl(0 0% 55%)", "hsl(0 0% 65%)", "hsl(0 0% 80%)", "hsl(0 0% 95%)"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Command Canvas",
+        "canonical": "#f7f7f6",
+        "tonalRamp": ["hsl(60 1% 15%)", "hsl(60 1% 25%)", "hsl(60 1% 35%)", "hsl(60 1% 45%)", "hsl(60 1% 55%)", "hsl(60 1% 65%)", "hsl(60 1% 80%)", "hsl(60 1% 95%)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ledger Ink",
+        "canonical": "#22201e",
+        "tonalRamp": ["hsl(30 6% 15%)", "hsl(30 6% 25%)", "hsl(30 6% 35%)", "hsl(30 6% 45%)", "hsl(30 6% 55%)", "hsl(30 6% 65%)", "hsl(30 6% 80%)", "hsl(30 6% 95%)"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Register Text",
+        "canonical": "#57534e",
+        "tonalRamp": ["hsl(33 5% 15%)", "hsl(33 5% 25%)", "hsl(33 5% 35%)", "hsl(33 5% 45%)", "hsl(33 5% 55%)", "hsl(33 5% 65%)", "hsl(33 5% 80%)", "hsl(33 5% 95%)"]
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "Ledger Divider",
+        "canonical": "#dedbd8",
+        "tonalRamp": ["hsl(30 10% 15%)", "hsl(30 10% 25%)", "hsl(30 10% 35%)", "hsl(30 10% 45%)", "hsl(30 10% 55%)", "hsl(30 10% 65%)", "hsl(30 10% 80%)", "hsl(30 10% 95%)"]
+      },
+      "divider-strong": {
+        "role": "neutral",
+        "displayName": "Strong Ledger Divider",
+        "canonical": "#c9c5c1",
+        "tonalRamp": ["hsl(30 7% 15%)", "hsl(30 7% 25%)", "hsl(30 7% 35%)", "hsl(30 7% 45%)", "hsl(30 7% 55%)", "hsl(30 7% 65%)", "hsl(30 7% 80%)", "hsl(30 7% 95%)"]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Operational Field Border",
+        "canonical": "#d6d3d1",
+        "tonalRamp": ["hsl(30 6% 15%)", "hsl(30 6% 25%)", "hsl(30 6% 35%)", "hsl(30 6% 45%)", "hsl(30 6% 55%)", "hsl(30 6% 65%)", "hsl(30 6% 80%)", "hsl(30 6% 95%)"]
+      },
+      "status-ahead": {
+        "role": "secondary",
+        "displayName": "Ahead Teal",
+        "canonical": "#0e8a68",
+        "tonalRamp": ["hsl(164 82% 15%)", "hsl(164 82% 25%)", "hsl(164 82% 35%)", "hsl(164 82% 45%)", "hsl(164 82% 55%)", "hsl(164 82% 65%)", "hsl(164 82% 80%)", "hsl(164 82% 95%)"]
+      },
+      "status-on-track": {
+        "role": "secondary",
+        "displayName": "On-Track Green",
+        "canonical": "#39a65a",
+        "tonalRamp": ["hsl(139 49% 15%)", "hsl(139 49% 25%)", "hsl(139 49% 35%)", "hsl(139 49% 45%)", "hsl(139 49% 55%)", "hsl(139 49% 65%)", "hsl(139 49% 80%)", "hsl(139 49% 95%)"]
+      },
+      "status-watch": {
+        "role": "secondary",
+        "displayName": "Watch Orange",
+        "canonical": "#e56811",
+        "tonalRamp": ["hsl(25 86% 15%)", "hsl(25 86% 25%)", "hsl(25 86% 35%)", "hsl(25 86% 45%)", "hsl(25 86% 55%)", "hsl(25 86% 65%)", "hsl(25 86% 80%)", "hsl(25 86% 95%)"]
+      },
+      "status-risk": {
+        "role": "secondary",
+        "displayName": "Risk Red",
+        "canonical": "#e02d20",
+        "tonalRamp": ["hsl(4 76% 15%)", "hsl(4 76% 25%)", "hsl(4 76% 35%)", "hsl(4 76% 45%)", "hsl(4 76% 55%)", "hsl(4 76% 65%)", "hsl(4 76% 80%)", "hsl(4 76% 95%)"]
+      },
+      "status-no-data": {
+        "role": "neutral",
+        "displayName": "No-Data Gray",
+        "canonical": "#8a8b8d",
+        "tonalRamp": ["hsl(220 1% 15%)", "hsl(220 1% 25%)", "hsl(220 1% 35%)", "hsl(220 1% 45%)", "hsl(220 1% 55%)", "hsl(220 1% 65%)", "hsl(220 1% 80%)", "hsl(220 1% 95%)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Module Display", "purpose": "Product identity and shared module page titles." },
+      "headline": { "displayName": "Command Heading", "purpose": "Decision-queue and primary command-center headings." },
+      "title": { "displayName": "Record Title", "purpose": "Organization identity, inspector headings, and primary matrix values." },
+      "body": { "displayName": "Operational Body", "purpose": "Readable form controls, explanations, actions, and notices." },
+      "label": { "displayName": "Dense Evidence Label", "purpose": "Matrix content, table subheads, status legends, dates, and evidence metadata." }
+    },
+    "shadows": [
+      { "name": "selected-edge", "value": "inset 3px 0 0 var(--orange-600)", "purpose": "Binds the selected organization to its matrix row or mobile record." },
+      { "name": "live-halo", "value": "0 0 0 3px #def5e9", "purpose": "Marks the live-data dot without elevating its container." },
+      { "name": "fixed-action-bar", "value": "0 -4px 14px rgba(28,25,23,0.08)", "purpose": "Separates fixed form actions from long operational forms." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "140ms ease", "purpose": "Matrix row hover and selected-state feedback." },
+      { "name": "state-standard", "value": "150ms ease", "purpose": "Navigation color and background transitions." },
+      { "name": "panel-enter", "value": "180ms ease-out", "purpose": "Filter reveal and evidence-inspector entry." }
+    ],
+    "breakpoints": [
+      { "name": "inspector-stack", "value": "1100px" },
+      { "name": "compact-rail", "value": "960px" },
+      { "name": "executive-bottom-nav", "value": "760px" },
+      { "name": "module-bottom-nav", "value": "700px" },
+      { "name": "compact-utilities", "value": "480px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Active Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "The current module in the full-text desktop sidebar.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"></rect><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"></rect><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"></rect><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"></rect></svg><span>หน้าหลักฐาน</span></a>",
+      "css": ".ds-nav-active { display:flex; min-height:42px; align-items:center; gap:12px; border-left:3px solid #fff; padding:8px 13px; color:#fff; background:var(--orange-600); font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; font-size:11.5px; font-weight:700; line-height:1.25; text-decoration:none; transition:background-color 150ms ease; } .ds-nav-active:hover { background:var(--orange-700); } .ds-nav-active:focus-visible { outline:3px solid color-mix(in srgb, var(--focus) 55%, transparent); outline-offset:2px; } .ds-nav-active:active { transform:translateY(1px); }"
+    },
+    {
+      "name": "Utility Control",
+      "kind": "button",
+      "refersTo": "utility-control",
+      "description": "Compact utility action for export, print, filters, or sign-out.",
+      "html": "<button class=\"ds-utility-control\" type=\"button\"><svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M12 3v12\"></path><path d=\"m7 10 5 5 5-5\"></path><path d=\"M5 21h14\"></path></svg><span>ส่งออก</span></button>",
+      "css": ".ds-utility-control { display:inline-flex; min-height:34px; align-items:center; gap:6px; border:1px solid transparent; padding:0 9px; color:#484440; background:#fff; font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; font-size:10px; } .ds-utility-control:hover { border-color:var(--line); color:var(--orange-700); background:#fff7f3; } .ds-utility-control:focus-visible { outline:3px solid color-mix(in srgb, var(--focus) 55%, transparent); outline-offset:2px; } .ds-utility-control:active { transform:translateY(1px); }"
+    },
+    {
+      "name": "Decision Queue Item",
+      "kind": "card",
+      "refersTo": "decision-queue-item",
+      "description": "A horizontal action record that opens its organization in the evidence inspector.",
+      "html": "<button class=\"ds-queue-item\" type=\"button\"><svg viewBox=\"0 0 24 24\" width=\"21\" height=\"21\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><path d=\"M14 2v6h6\"></path></svg><span><strong>รอพิจารณา</strong><small>คณะตัวอย่าง</small><b>2,500,000 บาท</b><em>ควรดำเนินการเร่งด่วน</em></span></button>",
+      "css": ".ds-queue-item { display:grid; width:190px; min-height:102px; grid-template-columns:23px minmax(0,1fr); gap:9px; border:1px solid var(--line); padding:12px 10px; color:#36322f; background:#fff; font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; text-align:left; } .ds-queue-item>svg { color:var(--orange-600); } .ds-queue-item>span { display:flex; min-width:0; flex-direction:column; align-items:flex-start; } .ds-queue-item strong { font-size:10.5px; font-weight:800; } .ds-queue-item small { margin-top:4px; color:#716b66; font-size:8.5px; } .ds-queue-item b { margin-top:4px; font-size:9.5px; font-weight:650; } .ds-queue-item em { margin-top:auto; color:var(--orange-600); font-size:8.5px; font-style:normal; font-weight:700; } .ds-queue-item:hover { background:#fff8f4; } .ds-queue-item:focus-visible { outline:3px solid color-mix(in srgb, var(--focus) 55%, transparent); outline-offset:2px; } .ds-queue-item:active { transform:translateY(1px); }"
+    },
+    {
+      "name": "Filter Field",
+      "kind": "input",
+      "refersTo": "filter-field",
+      "description": "Square search field for narrowing organizations by code or name.",
+      "html": "<label class=\"ds-filter-field\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><path d=\"m21 21-4.35-4.35\"></path></svg><input type=\"search\" placeholder=\"ค้นหารหัสหรือชื่อหน่วยงาน\" aria-label=\"ค้นหาหน่วยงาน\"></label>",
+      "css": ".ds-filter-field { display:flex; width:270px; min-height:34px; align-items:center; gap:8px; border:1px solid #cac6c2; padding:0 10px; color:#57534e; background:#fff; } .ds-filter-field input { min-width:0; flex:1; border:0; outline:0; color:#22201e; background:transparent; font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; font-size:10.5px; } .ds-filter-field:hover { border-color:var(--orange-600); } .ds-filter-field:focus-within { border-color:var(--orange-600); box-shadow:0 0 0 3px var(--orange-100); }"
+    },
+    {
+      "name": "Status Legend",
+      "kind": "chip",
+      "description": "The five-label key that keeps performance color interpretable.",
+      "html": "<div class=\"ds-status-legend\" aria-label=\"คำอธิบายสถานะ\"><span><i class=\"ds-ahead\"></i>สูงกว่าแผน</span><span><i class=\"ds-track\"></i>ตามแผน</span><span><i class=\"ds-watch\"></i>ต้องติดตาม</span><span><i class=\"ds-risk\"></i>ต่ำกว่าแผน</span><span><i class=\"ds-none\"></i>ไม่มีข้อมูล</span></div>",
+      "css": ".ds-status-legend { display:flex; flex-wrap:wrap; gap:9px; font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; } .ds-status-legend span { display:inline-flex; align-items:center; gap:4px; color:#5c5752; font-size:7.5px; } .ds-status-legend i { width:8px; height:8px; border-radius:50%; } .ds-ahead { background:#0e8a68; } .ds-track { background:#39a65a; } .ds-watch { background:#e56811; } .ds-risk { background:#e02d20; } .ds-none { background:#8a8b8d; }"
+    },
+    {
+      "name": "Selected Matrix Record",
+      "kind": "custom",
+      "refersTo": "selected-matrix-row",
+      "description": "The selected organization row translated into a compact renderable specimen.",
+      "html": "<button class=\"ds-matrix-record\" type=\"button\" aria-pressed=\"true\"><span><strong>คณะตัวอย่าง</strong><small>ORG-001 · 12 โครงการ</small></span><b>คืบหน้า 54.0%</b><b>เบิกจ่าย 48.0%</b><i aria-label=\"ตามแผน\"></i></button>",
+      "css": ".ds-matrix-record { display:grid; width:100%; min-height:62px; grid-template-columns:minmax(150px,1fr) auto auto 12px; align-items:center; gap:14px; border:1px solid var(--line); padding:7px 10px; color:#393531; background:#fff3ea; box-shadow:inset 3px 0 0 var(--orange-600); font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; text-align:left; } .ds-matrix-record span strong,.ds-matrix-record span small { display:block; } .ds-matrix-record strong { font-size:10.5px; } .ds-matrix-record small { margin-top:2px; color:#6c6762; font-size:8px; } .ds-matrix-record b { font-size:9px; } .ds-matrix-record i { width:8px; height:8px; border-radius:50%; background:#39a65a; } .ds-matrix-record:hover { background:#fff8f4; } .ds-matrix-record:focus-visible { outline:3px solid color-mix(in srgb, var(--focus) 55%, transparent); outline-offset:2px; } .ds-matrix-record:active { transform:translateY(1px); }"
+    },
+    {
+      "name": "Evidence Inspector Tabs",
+      "kind": "custom",
+      "description": "Three-tab switcher for organization summary, evidence, and linked registers.",
+      "html": "<div class=\"ds-inspector-tabs\" role=\"tablist\" aria-label=\"รายละเอียดหน่วยงาน\"><button type=\"button\" role=\"tab\" aria-selected=\"true\">สรุป</button><button type=\"button\" role=\"tab\" aria-selected=\"false\">หลักฐาน (12)</button><button type=\"button\" role=\"tab\" aria-selected=\"false\">การอ้างอิง</button></div>",
+      "css": ".ds-inspector-tabs { display:grid; grid-template-columns:.75fr 1.2fr 1fr; border:1px solid var(--line); } .ds-inspector-tabs button { min-height:35px; border:0; border-bottom:2px solid transparent; color:#5e5955; background:#fff; font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; font-size:8.5px; } .ds-inspector-tabs button:hover { color:var(--orange-700); background:#fff8f4; } .ds-inspector-tabs button[aria-selected='true'] { border-bottom-color:var(--orange-600); color:var(--orange-700); font-weight:800; } .ds-inspector-tabs button:focus-visible { outline:3px solid color-mix(in srgb, var(--focus) 55%, transparent); outline-offset:-3px; } .ds-inspector-tabs button:active { transform:translateY(1px); }"
+    },
+    {
+      "name": "Evidence Record",
+      "kind": "card",
+      "description": "A compact inspector row with source identifier, date, and verification state.",
+      "html": "<article class=\"ds-evidence-record\"><svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><path d=\"M14 2v6h6\"></path></svg><div><strong>รายงานผลไตรมาส 2</strong><span>PRJ-2570-001 · 31 มี.ค. 2570</span></div><svg class=\"ds-verified\" viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-label=\"ตรวจสอบแล้ว\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"m8 12 3 3 5-6\"></path></svg></article>",
+      "css": ".ds-evidence-record { display:grid; grid-template-columns:20px minmax(0,1fr) 18px; align-items:center; gap:7px; border-bottom:1px solid #ece9e6; padding:9px 0; color:var(--orange-600); font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; } .ds-evidence-record strong,.ds-evidence-record span { display:block; } .ds-evidence-record strong { color:#22201e; font-size:8.5px; } .ds-evidence-record span { margin-top:2px; color:#77716c; font-size:7.5px; } .ds-evidence-record .ds-verified { color:#199060; } .ds-evidence-record:hover { background:#fff8f4; }"
+    },
+    {
+      "name": "Operational Field With Error",
+      "kind": "input",
+      "refersTo": "operational-field",
+      "description": "A square 44px form field with programmatically linked inline validation.",
+      "html": "<label class=\"ds-operation-field\"><span>ชื่อโครงการ <b>*</b></span><input aria-invalid=\"true\" aria-describedby=\"ds-project-error\" value=\"\"><small id=\"ds-project-error\">กรุณาระบุชื่อโครงการ</small></label>",
+      "css": ".ds-operation-field { display:block; color:#44403c; font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; font-size:12px; font-weight:600; } .ds-operation-field span { display:block; } .ds-operation-field span b { color:#dc2626; } .ds-operation-field input { width:100%; height:44px; margin-top:6px; border:1px solid #d6d3d1; padding:0 12px; color:#22201e; background:#fff; font-size:14px; outline:none; } .ds-operation-field input:hover { border-color:#b8b3af; } .ds-operation-field input:focus-visible { border-color:#d8470c; box-shadow:0 0 0 2px #ffedd5; } .ds-operation-field input[aria-invalid='true'] { border-color:#b91c1c; } .ds-operation-field small { display:block; margin-top:4px; color:#b91c1c; font-size:12px; font-weight:400; }"
+    },
+    {
+      "name": "Fixed Form Action Bar",
+      "kind": "custom",
+      "description": "Persistent cancel, draft, and submit actions; the production bar uses left offsets 206px, 72px at 960px, and 0 at 700px.",
+      "html": "<div class=\"ds-action-stage\"><div class=\"ds-action-bar\"><a href=\"#\">ยกเลิก</a><div><button type=\"button\" class=\"ds-save\">บันทึกฉบับร่าง</button><button type=\"button\" class=\"ds-submit\">ส่งอนุมัติ</button></div></div></div>",
+      "css": ".ds-action-stage { position:relative; min-height:76px; background:#f7f7f6; } .ds-action-bar { position:absolute; right:0; bottom:0; left:0; display:flex; min-height:64px; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #d6d3d1; padding:12px 16px; background:#fff; box-shadow:0 -4px 14px rgba(28,25,23,.08); font-family:'Noto Sans Thai Variable','Leelawadee UI',Tahoma,sans-serif; } .ds-action-bar a,.ds-action-bar button { display:inline-flex; min-height:40px; align-items:center; border:1px solid #d6d3d1; padding:8px 16px; color:#22201e; background:#fff; font-size:14px; font-weight:600; text-decoration:none; } .ds-action-bar>div { display:flex; gap:8px; } .ds-action-bar .ds-submit { border-color:#cf430c; padding-inline:20px; color:#fff; background:#cf430c; } .ds-action-bar a:hover,.ds-action-bar .ds-save:hover { border-color:#d8470c; } .ds-action-bar .ds-submit:hover { background:#ad3507; } .ds-action-bar a:focus-visible,.ds-action-bar button:focus-visible { outline:3px solid color-mix(in srgb, var(--focus) 55%, transparent); outline-offset:2px; } .ds-action-bar a:active,.ds-action-bar button:active { transform:translateY(1px); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Executive Evidence Ledger",
+    "overview": "The system is a live institutional command desk: dense enough to compare every organization, restrained enough to keep exceptions legible, and structured so a decision can always be traced back to projects, KPI results, quarterly reporting, and evidence. The visual language combines vivid institutional orange with white working surfaces, crisp ledger rules, compact Thai typography, and square controls. Operate mode governs the surface. The first viewport prioritizes work to decide, cross-organization comparison, and an evidence inspector—not a decorative KPI-card mosaic. Orange identifies the product, current location, and next action; semantic colors explain performance states; warm washes carry hover and selection without breaking the ledger. The same world now carries complete operational work: project create/edit/submit, quarterly reporting, disbursement entry, KPI result submission and verification, evidence upload/review, approvals, notifications, and the Admin access editor. Forms retain the square register structure, pair the main fieldset with a narrow contextual readiness or calculation panel, and keep save/submit decisions anchored at the bottom of the viewport.",
+    "keyCharacteristics": [
+      "A full-text orange-and-white sidebar keeps the institutional module map visible on desktop.",
+      "A thin fiscal/quarter utility bar holds period context, live-data state, notifications, export, print, filters, and sign-out.",
+      "A horizontal decision queue surfaces up to six actionable records before the organization matrix.",
+      "The ruled matrix compares requested and approved budget, delivery, disbursement, KPI performance, evidence, and organization status.",
+      "A tabbed inspector preserves the selected organization while exposing summary, evidence, and linked registers.",
+      "Operational forms pair editable registers with contextual checks and a fixed save/submit action bar.",
+      "Density, one-pixel rules, labels, and tabular numerals carry the hierarchy; decoration does not."
+    ],
+    "rules": [
+      { "name": "The One Orange Voice Rule", "body": "Orange may identify the institution, current position, or next action, but it must not turn every metric into a brand highlight.", "section": "colors" },
+      { "name": "The Label-Plus-Color Rule", "body": "Status dots are shorthand only. Preserve the Thai legend, explicit variance copy, accessible label, or inspector status text that explains each hue.", "section": "colors" },
+      { "name": "The One-Family Rule", "body": "Extend the interface through weight, size, and tabular figures; do not add a decorative display face or an English-first UI font.", "section": "typography" },
+      { "name": "The Numbers Are Evidence Rule", "body": "Keep budgets and percentages aligned and formatted consistently so differences can be scanned vertically before the reader opens the inspector.", "section": "typography" },
+      { "name": "The Context-Preservation Rule", "body": "When the matrix becomes a mobile list or the inspector stacks, preserve organization identity, status, key performance values, and the evidence-opening action.", "section": "layout" },
+      { "name": "The Anchored Action Rule", "body": "Save, submit, and cancel controls remain fixed to the visible workspace and must follow the 206/72/0 sidebar offsets exactly.", "section": "layout" },
+      { "name": "The Flat Command Desk Rule", "body": "If a one-pixel rule, tonal wash, or positional change can communicate hierarchy, use it before introducing shadow.", "section": "elevation" },
+      { "name": "The Small-Corner Rule", "body": "Do not introduce large-radius cards or pill buttons. Full rounding is compact state geometry, not a general surface treatment.", "section": "shapes" },
+      { "name": "The Most-Specific Route Rule", "body": "When navigation paths overlap, only the longest matching visible route receives the active treatment and `aria-current=\"page\"`.", "section": "components" }
+    ],
+    "dos": [
+      "Do begin executive surfaces with decisions, cross-unit comparison, and evidence inspection instead of detached summary decoration.",
+      "Do preserve the organization → project → KPI → quarterly report evidence chain in data, labels, links, and responsive transformations.",
+      "Do source dashboard records and aggregates from authenticated Supabase/RLS queries; show an explicit error state when live data cannot be read.",
+      "Do use Noto Sans Thai Variable, Buddhist Era fiscal context, THB units, tabular numerals, and readable Thai wrapping.",
+      "Do reuse the full-text command sidebar, sticky period bar, decision queue, ruled matrix, status legend, and inspector vocabulary across adjacent executive workflows.",
+      "Do retain visible keyboard focus, `aria-current`, `aria-selected`, `aria-pressed`, labelled regions, labelled icon controls, and print behavior.",
+      "Do keep server validation beside the affected field and announce form, review, and workflow outcomes through an appropriate live region.",
+      "Do preserve the project readiness panel as three explicit checks and the fixed form action-bar offsets as 206/72/0."
+    ],
+    "donts": [
+      "Don't replace the primary matrix or record workflow with a generic mosaic of KPI cards or charts detached from source evidence.",
+      "Don't add gradients, decorative imagery, fake paper texture, glass cards, dark mode, purple accents, invented seals, or large floating rounded surfaces.",
+      "Don't communicate status, selection, urgency, evidence verification, or progress through color alone.",
+      "Don't invent sample figures in the interface when an RLS-scoped query is empty or fails.",
+      "Don't squeeze the 790px matrix onto a phone; switch to the implemented mobile record list.",
+      "Don't use shadows as routine card decoration or full pills as default controls.",
+      "Don't mark a shorter parent navigation route active when a longer visible route matches the current pathname.",
+      "Don't enable edits after a record enters approval or verification unless the workflow has explicitly returned it for revision."
+    ]
+  }
+}

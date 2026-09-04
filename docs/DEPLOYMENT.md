@@ -1,0 +1,92 @@
+# คู่มือนำขึ้นระบบจริง
+
+## สถานะความพร้อม
+
+โค้ดรองรับ Next.js 16 แบบ Node.js server, Server Components, Server Actions และ Proxy จึงต้องใช้ hosting ที่รัน Node.js และรองรับ streaming request/response ได้ การ deploy จริงต้องมีชื่อ platform, production domain และสิทธิ์เข้าถึงบัญชี hosting ก่อน
+
+## 1. จัดการความลับก่อนทุกขั้นตอน
+
+1. Rotate service role key ที่เคยถูกส่งผ่านแชต แล้วใช้ key ใหม่เท่านั้น
+2. ห้ามใส่ service role key ใน Git, browser, `NEXT_PUBLIC_*` หรือ screenshot
+3. ตั้งค่า environment variables ใน secret manager ของ hosting:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<new-rotated-service-role-key>
+NEXT_PUBLIC_SITE_URL=https://<production-domain>
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` ใช้เฉพาะ Server Action สำหรับเชิญผู้ใช้ใหม่ ส่วนการทำงานทั่วไปใช้ session และ RLS
+
+## 2. อัปเดตฐานข้อมูล
+
+ใน Supabase SQL Editor ให้รันไฟล์ต่อไปนี้ตามลำดับและรอให้แต่ละไฟล์สำเร็จก่อนเริ่มไฟล์ถัดไป:
+
+1. `supabase/migrations/202609040001_initial_schema.sql`
+2. `supabase/migrations/202609040002_rls_and_views.sql`
+3. `supabase/migrations/202609040003_operational_workflows.sql`
+4. `supabase/verify-operational.sql` — เป็น read-only verification
+
+หากระบบเดิมรัน `001` และ `002` แล้ว ให้เริ่มที่ `003` ห้ามรัน seed บน production เว้นแต่ได้รับอนุมัติว่าเป็นข้อมูลตัวอย่างที่ต้องการจริง
+
+ผล verification ที่คาดหวัง:
+
+- public RPC 4 รายการ
+- view `workflow_inbox` และ `evidence_register`
+- private bucket `evidence` จำกัด 20 MB
+- trigger คุมวงเงิน, sync ยอด, sync หลักฐาน และ audit
+- storage policies สำหรับ select/insert/delete
+
+## 3. ตั้งค่า Supabase Auth
+
+1. กำหนด Site URL เป็น production domain
+2. เพิ่ม Redirect URL อย่างน้อย `https://<production-domain>/auth/callback` และ URL ของ UAT
+3. เปิด email provider ที่องค์กรใช้และทดสอบ invitation/reset password
+4. ตรวจอายุ session, rate limit และ SMTP quota ให้เหมาะกับผู้ใช้จริง
+5. สร้าง Admin แรกด้วย `bootstrap-admin.example.sql` โดยแทน UUID จริง และลบค่าชั่วคราวหลังใช้งาน
+
+## 4. Quality gate ก่อน deploy
+
+```bash
+npm ci
+npm run typecheck
+npm run lint
+npm run test:uat
+npm run build
+```
+
+จากนั้นรัน production-like server ด้วย `npm start` และทำ smoke test เส้นทาง `/login`, `/projects`, `/approvals`, `/evidence`, `/admin`
+
+## 5. Deploy
+
+ตั้งค่า build command เป็น `npm run build`, start command เป็น `npm start`, Node.js ให้ตรงกับ runtime ที่ hosting รองรับ และเปิด HTTPS เท่านั้น หากใช้ reverse proxy ต้องส่ง `Host`/`X-Forwarded-Host` ให้ถูกต้องเพื่อให้ CSRF origin check ของ Server Actions ผ่าน
+
+ระบบรับไฟล์สูงสุด 20 MB และตั้ง Server Action body limit ไว้ 21 MB ดังนั้น proxy/CDN ต้องยอมรับ request อย่างน้อย 21 MB เช่นกัน
+
+## 6. Smoke test หลัง deploy
+
+1. ผู้ใช้แต่ละ role เข้าสู่ระบบและเห็นเมนูตามสิทธิ์
+2. Staff สร้างโครงการและส่งอนุมัติ
+3. User เห็น task และส่งต่อ Executive
+4. Executive อนุมัติ แล้วสถานะโครงการเป็น active
+5. บันทึกเบิกจ่ายและทดสอบยอดเกินวงเงิน
+6. อัปโหลดและดาวน์โหลดหลักฐานด้วย signed URL
+7. Admin แก้ scope ผู้ใช้และยืนยันว่าบัญชีนอก scope มองไม่เห็นข้อมูล
+8. ตรวจ dashboard, audit events และ notification badge
+
+## 7. Monitoring และ rollback
+
+- เปิด server/error log โดยห้ามบันทึก JWT, cookie, service role key หรือเนื้อหาไฟล์
+- ตั้ง alert สำหรับ HTTP 5xx, auth error, storage error และ response time ของ Server Actions
+- เปิด Supabase Point-in-Time Recovery หรือกำหนดรอบ backup ตามนโยบายองค์กร
+- ก่อน migration ให้บันทึก backup และ release tag; rollback application ด้วย release ก่อนหน้า
+- Schema migration นี้เพิ่ม object และ policy การ rollback ควรทำด้วย migration ใหม่ที่ผ่านการทดสอบ ห้ามลบ table หรือ bucket โดยตรงบน production
+
+## สิ่งที่ต้องได้รับก่อนกด deploy จริง
+
+- Platform/บัญชี hosting และ production domain
+- service role key ที่ rotate ใหม่
+- รายชื่อผู้ลงนาม UAT และผล UAT ที่ผ่านเกณฑ์
+- วันเปิดระบบ เจ้าของ incident และช่องทางแจ้งเหตุ
+

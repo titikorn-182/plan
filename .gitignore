@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+
+# Next.js
+/.next
+/out
+
+# production
+/build
+
+# local environment files
+.env*
+!.env.example
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+/.npm-cache
+
+# editor and OS
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+
+# local Impeccable state
+/.impeccable/review
+/.impeccable/build
+/.impeccable/config.local.json
+/.impeccable/questions
+/.agents/skills/impeccable/scripts/.impeccable
