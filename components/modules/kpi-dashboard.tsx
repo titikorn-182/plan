@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, CheckCircle2, FileWarning, Target } from "lucide-react";
-import type { KpiRow } from "@/lib/domain";
+import type { KpiRow } from "@/features/kpi/types";
 import { EmptyData } from "@/components/ui/data-state";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 

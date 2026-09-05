@@ -28,7 +28,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { isCurrentNavigationPath, primaryNavigation } from "@/components/layout/navigation";
-import type { CommandCenterRow, CommandCenterStatus, DecisionRecord, ReportingPeriod, Viewer } from "@/lib/domain";
+import type { Viewer } from "@/features/auth/types";
+import type { CommandCenterRow, CommandCenterStatus, DecisionRecord } from "@/features/dashboard/types";
+import type { ReportingPeriod } from "@/features/shared/types";
 import { COMMAND_CENTER_THRESHOLDS, getQuarterProgressTarget } from "@/lib/operations/rules";
 
 const stageIcons: Record<DecisionRecord["stage"], LucideIcon> = {

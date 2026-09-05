@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, LoaderCircle, Save, Send } from "lucide-react";
-import type { OperationState } from "@/app/operations/actions";
+import type { OperationState } from "@/features/shared/action-state";
 
 export const fieldClass = "mt-1.5 h-11 w-full border border-stone-300 bg-white px-3 text-sm outline-none transition-colors focus:border-[#d8470c] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100";
 export const areaClass = "mt-1.5 min-h-28 w-full resize-y border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-[#d8470c] focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-stone-100";

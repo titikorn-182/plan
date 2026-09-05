@@ -2,9 +2,10 @@
 
 import { useActionState } from "react";
 import { Bell, Check, CheckCheck, LoaderCircle } from "lucide-react";
-import { markNotificationAction, type OperationState } from "@/app/operations/actions";
+import { markNotificationAction } from "@/features/notifications/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { RegisterSection } from "@/components/ui/module-primitives";
-import type { NotificationRow } from "@/lib/domain";
+import type { NotificationRow } from "@/features/notifications/types";
 
 function ReadButton({ id }: { id: string }) {
   const [, action, pending] = useActionState(markNotificationAction, {} satisfies OperationState);

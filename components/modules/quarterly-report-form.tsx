@@ -2,10 +2,11 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { AlertTriangle, CalendarClock, FileCheck2, Gauge } from "lucide-react";
-import { saveQuarterlyReportAction, type OperationState } from "@/app/operations/actions";
+import { saveQuarterlyReportAction } from "@/features/quarterly-reports/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { FormActions, FieldError, FieldLabel, FormNotice, FormTopbar, areaClass, fieldClass } from "@/components/ui/operation-form";
 import { ProgressBar, RegisterSection } from "@/components/ui/module-primitives";
-import type { QuarterlyReportFormOptions } from "@/lib/domain";
+import type { QuarterlyReportFormOptions } from "@/features/quarterly-reports/types";
 
 export function QuarterlyReportForm({ options }: { options: QuarterlyReportFormOptions }) {
   const record = options.record;

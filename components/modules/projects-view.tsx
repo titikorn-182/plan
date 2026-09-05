@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CalendarClock, Check, ChevronRight, CircleDollarSign, FileCheck2, Plus, Users } from "lucide-react";
-import type { ProjectRow } from "@/lib/domain";
+import type { ProjectRow } from "@/features/projects/types";
 import { EmptyData } from "@/components/ui/data-state";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 

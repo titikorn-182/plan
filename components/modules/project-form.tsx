@@ -2,10 +2,11 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { CalendarRange, CircleDollarSign, ClipboardCheck, UserRound } from "lucide-react";
-import { saveProjectAction, type OperationState } from "@/app/operations/actions";
+import { saveProjectAction } from "@/features/projects/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { FormActions, FieldError, FieldLabel, FormNotice, FormTopbar, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection } from "@/components/ui/module-primitives";
-import type { ProjectFormOptions } from "@/lib/domain";
+import type { ProjectFormOptions } from "@/features/projects/types";
 
 export function ProjectForm({ options }: { options: ProjectFormOptions }) {
   const record = options.record;

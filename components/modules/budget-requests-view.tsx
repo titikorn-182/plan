@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, ChevronDown, Download, FilePlus2, Search } from "lucide-react";
-import type { BudgetRequest } from "@/lib/domain";
+import type { BudgetRequest } from "@/features/budget-requests/types";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 
 const statusTone: Record<BudgetRequest["status"], "orange" | "red" | "green" | "gray"> = {

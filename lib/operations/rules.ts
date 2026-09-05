@@ -1,4 +1,4 @@
-import type { KpiDirection, KpiResultState } from "@/lib/domain";
+import type { KpiDirection, KpiResultState } from "@/features/kpi/types";
 
 export const COMMAND_CENTER_THRESHOLDS = {
   riskGap: 15,

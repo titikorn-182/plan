@@ -2,10 +2,12 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { CheckCircle2, Download, FileSearch, FileUp, LoaderCircle, RotateCcw, ShieldCheck } from "lucide-react";
-import { reviewEvidenceAction, uploadEvidenceAction, type OperationState } from "@/app/operations/actions";
+import { reviewEvidenceAction, uploadEvidenceAction } from "@/features/evidence/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
-import type { AppRole, EvidenceEntityOption, EvidenceRow } from "@/lib/domain";
+import type { AppRole } from "@/features/auth/types";
+import type { EvidenceEntityOption, EvidenceRow } from "@/features/evidence/types";
 
 const entityLabel: Record<string, string> = { budget_request: "คำของบ", project: "โครงการ", quarterly_report: "รายงานไตรมาส", kpi_result: "ผล KPI" };
 

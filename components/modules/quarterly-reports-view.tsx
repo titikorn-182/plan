@@ -1,6 +1,6 @@
 import { AlertCircle, ArrowUpRight, CalendarDays, CheckCircle2, Clock3, FileCheck2, Send } from "lucide-react";
 import Link from "next/link";
-import type { QuarterlyReportRow } from "@/lib/domain";
+import type { QuarterlyReportRow } from "@/features/quarterly-reports/types";
 import { EmptyData } from "@/components/ui/data-state";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 

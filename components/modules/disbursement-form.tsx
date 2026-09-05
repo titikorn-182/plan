@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { ArrowLeft, CircleDollarSign, Landmark, LoaderCircle, ReceiptText, Save } from "lucide-react";
-import { saveDisbursementAction, type OperationState } from "@/app/operations/actions";
+import { saveDisbursementAction } from "@/features/disbursements/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { FieldError, FieldLabel, FormNotice, FormTopbar, fieldClass } from "@/components/ui/operation-form";
 import { ProgressBar, RegisterSection } from "@/components/ui/module-primitives";
-import type { DisbursementFormOptions } from "@/lib/domain";
+import type { DisbursementFormOptions } from "@/features/disbursements/types";
 
 export function DisbursementForm({ options }: { options: DisbursementFormOptions }) {
   const [state, action, pending] = useActionState(saveDisbursementAction, {} satisfies OperationState);

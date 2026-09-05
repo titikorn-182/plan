@@ -2,10 +2,11 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { Calculator, FileCheck2, Flag, ShieldCheck } from "lucide-react";
-import { saveKpiResultAction, type OperationState } from "@/app/operations/actions";
+import { saveKpiResultAction } from "@/features/kpi/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { FormActions, FieldError, FieldLabel, FormNotice, FormTopbar, areaClass, fieldClass } from "@/components/ui/operation-form";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
-import type { KpiResultFormRecord } from "@/lib/domain";
+import type { KpiResultFormRecord } from "@/features/kpi/types";
 
 export function KpiResultForm({ record }: { record: KpiResultFormRecord }) {
   const [state, action, pending] = useActionState(saveKpiResultAction, { id: record.id, version: record.version } satisfies OperationState);

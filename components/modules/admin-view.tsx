@@ -2,10 +2,13 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { Check, Database, History, LoaderCircle, MailPlus, Save, Search, ShieldCheck, UserCog, Users } from "lucide-react";
-import { inviteUserAction, updateUserAccessAction, type OperationState } from "@/app/operations/actions";
+import { inviteUserAction, updateUserAccessAction } from "@/features/admin/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
-import { APP_ROLES, type AdminUser, type AppRole, type AuditRow, type OrganizationOption } from "@/lib/domain";
+import type { AdminUser, AuditRow } from "@/features/admin/types";
+import { APP_ROLE_NAMES, APP_ROLES } from "@/features/auth/types";
+import type { OrganizationOption } from "@/features/shared/types";
 
 const permissionRows = [
   ["Dashboard ส่วนบุคคล", true, true, true, true], ["คำของบประมาณ", true, true, false, "own"],
@@ -13,7 +16,7 @@ const permissionRows = [
   ["รายงานผลรายไตรมาส", true, true, true, "own"], ["ข้อมูลเบิกจ่าย", true, true, true, "own"],
   ["KPI EdPEx & AUN-QA", true, true, true, "own"], ["ผู้ใช้และข้อมูลหลัก", true, false, false, false],
 ] as const;
-const roleLabel: Record<AppRole, string> = { admin: "Admin", user: "User", executive: "Executive", staff: "Staff" };
+const roleLabel = APP_ROLE_NAMES;
 
 function PermissionMark({ value }: { value: boolean | "own" }) {
   if (value === "own") return <span className="text-[10px] font-semibold text-orange-700">เฉพาะตนเอง</span>;

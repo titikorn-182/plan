@@ -51,6 +51,17 @@ npm run build
 
 เมื่อ schema บน Supabase เปลี่ยน ให้รัน `npm run types:generate` เพื่อสร้างชนิดข้อมูล TypeScript ใหม่จากฐานข้อมูล แล้วตรวจทาน diff ก่อน commit
 
+## โครงสร้างโค้ด
+
+- `app/(workspace)` เก็บ route ที่ต้องเข้าสู่ระบบและใช้ shell/layout กลาง โดยวงเล็บเป็น route group จึงไม่เปลี่ยน URL
+- `features/<feature>/actions.ts` เก็บคำสั่งที่เปลี่ยนข้อมูลของแต่ละฟีเจอร์ เช่น โครงการ KPI หรือหลักฐาน
+- `features/<feature>/queries.ts` เก็บการอ่านและแปลงข้อมูลจาก Supabase ของฟีเจอร์นั้น
+- `features/<feature>/types.ts` เก็บ type, enum guard และข้อความสถานะที่เป็นกติกาของฟีเจอร์
+- `features/shared` เก็บโค้ดกลางที่ใช้ร่วมกัน เช่น รอบรายงาน ผลลัพธ์ query และสถานะของ server action
+- `components/layout`, `components/modules` และ `components/ui` เก็บ shell, หน้าจอโมดูล และส่วนประกอบ UI ตามลำดับ
+- `lib` เก็บโครงสร้างพื้นฐานร่วม เช่น authentication, Supabase client และกติกาคำนวณที่ไม่มี UI
+- `types/database.generated.ts` สร้างจาก schema ของ Supabase และไม่ควรแก้ด้วยมือ
+
 ## ขอบเขตที่เชื่อมแล้ว
 
 - Supabase Auth: เข้าสู่ระบบ ออกจากระบบ ลืมรหัสผ่าน และตั้งรหัสผ่านใหม่

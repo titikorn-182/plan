@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Upload } from "lucide-react";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { EmptyData } from "@/components/ui/data-state";
-import type { DisbursementRow } from "@/lib/domain";
+import type { DisbursementRow } from "@/features/disbursements/types";
 
 const money = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
 

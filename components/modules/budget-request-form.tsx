@@ -4,8 +4,8 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, FileUp, LoaderCircle, Save, Send, ShieldCheck } from "lucide-react";
 import { RegisterSection } from "@/components/ui/module-primitives";
-import { saveBudgetRequestAction, type BudgetRequestState } from "@/app/budget-requests/actions";
-import type { BudgetFormOptions } from "@/lib/domain";
+import { saveBudgetRequestAction, type BudgetRequestState } from "@/features/budget-requests/actions";
+import type { BudgetFormOptions } from "@/features/budget-requests/types";
 
 const steps = ["ข้อมูลทั่วไป", "ความสอดคล้องยุทธศาสตร์", "รายละเอียดงบประมาณ", "ผลผลิตและตัวชี้วัด", "เอกสารแนบ"];
 

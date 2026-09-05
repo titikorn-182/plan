@@ -7,19 +7,37 @@ const root = process.cwd();
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 
 test("all eight operational surfaces are present", () => {
+  const workspace = "app/(workspace)";
   const routes = [
-    "app/projects/new/page.tsx", "app/reports/quarterly/new/page.tsx", "app/disbursements/new/page.tsx",
-    "app/kpi/[id]/edit/page.tsx", "app/evidence/page.tsx", "app/approvals/page.tsx",
-    "app/notifications/page.tsx", "app/admin/page.tsx",
+    `${workspace}/projects/new/page.tsx`, `${workspace}/reports/quarterly/new/page.tsx`,
+    `${workspace}/disbursements/new/page.tsx`, `${workspace}/kpi/[id]/edit/page.tsx`,
+    `${workspace}/evidence/page.tsx`, `${workspace}/approvals/page.tsx`,
+    `${workspace}/notifications/page.tsx`, `${workspace}/admin/page.tsx`,
   ];
   routes.forEach((route) => assert.equal(existsSync(resolve(root, route)), true, route));
 });
 
 test("every mutating action performs an authenticated session check", () => {
-  const source = read("app/operations/actions.ts");
+  const actionFiles = [
+    "features/admin/actions.ts",
+    "features/approvals/actions.ts",
+    "features/budget-requests/actions.ts",
+    "features/disbursements/actions.ts",
+    "features/evidence/actions.ts",
+    "features/kpi/actions.ts",
+    "features/notifications/actions.ts",
+    "features/projects/actions.ts",
+    "features/quarterly-reports/actions.ts",
+  ];
+  const source = actionFiles.map(read).join("\n");
   const actions = source.match(/export async function \w+Action/g) ?? [];
   assert.equal(actions.length >= 9, true);
-  assert.match(source, /auth\.getClaims\(\)/);
+  assert.match(read("features/shared/server-actions.ts"), /auth\.getClaims\(\)/);
+  assert.match(read("features/budget-requests/actions.ts"), /auth\.getClaims\(\)/);
+  assert.equal(
+    actionFiles.slice(1).every((path) => /authenticated\(\)|requireAdmin\(\)|auth\.getClaims\(\)/.test(read(path))),
+    true,
+  );
   assert.match(source, /requireAdmin\(\)/);
 });
 
@@ -34,7 +52,7 @@ test("budget submission changes status and creates its approval task atomically"
   assert.match(sql, /for update;/);
   assert.match(sql, /task_id := public\.submit_entity_for_approval/);
 
-  const action = read("app/budget-requests/actions.ts");
+  const action = read("features/budget-requests/actions.ts");
   assert.match(action, /rpc\("submit_budget_request_for_approval"/);
   assert.equal(action.includes('status: parsed.data.intent === "submit" ? "submitted" : "draft"'), false);
 });
@@ -46,7 +64,7 @@ test("budget and storage guards serialize spending and bind uploads to the signe
 });
 
 test("editing a project does not silently reassign its owner identity", () => {
-  const source = read("app/operations/actions.ts");
+  const source = read("features/projects/actions.ts");
   assert.equal(source.match(/owner_id: userId/g)?.length, 1);
   assert.equal(source.match(/coordinator_id: userId/g)?.length, 1);
 });

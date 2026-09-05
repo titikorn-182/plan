@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { ArrowUpRight, CheckCircle2, Clock3, LoaderCircle, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
-import { actOnApprovalAction, type OperationState } from "@/app/operations/actions";
+import { actOnApprovalAction } from "@/features/approvals/actions";
+import type { OperationState } from "@/features/shared/action-state";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
-import type { WorkflowTask } from "@/lib/domain";
+import {
+  APPROVAL_ROLE_LABELS,
+  WORKFLOW_STATUS_LABELS,
+  type WorkflowTask,
+} from "@/features/approvals/types";
 
 const typeLabel: Record<string, string> = { budget_request: "คำของบ", project: "โครงการ", quarterly_report: "รายงานไตรมาส", kpi_result: "ผล KPI" };
-const roleLabel: Record<string, string> = { admin: "ผู้ดูแลระบบ", user: "ผู้ตรวจระดับหน่วยงาน", executive: "ผู้บริหาร", staff: "ผู้ปฏิบัติงาน" };
-const statusLabel: Record<string, string> = { pending: "รอดำเนินการ", approved: "อนุมัติ", revision_required: "ส่งกลับแก้ไข", rejected: "ไม่อนุมัติ", cancelled: "ยกเลิก" };
+const roleLabel = APPROVAL_ROLE_LABELS;
+const statusLabel = WORKFLOW_STATUS_LABELS;
 
 function entityHref(task: WorkflowTask) {
   if (task.entityType === "project") return `/projects/${task.entityId}/edit`;

@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AppRole, Viewer } from "@/lib/domain";
+import type { AppRole, Viewer } from "@/features/auth/types";
 
 const priority: AppRole[] = ["admin", "executive", "user", "staff"];
 

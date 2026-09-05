@@ -10,16 +10,32 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
-import { isCurrentNavigationPath, primaryNavigation } from "@/components/layout/navigation";
-import type { ReportingPeriod, Viewer } from "@/lib/domain";
+import {
+  getWorkspaceTitle,
+  isCurrentNavigationPath,
+  primaryNavigation,
+} from "@/components/layout/navigation";
+import { APP_ROLE_LABELS, type Viewer } from "@/features/auth/types";
+import type { ReportingPeriod } from "@/features/shared/types";
 
-export function WorkspaceShell({ children, title, actions, viewer, period }: { children: ReactNode; title: string; actions?: ReactNode; viewer: Viewer; period: ReportingPeriod }) {
+export function WorkspaceShell({
+  children,
+  viewer,
+  period,
+}: {
+  children: ReactNode;
+  viewer: Viewer;
+  period: ReportingPeriod;
+}) {
   const pathname = usePathname();
+  const title = getWorkspaceTitle(pathname);
   const visibleNavItems = primaryNavigation.filter((item) => !item.adminOnly || viewer.roles.includes("admin"));
   const currentHref = visibleNavItems
     .filter((item) => isCurrentNavigationPath(pathname, item.href))
     .sort((left, right) => right.href.length - left.href.length)[0]?.href;
-  const roleLabel = { admin: "ผู้ดูแลระบบ", user: "ผู้ประสานงาน", executive: "ผู้บริหาร", staff: "เจ้าหน้าที่" }[viewer.role];
+  const roleLabel = APP_ROLE_LABELS[viewer.role];
+
+  if (pathname === "/") return children;
 
   return (
     <div className="module-command-shell">
@@ -38,7 +54,6 @@ export function WorkspaceShell({ children, title, actions, viewer, period }: { c
         <header className="module-command-topbar">
           <div className="module-command-period"><button type="button">ปีงบประมาณ <strong>{period.buddhistYear}</strong><CalendarDays size={15} /></button><button type="button">{period.quarterLabel}<ChevronDown size={15} /></button><span><i />ข้อมูลจริง</span></div>
           <div className="module-command-tools">
-            {actions}
             <Link aria-label={`การแจ้งเตือน ${viewer.unreadNotifications} รายการ`} href="/notifications"><Bell size={17} />{viewer.unreadNotifications > 0 ? <b>{Math.min(viewer.unreadNotifications, 99)}</b> : null}</Link>
             <form action="/auth/signout" method="post"><button type="submit" aria-label="ออกจากระบบ" title="ออกจากระบบ"><LogOut size={17} /></button></form>
           </div>

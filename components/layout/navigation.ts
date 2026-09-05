@@ -32,7 +32,35 @@ export const primaryNavigation: readonly NavigationItem[] = [
   { label: "กำกับและตั้งค่าระบบ", href: "/admin", icon: ShieldCheck, adminOnly: true },
 ];
 
-export function isCurrentNavigationPath(pathname: string, href: string) {
+const WORKSPACE_TITLES: ReadonlyArray<{
+  matches: (pathname: string) => boolean;
+  title: string;
+}> = [
+  { matches: (pathname) => /^\/budget-requests\/[^/]+\/edit$/.test(pathname), title: "แก้ไขคำของบประมาณ" },
+  { matches: (pathname) => pathname === "/budget-requests/new", title: "สร้างคำของบประมาณ" },
+  { matches: (pathname) => pathname === "/budget-requests", title: "คำของบประมาณประจำปี" },
+  { matches: (pathname) => /^\/projects\/[^/]+\/edit$/.test(pathname), title: "แก้ไขข้อเสนอโครงการ" },
+  { matches: (pathname) => pathname === "/projects/new", title: "สร้างข้อเสนอโครงการ" },
+  { matches: (pathname) => pathname === "/projects", title: "บริหารกิจกรรมและโครงการ" },
+  { matches: (pathname) => /^\/reports\/quarterly\/[^/]+\/edit$/.test(pathname), title: "แก้ไขรายงานรายไตรมาส" },
+  { matches: (pathname) => pathname === "/reports/quarterly/new", title: "บันทึกผลดำเนินงานรายไตรมาส" },
+  { matches: (pathname) => pathname === "/reports/quarterly", title: "ติดตามผลการดำเนินงานรายไตรมาส" },
+  { matches: (pathname) => pathname === "/reports", title: "รายงานและส่งออกข้อมูล" },
+  { matches: (pathname) => pathname === "/disbursements/new", title: "บันทึกการเบิกจ่าย" },
+  { matches: (pathname) => pathname === "/disbursements", title: "ติดตามการเบิกจ่ายงบประมาณ" },
+  { matches: (pathname) => /^\/kpi\/[^/]+\/edit$/.test(pathname), title: "กรอกและรับรองผล KPI" },
+  { matches: (pathname) => pathname === "/kpi", title: "KPI Dashboard — EdPEx & AUN-QA" },
+  { matches: (pathname) => pathname === "/evidence", title: "หลักฐานและเอกสาร" },
+  { matches: (pathname) => pathname === "/approvals", title: "Workflow อนุมัติ" },
+  { matches: (pathname) => pathname === "/notifications", title: "การแจ้งเตือน" },
+  { matches: (pathname) => pathname === "/admin", title: "ผู้ใช้ สิทธิ์ และข้อมูลหลัก" },
+];
+
+export function getWorkspaceTitle(pathname: string): string {
+  return WORKSPACE_TITLES.find((item) => item.matches(pathname))?.title ?? "ระบบบริหารแผน";
+}
+
+export function isCurrentNavigationPath(pathname: string, href: string): boolean {
   if (href === "/") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }

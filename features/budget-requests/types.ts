@@ -1,0 +1,50 @@
+import type { Enums } from "@/types/database.generated";
+
+export type DocumentStatus = Enums<"document_status">;
+export type BudgetStatus = "ฉบับร่าง" | "รอตรวจสอบ" | "รออนุมัติ" | "อนุมัติแล้ว" | "ส่งกลับแก้ไข" | "ยกเลิก";
+
+export const BUDGET_STATUS_LABELS: Readonly<Record<string, BudgetStatus>> = {
+  draft: "ฉบับร่าง",
+  submitted: "รอตรวจสอบ",
+  under_review: "รอตรวจสอบ",
+  pending_approval: "รออนุมัติ",
+  revision_required: "ส่งกลับแก้ไข",
+  approved: "อนุมัติแล้ว",
+  rejected: "ส่งกลับแก้ไข",
+  withdrawn: "ยกเลิก",
+  cancelled: "ยกเลิก",
+};
+
+export type BudgetRequest = {
+  uuid: string;
+  id: string;
+  title: string;
+  unit: string;
+  category: string;
+  amount: number;
+  status: BudgetStatus;
+  updated: string;
+  editable: boolean;
+};
+
+export type BudgetFormOptions = {
+  organizations: { id: string; name: string }[];
+  fiscalYearId: string;
+  fiscalYearLabel: string;
+  budgetCycleId: string;
+  defaultOwnerName: string;
+  record: BudgetFormRecord | null;
+};
+
+export type BudgetFormRecord = {
+  id: string;
+  code: string;
+  version: number;
+  title: string;
+  organizationId: string;
+  projectType: string;
+  ownerName: string;
+  rationale: string;
+  amount: number;
+  status: DocumentStatus;
+};
