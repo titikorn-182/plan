@@ -38,7 +38,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="mt-2 text-sm leading-6 text-stone-500">ใช้อีเมลสถาบันและรหัสผ่านของคุณ ระบบจะแสดงข้อมูลตามบทบาทและหน่วยงานที่ได้รับสิทธิ์</p>
           {error ? <p className="mt-5 border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800" role="alert">{error === "inactive" ? "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" : "ลิงก์ยืนยันไม่ถูกต้องหรือหมดอายุ กรุณาเข้าสู่ระบบหรือขอลิงก์ใหม่"}</p> : null}
           <LoginForm nextPath={safeNextPath(next)} />
-          <p className="mt-8 border-t border-stone-200 pt-5 text-xs leading-5 text-stone-500">ระบบใช้ Supabase Auth และแสดงข้อมูลตามบทบาท ขอบเขตหน่วยงาน และรายการที่ได้รับมอบหมาย</p>
+          <footer className="mt-8 border-t border-stone-200 pt-5 text-stone-500">
+            <p className="text-xs leading-5">ระบบใช้ Supabase Auth และแสดงข้อมูลตามบทบาท ขอบเขตหน่วยงาน และรายการที่ได้รับมอบหมาย</p>
+            <p className="mt-4 text-[11px] leading-5 text-stone-600">
+              <span className="block"><strong className="font-semibold text-stone-700">พัฒนาโดย</strong> สำนักงานเลขานุการ คณะรัฐศาสตร์ มหาวิทยาลัยอุบลราชธานี</span>
+              <span className="block">ฐิติกรณ์รัศมิ์ ภัททสิริภูวดล เจ้าหน้าที่บริหารงานทั่วไปชำนาญการพิเศษ</span>
+            </p>
+          </footer>
         </div>
       </section>
       <section className="relative hidden overflow-hidden bg-[#c9440b] p-12 text-white lg:flex lg:flex-col lg:justify-between">
