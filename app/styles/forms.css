@@ -1,0 +1,42 @@
+@media (max-width: 640px) {
+  .budget-request-form {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .form-action-bar {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    min-height: 64px;
+    gap: 8px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .form-action-back {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    padding: 0;
+  }
+
+  .form-action-back span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .form-action-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .form-action-group > button {
+    min-height: 42px;
+    justify-content: center;
+    white-space: nowrap;
+  }
+}

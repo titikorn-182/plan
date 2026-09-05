@@ -1,10 +1,6 @@
 import "server-only";
 
-import type {
-  ProjectFormOptions,
-  ProjectOption,
-  ProjectRow,
-} from "@/features/projects/types";
+import type { ProjectFormOptions, ProjectOption, ProjectRow } from "@/features/projects/types";
 import type { DataResult } from "@/features/shared/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import { getOrganizationsAndYears } from "@/features/shared/queries";

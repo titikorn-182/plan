@@ -9,10 +9,14 @@ const read = (path) => readFileSync(resolve(root, path), "utf8");
 test("all eight operational surfaces are present", () => {
   const workspace = "app/(workspace)";
   const routes = [
-    `${workspace}/projects/new/page.tsx`, `${workspace}/reports/quarterly/new/page.tsx`,
-    `${workspace}/disbursements/new/page.tsx`, `${workspace}/kpi/[id]/edit/page.tsx`,
-    `${workspace}/evidence/page.tsx`, `${workspace}/approvals/page.tsx`,
-    `${workspace}/notifications/page.tsx`, `${workspace}/admin/page.tsx`,
+    `${workspace}/projects/new/page.tsx`,
+    `${workspace}/reports/quarterly/new/page.tsx`,
+    `${workspace}/disbursements/new/page.tsx`,
+    `${workspace}/kpi/[id]/edit/page.tsx`,
+    `${workspace}/evidence/page.tsx`,
+    `${workspace}/approvals/page.tsx`,
+    `${workspace}/notifications/page.tsx`,
+    `${workspace}/admin/page.tsx`,
   ];
   routes.forEach((route) => assert.equal(existsSync(resolve(root, route)), true, route));
 });
@@ -35,7 +39,9 @@ test("every mutating action performs an authenticated session check", () => {
   assert.match(read("features/shared/server-actions.ts"), /auth\.getClaims\(\)/);
   assert.match(read("features/budget-requests/actions.ts"), /auth\.getClaims\(\)/);
   assert.equal(
-    actionFiles.slice(1).every((path) => /authenticated\(\)|requireAdmin\(\)|auth\.getClaims\(\)/.test(read(path))),
+    actionFiles
+      .slice(1)
+      .every((path) => /authenticated\(\)|requireAdmin\(\)|auth\.getClaims\(\)/.test(read(path))),
     true,
   );
   assert.match(source, /requireAdmin\(\)/);
@@ -43,7 +49,15 @@ test("every mutating action performs an authenticated session check", () => {
 
 test("operational migration includes workflow, budget guard, private storage, and admin access RPCs", () => {
   const sql = read("supabase/migrations/202609040003_operational_workflows.sql");
-  ["submit_entity_for_approval", "act_on_approval_task", "guard_disbursement_budget", "storage.buckets", "review_evidence", "admin_update_user_access", "workflow_inbox"].forEach((contract) => assert.equal(sql.includes(contract), true, contract));
+  [
+    "submit_entity_for_approval",
+    "act_on_approval_task",
+    "guard_disbursement_budget",
+    "storage.buckets",
+    "review_evidence",
+    "admin_update_user_access",
+    "workflow_inbox",
+  ].forEach((contract) => assert.equal(sql.includes(contract), true, contract));
 });
 
 test("budget submission changes status and creates its approval task atomically", () => {
@@ -54,7 +68,10 @@ test("budget submission changes status and creates its approval task atomically"
 
   const action = read("features/budget-requests/actions.ts");
   assert.match(action, /rpc\("submit_budget_request_for_approval"/);
-  assert.equal(action.includes('status: parsed.data.intent === "submit" ? "submitted" : "draft"'), false);
+  assert.equal(
+    action.includes('status: parsed.data.intent === "submit" ? "submitted" : "draft"'),
+    false,
+  );
 });
 
 test("budget and storage guards serialize spending and bind uploads to the signed-in user", () => {

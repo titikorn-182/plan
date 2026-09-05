@@ -4,5 +4,9 @@ import { getDisbursements } from "@/features/disbursements/queries";
 
 export default async function DisbursementsPage() {
   const result = await getDisbursements();
-  return result.error ? <DataError message={result.error} /> : <DisbursementsView rows={result.data} />;
+  return result.error ? (
+    <DataError message={result.error} />
+  ) : (
+    <DisbursementsView rows={result.data} />
+  );
 }

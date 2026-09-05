@@ -1,0 +1,8 @@
+.agents
+.codex
+.impeccable
+.next
+node_modules
+public
+supabase
+types/database.generated.ts

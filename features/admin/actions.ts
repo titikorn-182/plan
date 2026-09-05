@@ -23,11 +23,19 @@ export async function updateUserAccessAction(
     .filter((id) => z.string().uuid().safeParse(id).success);
   const active = formData.get("active") === "on";
 
-  if (!z.string().uuid().safeParse(profileId).success || fullName.length < 2 || roles.length === 0) {
+  if (
+    !z.string().uuid().safeParse(profileId).success ||
+    fullName.length < 2 ||
+    roles.length === 0
+  ) {
     return { ...previous, success: false, message: "กรุณาระบุชื่อและเลือกอย่างน้อย 1 บทบาท" };
   }
   if (profileId === viewer.id && (!active || !roles.includes("admin"))) {
-    return { ...previous, success: false, message: "ไม่สามารถถอนสิทธิ์ Admin หรือระงับบัญชีของตนเอง" };
+    return {
+      ...previous,
+      success: false,
+      message: "ไม่สามารถถอนสิทธิ์ Admin หรือระงับบัญชีของตนเอง",
+    };
   }
 
   const supabase = await createClient();

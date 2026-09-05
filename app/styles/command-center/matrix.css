@@ -1,0 +1,256 @@
+.cc-command-grid {
+  display: grid;
+  min-height: 0;
+  margin-top: 14px;
+  border-top: 2px solid var(--orange-500);
+  background: #fff;
+}
+
+.cc-command-grid.with-inspector {
+  grid-template-columns: minmax(0, 1fr) 286px;
+}
+.cc-matrix-panel {
+  min-width: 0;
+}
+
+.cc-matrix-scroll {
+  overflow: auto;
+  border-right: 1px solid #d7d5d3;
+  border-bottom: 1px solid #d7d5d3;
+  border-left: 1px solid #d7d5d3;
+}
+
+.cc-matrix {
+  width: 100%;
+  min-width: 790px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 10px;
+}
+
+.cc-matrix th,
+.cc-matrix td {
+  border-right: 1px solid #dedbd8;
+  border-bottom: 1px solid #e5e2df;
+  padding: 7px 7px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cc-matrix th:last-child,
+.cc-matrix td:last-child {
+  border-right: 0;
+}
+
+.cc-matrix thead th {
+  height: 48px;
+  color: #393531;
+  background: #fff9f5;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.cc-matrix thead th:first-child,
+.cc-matrix thead th:nth-child(2) {
+  background: #fff4ed;
+}
+
+.cc-matrix th small,
+.cc-matrix td > small,
+.cc-matrix tfoot small {
+  display: block;
+  margin-top: 2px;
+  color: #7d7772;
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.cc-matrix th:nth-child(2) {
+  width: 190px;
+}
+.cc-matrix th:nth-child(3),
+.cc-matrix th:nth-child(4) {
+  width: 82px;
+}
+.cc-matrix th:nth-child(5),
+.cc-matrix th:nth-child(6) {
+  width: 105px;
+}
+.cc-matrix th:nth-child(7) {
+  width: 88px;
+}
+.cc-matrix th:nth-child(8) {
+  width: 74px;
+}
+.cc-matrix .cc-rank-col {
+  width: 30px;
+}
+.cc-matrix .cc-pin-col {
+  width: 37px;
+}
+
+.cc-matrix tbody tr {
+  height: 62px;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.cc-matrix tbody tr:hover {
+  background: #fffaf7;
+}
+.cc-matrix tbody tr.selected {
+  background: #fff3ea;
+  box-shadow: inset 3px 0 0 var(--orange-600);
+}
+
+.cc-unit-cell {
+  text-align: left !important;
+}
+
+.cc-unit-cell strong,
+.cc-unit-cell span,
+.cc-unit-cell em {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cc-unit-cell strong {
+  font-size: 10.5px;
+}
+.cc-unit-cell span {
+  margin-top: 2px;
+  color: #6c6762;
+  font-size: 8px;
+}
+.cc-unit-cell em {
+  margin-top: 2px;
+  color: var(--orange-600);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.cc-metric-cell > div,
+.cc-kpi-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.cc-metric-cell strong,
+.cc-kpi-cell > strong {
+  font-size: 11.5px;
+}
+
+.cc-metric-cell small,
+.cc-kpi-cell small {
+  display: block;
+  margin-top: 4px;
+  font-size: 7.5px;
+  white-space: nowrap;
+}
+
+.cc-kpi-cell {
+  flex-wrap: wrap;
+}
+.cc-kpi-cell small {
+  width: 100%;
+  color: #4f4a46;
+}
+.positive {
+  color: #16805d !important;
+}
+.negative {
+  color: #d34717 !important;
+}
+
+.cc-evidence-cell > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 4px;
+  color: #4d4945;
+}
+
+.cc-pin-col button {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border: 0;
+  color: #3c3936;
+  background: transparent;
+}
+
+.cc-pin-col button:hover,
+.cc-pin-col button[aria-pressed="true"] {
+  color: #fff;
+  background: #116a63;
+}
+
+.cc-matrix tfoot td {
+  height: 47px;
+  border-bottom: 0;
+  background: #faf9f8;
+  font-size: 10.5px;
+}
+
+.cc-no-results {
+  display: flex;
+  min-height: 180px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #69635e;
+  font-size: 11px;
+}
+
+.cc-no-results button {
+  border: 1px solid var(--orange-500);
+  padding: 6px 10px;
+  color: var(--orange-700);
+  background: #fff;
+  font-size: 9px;
+}
+
+.cc-mobile-list {
+  display: none;
+}
+
+.cc-matrix-footer {
+  display: flex;
+  min-height: 37px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #d7d5d3;
+  border-top: 0;
+  padding: 5px 10px;
+  background: #fff;
+}
+
+.cc-matrix-footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.cc-matrix-footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #5c5752;
+  font-size: 7.5px;
+}
+
+.cc-matrix-footer p {
+  margin: 0;
+  color: #8a847f;
+  font-size: 7.5px;
+}

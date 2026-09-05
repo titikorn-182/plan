@@ -9,4 +9,10 @@ export type AdminUser = {
   organizationIds: string[];
 };
 
-export type AuditRow = { id: number; action: string; entityType: string; createdAt: string; actorEmail: string };
+export type AuditRow = {
+  id: number;
+  action: string;
+  entityType: string;
+  createdAt: string;
+  actorEmail: string;
+};

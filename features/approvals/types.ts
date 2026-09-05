@@ -1,7 +1,13 @@
 import type { AppRole } from "@/features/auth/types";
 import type { EvidenceEntityType } from "@/features/evidence/types";
 
-export const WORKFLOW_STATUSES = ["pending", "approved", "revision_required", "rejected", "cancelled"] as const;
+export const WORKFLOW_STATUSES = [
+  "pending",
+  "approved",
+  "revision_required",
+  "rejected",
+  "cancelled",
+] as const;
 export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
 
 export const WORKFLOW_STATUS_LABELS: Readonly<Record<WorkflowStatus, string>> = {

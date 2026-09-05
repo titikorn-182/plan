@@ -3,7 +3,15 @@ import type { Enums } from "@/types/database.generated";
 export type KpiResultStatus = Enums<"kpi_result_status">;
 export type KpiResultState = Enums<"result_state">;
 
-export const KPI_RESULT_STATUSES = ["not_started", "draft", "submitted", "revision_required", "verified", "overdue", "not_applicable"] as const satisfies readonly KpiResultStatus[];
+export const KPI_RESULT_STATUSES = [
+  "not_started",
+  "draft",
+  "submitted",
+  "revision_required",
+  "verified",
+  "overdue",
+  "not_applicable",
+] as const satisfies readonly KpiResultStatus[];
 export const KPI_DIRECTIONS = ["higher_is_better", "lower_is_better", "range", "boolean"] as const;
 export type KpiDirection = (typeof KPI_DIRECTIONS)[number];
 export const KPI_FRAMEWORKS = ["EdPEx", "AUN-QA", "Internal"] as const;

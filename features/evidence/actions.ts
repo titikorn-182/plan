@@ -46,9 +46,14 @@ export async function uploadEvidenceAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId)
+    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
   const extension = file.name.includes(".")
-    ? file.name.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)
+    ? file.name
+        .split(".")
+        .pop()
+        ?.replace(/[^a-zA-Z0-9]/g, "")
+        .slice(0, 8)
     : "bin";
   const storagePath = `${organizationId}/${entityType}/${entityId}/${userId}/${crypto.randomUUID()}.${extension || "bin"}`;
   const { error: uploadError } = await supabase.storage
@@ -74,7 +79,11 @@ export async function uploadEvidenceAction(
     .single();
   if (error) {
     await supabase.storage.from("evidence").remove([storagePath]);
-    return { ...previous, success: false, message: `บันทึกข้อมูลไฟล์ไม่สำเร็จ: ${friendlyError(error)}` };
+    return {
+      ...previous,
+      success: false,
+      message: `บันทึกข้อมูลไฟล์ไม่สำเร็จ: ${friendlyError(error)}`,
+    };
   }
 
   refreshOperations();

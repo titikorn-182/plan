@@ -14,10 +14,15 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function getKpis(): Promise<DataResult<KpiRow[]>> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("kpi_register").select("*").order("code", { ascending: true });
+  const { data, error } = await supabase
+    .from("kpi_register")
+    .select("*")
+    .order("code", { ascending: true });
   return result(
     (data ?? [])
-      .filter((row) => hasValues(row, ["id", "code", "name", "owner", "framework", "unit", "status"]))
+      .filter((row) =>
+        hasValues(row, ["id", "code", "name", "owner", "framework", "unit", "status"]),
+      )
       .map((row) => ({
         uuid: row.id,
         code: row.code,
@@ -28,7 +33,9 @@ export async function getKpis(): Promise<DataResult<KpiRow[]>> {
         actual: row.actual === null ? null : Number(row.actual),
         unit: row.unit,
         status: KPI_STATUS_LABELS[row.status] ?? "ไม่มีข้อมูล",
-        workflowStatus: isKpiResultStatus(row.workflow_status) ? row.workflow_status : "not_started",
+        workflowStatus: isKpiResultStatus(row.workflow_status)
+          ? row.workflow_status
+          : "not_started",
       })),
     error,
   );
@@ -52,7 +59,11 @@ export async function getKpiResultFormRecord(
   const definition = Array.isArray(data.kpi_definitions)
     ? data.kpi_definitions[0]
     : data.kpi_definitions;
-  if (!definition || !isKpiFramework(definition.framework) || !isKpiDirection(definition.direction)) {
+  if (
+    !definition ||
+    !isKpiFramework(definition.framework) ||
+    !isKpiDirection(definition.direction)
+  ) {
     return result(null, { message: "ข้อมูลชนิดของ KPI ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ" });
   }
   return result({

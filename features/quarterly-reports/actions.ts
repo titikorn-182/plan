@@ -40,7 +40,8 @@ export async function saveQuarterlyReportAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId)
+    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .select("organization_id,fiscal_year_id")
@@ -118,6 +119,7 @@ export async function saveQuarterlyReportAction(
     success: true,
     id: data.id,
     version: data.version,
-    message: input.intent === "submit" ? "ส่งรายงานเข้าสู่ workflow แล้ว" : "บันทึกรายงานฉบับร่างแล้ว",
+    message:
+      input.intent === "submit" ? "ส่งรายงานเข้าสู่ workflow แล้ว" : "บันทึกรายงานฉบับร่างแล้ว",
   };
 }

@@ -4,5 +4,9 @@ import { getQuarterlyReports } from "@/features/quarterly-reports/queries";
 
 export default async function QuarterlyReportsPage() {
   const result = await getQuarterlyReports();
-  return result.error ? <DataError message={result.error} /> : <QuarterlyReportsView reports={result.data} />;
+  return result.error ? (
+    <DataError message={result.error} />
+  ) : (
+    <QuarterlyReportsView reports={result.data} />
+  );
 }

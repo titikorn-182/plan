@@ -1,10 +1,7 @@
 import "server-only";
 
 import { BUDGET_STATUS_LABELS } from "@/features/budget-requests/types";
-import type {
-  BudgetFormOptions,
-  BudgetRequest,
-} from "@/features/budget-requests/types";
+import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-requests/types";
 import type { DataResult } from "@/features/shared/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import { getViewer } from "@/lib/auth/viewer";
@@ -39,28 +36,31 @@ export async function getBudgetFormOptions(
 ): Promise<DataResult<BudgetFormOptions | null>> {
   const [viewer, supabase] = await Promise.all([getViewer(), createClient()]);
   const currentTimestamp = new Date().toISOString();
-  const [{ data: organizations, error: orgError }, { data: cycles, error: cycleError }, recordResult] =
-    await Promise.all([
-      supabase.from("organizations").select("id,name_th").eq("is_active", true).order("name_th"),
-      supabase
-        .from("budget_cycles")
-        .select("id,fiscal_year_id,fiscal_years!inner(label,status)")
-        .eq("status", "open")
-        .lte("opens_at", currentTimestamp)
-        .gte("closes_at", currentTimestamp)
-        .order("closes_at")
-        .limit(1),
-      budgetRequestId
-        ? supabase
-            .from("budget_requests")
-            .select(
-              "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label),organizations!budget_requests_organization_id_fkey(name_th)",
-            )
-            .eq("id", budgetRequestId)
-            .is("archived_at", null)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-    ]);
+  const [
+    { data: organizations, error: orgError },
+    { data: cycles, error: cycleError },
+    recordResult,
+  ] = await Promise.all([
+    supabase.from("organizations").select("id,name_th").eq("is_active", true).order("name_th"),
+    supabase
+      .from("budget_cycles")
+      .select("id,fiscal_year_id,fiscal_years!inner(label,status)")
+      .eq("status", "open")
+      .lte("opens_at", currentTimestamp)
+      .gte("closes_at", currentTimestamp)
+      .order("closes_at")
+      .limit(1),
+    budgetRequestId
+      ? supabase
+          .from("budget_requests")
+          .select(
+            "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label),organizations!budget_requests_organization_id_fkey(name_th)",
+          )
+          .eq("id", budgetRequestId)
+          .is("archived_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
 
   const error = orgError ?? cycleError ?? recordResult.error;
   if (error) return result(null, error);
@@ -88,7 +88,10 @@ export async function getBudgetFormOptions(
       ? recordRow.organizations[0]
       : recordRow.organizations
     : null;
-  const organizationOptions = (organizations ?? []).map((item) => ({ id: item.id, name: item.name_th }));
+  const organizationOptions = (organizations ?? []).map((item) => ({
+    id: item.id,
+    name: item.name_th,
+  }));
   if (
     recordRow &&
     recordOrganization &&

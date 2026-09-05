@@ -25,7 +25,11 @@ export function remainingBudget(approvedBudget: number, disbursedAmount: number)
   return Math.max(0, approvedBudget - disbursedAmount);
 }
 
-export function calculateKpiAttainmentPercent(actual: number | null, target: number, direction: KpiDirection): number | null {
+export function calculateKpiAttainmentPercent(
+  actual: number | null,
+  target: number,
+  direction: KpiDirection,
+): number | null {
   if (actual === null || !Number.isFinite(actual) || !Number.isFinite(target)) return null;
   if (direction === "range") return null;
   if (direction === "boolean") {
@@ -33,13 +37,21 @@ export function calculateKpiAttainmentPercent(actual: number | null, target: num
     return actual === target ? 100 : 0;
   }
   if (target === 0) return actual === 0 ? 100 : 0;
-  const ratio = direction === "lower_is_better" ? target / Math.max(actual, 0.0001) : actual / target;
+  const ratio =
+    direction === "lower_is_better" ? target / Math.max(actual, 0.0001) : actual / target;
   return Math.min(150, Math.max(0, ratio * 100));
 }
 
-export function evaluateKpiResult(actual: number, target: number, direction: KpiDirection): KpiEvaluation {
+export function evaluateKpiResult(
+  actual: number,
+  target: number,
+  direction: KpiDirection,
+): KpiEvaluation {
   if (direction === "range") {
-    return { success: false, message: "ตัวชี้วัดแบบช่วงต้องกำหนดค่าต่ำสุดและค่าสูงสุดก่อนบันทึกผล" };
+    return {
+      success: false,
+      message: "ตัวชี้วัดแบบช่วงต้องกำหนดค่าต่ำสุดและค่าสูงสุดก่อนบันทึกผล",
+    };
   }
 
   if (direction === "boolean") {

@@ -6,8 +6,14 @@ import { updatePasswordSchema } from "@/lib/auth/schemas";
 
 export type UpdatePasswordState = { error?: string };
 
-export async function updatePasswordAction(_previous: UpdatePasswordState, formData: FormData): Promise<UpdatePasswordState> {
-  const parsed = updatePasswordSchema.safeParse({ password: formData.get("password"), confirmPassword: formData.get("confirmPassword") });
+export async function updatePasswordAction(
+  _previous: UpdatePasswordState,
+  formData: FormData,
+): Promise<UpdatePasswordState> {
+  const parsed = updatePasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();

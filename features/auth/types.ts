@@ -2,7 +2,12 @@ import type { Enums } from "@/types/database.generated";
 
 export type AppRole = Enums<"app_role">;
 
-export const APP_ROLES = ["admin", "user", "executive", "staff"] as const satisfies readonly AppRole[];
+export const APP_ROLES = [
+  "admin",
+  "user",
+  "executive",
+  "staff",
+] as const satisfies readonly AppRole[];
 
 export const APP_ROLE_LABELS: Readonly<Record<AppRole, string>> = {
   admin: "ผู้ดูแลระบบ",

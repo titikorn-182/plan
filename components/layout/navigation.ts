@@ -36,15 +36,30 @@ const WORKSPACE_TITLES: ReadonlyArray<{
   matches: (pathname: string) => boolean;
   title: string;
 }> = [
-  { matches: (pathname) => /^\/budget-requests\/[^/]+\/edit$/.test(pathname), title: "แก้ไขคำของบประมาณ" },
+  {
+    matches: (pathname) => /^\/budget-requests\/[^/]+\/edit$/.test(pathname),
+    title: "แก้ไขคำของบประมาณ",
+  },
   { matches: (pathname) => pathname === "/budget-requests/new", title: "สร้างคำของบประมาณ" },
   { matches: (pathname) => pathname === "/budget-requests", title: "คำของบประมาณประจำปี" },
-  { matches: (pathname) => /^\/projects\/[^/]+\/edit$/.test(pathname), title: "แก้ไขข้อเสนอโครงการ" },
+  {
+    matches: (pathname) => /^\/projects\/[^/]+\/edit$/.test(pathname),
+    title: "แก้ไขข้อเสนอโครงการ",
+  },
   { matches: (pathname) => pathname === "/projects/new", title: "สร้างข้อเสนอโครงการ" },
   { matches: (pathname) => pathname === "/projects", title: "บริหารกิจกรรมและโครงการ" },
-  { matches: (pathname) => /^\/reports\/quarterly\/[^/]+\/edit$/.test(pathname), title: "แก้ไขรายงานรายไตรมาส" },
-  { matches: (pathname) => pathname === "/reports/quarterly/new", title: "บันทึกผลดำเนินงานรายไตรมาส" },
-  { matches: (pathname) => pathname === "/reports/quarterly", title: "ติดตามผลการดำเนินงานรายไตรมาส" },
+  {
+    matches: (pathname) => /^\/reports\/quarterly\/[^/]+\/edit$/.test(pathname),
+    title: "แก้ไขรายงานรายไตรมาส",
+  },
+  {
+    matches: (pathname) => pathname === "/reports/quarterly/new",
+    title: "บันทึกผลดำเนินงานรายไตรมาส",
+  },
+  {
+    matches: (pathname) => pathname === "/reports/quarterly",
+    title: "ติดตามผลการดำเนินงานรายไตรมาส",
+  },
   { matches: (pathname) => pathname === "/reports", title: "รายงานและส่งออกข้อมูล" },
   { matches: (pathname) => pathname === "/disbursements/new", title: "บันทึกการเบิกจ่าย" },
   { matches: (pathname) => pathname === "/disbursements", title: "ติดตามการเบิกจ่ายงบประมาณ" },

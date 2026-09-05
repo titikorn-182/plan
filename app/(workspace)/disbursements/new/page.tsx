@@ -4,5 +4,9 @@ import { getDisbursementFormOptions } from "@/features/disbursements/queries";
 
 export default async function NewDisbursementPage() {
   const result = await getDisbursementFormOptions();
-  return result.error ? <DataError message={result.error} /> : <DisbursementForm options={result.data} />;
+  return result.error ? (
+    <DataError message={result.error} />
+  ) : (
+    <DisbursementForm options={result.data} />
+  );
 }

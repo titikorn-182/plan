@@ -4,5 +4,9 @@ import { getQuarterlyReportFormOptions } from "@/features/quarterly-reports/quer
 
 export default async function NewQuarterlyReportPage() {
   const result = await getQuarterlyReportFormOptions();
-  return result.error || !result.data ? <DataError message={result.error ?? "ไม่สามารถเตรียมแบบฟอร์มได้"} /> : <QuarterlyReportForm options={result.data} />;
+  return result.error || !result.data ? (
+    <DataError message={result.error ?? "ไม่สามารถเตรียมแบบฟอร์มได้"} />
+  ) : (
+    <QuarterlyReportForm options={result.data} />
+  );
 }

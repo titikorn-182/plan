@@ -4,5 +4,9 @@ import { getWorkflowInbox } from "@/features/approvals/queries";
 
 export default async function ApprovalsPage() {
   const result = await getWorkflowInbox();
-  return result.error ? <DataError message={result.error} /> : <ApprovalsView tasks={result.data} />;
+  return result.error ? (
+    <DataError message={result.error} />
+  ) : (
+    <ApprovalsView tasks={result.data} />
+  );
 }

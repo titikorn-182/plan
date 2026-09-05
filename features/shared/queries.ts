@@ -40,7 +40,8 @@ function quarterForDate(
   }
   if (now <= start) return 1;
   if (now >= end) return 4;
-  const monthDifference = (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth();
+  const monthDifference =
+    (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth();
   return toQuarter(Math.floor(monthDifference / 3) + 1);
 }
 

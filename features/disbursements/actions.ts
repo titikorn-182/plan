@@ -9,6 +9,7 @@ import {
   refreshOperations,
 } from "@/features/shared/server-actions";
 import { remainingBudget } from "@/lib/operations/rules";
+import { formatThaiInteger } from "@/features/shared/formatters";
 
 const disbursementSchema = z.object({
   projectId: z.string().uuid("กรุณาเลือกโครงการ"),
@@ -28,7 +29,8 @@ export async function saveDisbursementAction(
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId)
+    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
@@ -42,12 +44,15 @@ export async function saveDisbursementAction(
     return { ...previous, success: false, message: "ปีงบประมาณไม่ตรงกับโครงการ" };
   }
 
-  const remaining = remainingBudget(Number(project.approved_budget), Number(project.disbursed_amount));
+  const remaining = remainingBudget(
+    Number(project.approved_budget),
+    Number(project.disbursed_amount),
+  );
   if (input.amount > remaining) {
     return {
       ...previous,
       success: false,
-      errors: { amount: [`ยอดสูงกว่าวงเงินคงเหลือ ${remaining.toLocaleString("th-TH")} บาท`] },
+      errors: { amount: [`ยอดสูงกว่าวงเงินคงเหลือ ${formatThaiInteger(remaining)} บาท`] },
       message: "ไม่สามารถบันทึกยอดเกินวงเงินอนุมัติ",
     };
   }

@@ -1,7 +1,8 @@
 import type { Enums } from "@/types/database.generated";
 
 export type DocumentStatus = Enums<"document_status">;
-export type BudgetStatus = "ฉบับร่าง" | "รอตรวจสอบ" | "รออนุมัติ" | "อนุมัติแล้ว" | "ส่งกลับแก้ไข" | "ยกเลิก";
+export type BudgetStatus =
+  "ฉบับร่าง" | "รอตรวจสอบ" | "รออนุมัติ" | "อนุมัติแล้ว" | "ส่งกลับแก้ไข" | "ยกเลิก";
 
 export const BUDGET_STATUS_LABELS: Readonly<Record<string, BudgetStatus>> = {
   draft: "ฉบับร่าง",

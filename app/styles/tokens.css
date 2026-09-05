@@ -1,0 +1,17 @@
+:root {
+  --orange-700: #d83b0b;
+  --orange-600: #ee4f16;
+  --orange-500: #f45a24;
+  --orange-100: #ffedd5;
+  --orange-50: #fff7ed;
+  --surface: #ffffff;
+  --background: #fffaf6;
+  --ink: #1c1917;
+  --muted: #57534e;
+  --line: #dedbd8;
+  --line-strong: #c9c5c1;
+  --success: #15803d;
+  --warning: #a16207;
+  --danger: #b91c1c;
+  --focus: #9a3412;
+}

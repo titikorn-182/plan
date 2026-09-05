@@ -1,10 +1,7 @@
 import "server-only";
 
 import { DISBURSEMENT_STATUS_LABELS } from "@/features/disbursements/types";
-import type {
-  DisbursementFormOptions,
-  DisbursementRow,
-} from "@/features/disbursements/types";
+import type { DisbursementFormOptions, DisbursementRow } from "@/features/disbursements/types";
 import { getAccessibleProjects } from "@/features/projects/queries";
 import { hasValues, result } from "@/features/shared/query-utils";
 import { getOrganizationsAndYears } from "@/features/shared/queries";
@@ -38,7 +35,10 @@ export async function getDisbursements(): Promise<DataResult<DisbursementRow[]>>
 }
 
 export async function getDisbursementFormOptions(): Promise<DataResult<DisbursementFormOptions>> {
-  const [projects, common] = await Promise.all([getAccessibleProjects(), getOrganizationsAndYears()]);
+  const [projects, common] = await Promise.all([
+    getAccessibleProjects(),
+    getOrganizationsAndYears(),
+  ]);
   return result(
     { projects: projects.data, fiscalYears: common.fiscalYears },
     projects.error ?? common.error,

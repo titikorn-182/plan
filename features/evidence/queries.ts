@@ -14,9 +14,21 @@ export async function getEvidenceWorkspace(): Promise<
 > {
   const supabase = await createClient();
   const [evidence, budgets, projects, reports, kpis] = await Promise.all([
-    supabase.from("evidence_register").select("*").order("uploaded_at", { ascending: false }).limit(200),
-    supabase.from("budget_requests").select("id,code,title_th,organization_id").is("archived_at", null).order("code"),
-    supabase.from("projects").select("id,code,title_th,organization_id").is("archived_at", null).order("code"),
+    supabase
+      .from("evidence_register")
+      .select("*")
+      .order("uploaded_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("budget_requests")
+      .select("id,code,title_th,organization_id")
+      .is("archived_at", null)
+      .order("code"),
+    supabase
+      .from("projects")
+      .select("id,code,title_th,organization_id")
+      .is("archived_at", null)
+      .order("code"),
     supabase
       .from("quarterly_reports")
       .select("id,quarter,organization_id,projects!inner(code,title_th)")
@@ -84,9 +96,8 @@ export async function getEvidenceWorkspace(): Promise<
             "is_verified",
           ]),
         )
-        .filter(
-          (row): row is typeof row & { entity_type: EvidenceRow["entityType"] } =>
-            isEvidenceEntityType(row.entity_type),
+        .filter((row): row is typeof row & { entity_type: EvidenceRow["entityType"] } =>
+          isEvidenceEntityType(row.entity_type),
         )
         .map((row) => ({
           id: row.id,

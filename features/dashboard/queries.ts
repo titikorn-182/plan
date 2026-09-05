@@ -10,6 +10,7 @@ import {
 } from "@/features/dashboard/types";
 import { isKpiDirection, type KpiDirection, type KpiResultState } from "@/features/kpi/types";
 import { formatDate, hasValues, isRecord, result } from "@/features/shared/query-utils";
+import { formatThaiInteger, formatThaiMoney } from "@/features/shared/formatters";
 import { getReportingPeriod } from "@/features/shared/queries";
 import type { DataResult } from "@/features/shared/types";
 import {
@@ -18,11 +19,6 @@ import {
   getQuarterProgressTarget,
 } from "@/lib/operations/rules";
 import { createClient } from "@/lib/supabase/server";
-
-const money = new Intl.NumberFormat("th-TH", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 interface DashboardKpi {
   id: string;
@@ -49,10 +45,16 @@ export async function getDashboardData(): Promise<
   const [queue, organizations, budgets, projects, disbursements, kpis, attachments] =
     await Promise.all([
       supabase.from("decision_queue").select("*").order("sort_key", { ascending: false }).limit(50),
-      supabase.from("organizations").select("id,code,name_th").eq("is_active", true).order("name_th"),
+      supabase
+        .from("organizations")
+        .select("id,code,name_th")
+        .eq("is_active", true)
+        .order("name_th"),
       supabase.from("budget_request_register").select("organization_id,unit,amount"),
       supabase.from("project_register").select("organization_id,unit,budget,progress"),
-      supabase.from("disbursement_register").select("organization_id,unit,approved,q1,q2,q3,q4,target"),
+      supabase
+        .from("disbursement_register")
+        .select("organization_id,unit,approved,q1,q2,q3,q4,target"),
       supabase
         .from("kpi_results")
         .select(
@@ -108,9 +110,8 @@ export async function getDashboardData(): Promise<
         "progress",
       ]),
     )
-    .filter(
-      (row): row is typeof row & { stage: DecisionRecord["stage"] } =>
-        isDecisionStage(row.stage),
+    .filter((row): row is typeof row & { stage: DecisionRecord["stage"] } =>
+      isDecisionStage(row.stage),
     )
     .map((row) => {
       const evidence = Array.isArray(row.evidence) ? row.evidence : [];
@@ -132,7 +133,7 @@ export async function getDashboardData(): Promise<
         amount:
           row.amount_value === null
             ? (row.amount_note ?? "—")
-            : money.format(Number(row.amount_value)),
+            : formatThaiMoney(Number(row.amount_value)),
         severity: SEVERITY_LABELS[row.severity] ?? "ปานกลาง",
         owner: row.owner,
         coordinator: row.coordinator,
@@ -158,13 +159,13 @@ export async function getDashboardData(): Promise<
       accumulator[row.stage] += 1;
       return accumulator;
     },
-    { "คำของบ": 0, "โครงการ": 0, "ดำเนินงาน": 0, "เบิกจ่าย": 0, KPI: 0 },
+    { คำของบ: 0, โครงการ: 0, ดำเนินงาน: 0, เบิกจ่าย: 0, KPI: 0 },
   );
   const lifecycle: LifecycleItem[] = (
     ["คำของบ", "โครงการ", "ดำเนินงาน", "เบิกจ่าย", "KPI"] as const
   ).map((label) => ({
     label,
-    count: new Intl.NumberFormat("th-TH").format(counts[label]),
+    count: formatThaiInteger(counts[label]),
     helper:
       label === "KPI"
         ? "ตัวชี้วัด"
@@ -242,8 +243,7 @@ export async function getDashboardData(): Promise<
 
   const matrix = Array.from(byOrganization.values())
     .filter(
-      (row) =>
-        row.requested > 0 || row.approved > 0 || row.kpiTotal > 0 || row.evidenceTotal > 0,
+      (row) => row.requested > 0 || row.approved > 0 || row.kpiTotal > 0 || row.evidenceTotal > 0,
     )
     .map<CommandCenterRow>((row) => {
       const progress = row.projectCount > 0 ? row.progressTotal / row.projectCount : 0;
@@ -256,7 +256,8 @@ export async function getDashboardData(): Promise<
           ? "noData"
           : progress < Math.max(0, progressTarget - COMMAND_CENTER_THRESHOLDS.riskGap) ||
               (hasDeliveryData &&
-                disbursement < Math.max(0, disbursementTarget - COMMAND_CENTER_THRESHOLDS.riskGap)) ||
+                disbursement <
+                  Math.max(0, disbursementTarget - COMMAND_CENTER_THRESHOLDS.riskGap)) ||
               (kpiScore !== null && kpiScore < COMMAND_CENTER_THRESHOLDS.kpiRisk)
             ? "risk"
             : progress >= progressTarget + COMMAND_CENTER_THRESHOLDS.aheadGap &&

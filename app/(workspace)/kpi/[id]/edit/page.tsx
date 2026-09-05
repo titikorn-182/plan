@@ -7,5 +7,9 @@ export default async function EditKpiResultPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const result = await getKpiResultFormRecord(id);
   if (!result.error && !result.data) notFound();
-  return result.error || !result.data ? <DataError message={result.error ?? "ไม่พบตัวชี้วัด"} /> : <KpiResultForm record={result.data} />;
+  return result.error || !result.data ? (
+    <DataError message={result.error ?? "ไม่พบตัวชี้วัด"} />
+  ) : (
+    <KpiResultForm record={result.data} />
+  );
 }

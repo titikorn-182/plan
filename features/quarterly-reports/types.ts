@@ -3,7 +3,8 @@ import type { ProjectOption } from "@/features/projects/types";
 import type { FiscalYearOption } from "@/features/shared/types";
 
 export type ReportStatus = Enums<"report_status">;
-export type QuarterlyReportStatusLabel = "ฉบับร่าง" | "รอตรวจ" | "เกินกำหนด" | "อนุมัติแล้ว" | "ต้องแก้ไข";
+export type QuarterlyReportStatusLabel =
+  "ฉบับร่าง" | "รอตรวจ" | "เกินกำหนด" | "อนุมัติแล้ว" | "ต้องแก้ไข";
 
 export const REPORT_STATUS_LABELS: Readonly<Record<string, QuarterlyReportStatusLabel>> = {
   draft: "ฉบับร่าง",

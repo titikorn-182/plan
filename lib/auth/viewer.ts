@@ -20,7 +20,11 @@ export const getViewer = cache(async (): Promise<Viewer> => {
   const [{ data: profile }, { data: roleRows }, { count }] = await Promise.all([
     supabase.from("profiles").select("full_name,email").eq("id", claims.sub).maybeSingle(),
     supabase.from("user_roles").select("role").eq("profile_id", claims.sub),
-    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("recipient_id", claims.sub).is("read_at", null),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", claims.sub)
+      .is("read_at", null),
   ]);
 
   const roles = (roleRows ?? []).map((item) => item.role);

@@ -37,7 +37,8 @@ export async function saveKpiResultAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId)
+    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
   const { data: current, error: currentError } = await supabase
     .from("kpi_results")
     .select("kpi_definitions!inner(target,direction)")
@@ -78,7 +79,11 @@ export async function saveKpiResultAction(
     .maybeSingle();
   if (error) return { ...previous, success: false, message: friendlyError(error) };
   if (!data) {
-    return { ...previous, success: false, message: "ผล KPI ถูกแก้ไขหรือรับรองไปแล้ว กรุณาเปิดหน้าใหม่" };
+    return {
+      ...previous,
+      success: false,
+      message: "ผล KPI ถูกแก้ไขหรือรับรองไปแล้ว กรุณาเปิดหน้าใหม่",
+    };
   }
 
   if (input.intent === "submit") {
