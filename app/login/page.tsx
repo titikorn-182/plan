@@ -9,7 +9,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="grid min-h-screen bg-[#f7f5f2] lg:grid-cols-[minmax(420px,0.85fr)_1.15fr]">
       <section className="flex items-center justify-center bg-white px-6 py-12">
         <div className="w-full max-w-md">
-          <header className="mb-9">
+          <header className="mb-8">
             <div className="flex items-center gap-3">
               <span className="grid size-16 shrink-0 place-items-center border border-stone-200 bg-[#efefef]">
                 <Image
@@ -30,8 +30,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                 />
               </span>
             </div>
-            <p className="mt-3 max-w-[23rem] text-lg font-extrabold leading-[1.38] tracking-[-0.015em] text-stone-950">
-              ระบบบริหารจัดการงบประมาณและการบริหารกิจกรรมโครงการ
+            <p className="mt-3 max-w-md text-[17px] font-extrabold leading-[1.45] tracking-[-0.015em] text-stone-950">
+              ระบบบริหารจัดการงบประมาณและการบริหารกิจกรรมโครงการ คณะรัฐศาสตร์ มหาวิทยาลัยอุบลราชธานี
             </p>
           </header>
           <h1 className="text-3xl font-bold tracking-[-0.03em]">เข้าสู่ระบบเพื่อดำเนินงาน</h1>
