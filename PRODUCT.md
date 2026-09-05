@@ -63,7 +63,7 @@ Every summary is intended to be explainable and drillable to its source record, 
 
 - Orange and white are binding brand colors supplied by the user.
 - The product should feel appropriate for a modern university administrative system: clear, credible, and task-oriented.
-- No official product name, logo, seal, font, or institutional brand guide has been supplied. Do not fabricate them.
+- Sarabun is the supplied interface font, and the supplied university and faculty marks anchor the login identity. No complete institutional brand guide has been supplied; do not infer additional brand rules.
 
 ## Evidence on Hand
 

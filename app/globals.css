@@ -77,7 +77,7 @@
   padding: 8px 13px;
   color: #302e2b;
   font-size: 11.5px;
-  font-weight: 570;
+  font-weight: 600;
   line-height: 1.25;
   text-decoration: none;
   transition: color 150ms ease, background-color 150ms ease;
@@ -286,7 +286,7 @@
 .cc-section-heading a {
   color: var(--orange-700);
   font-size: 9.5px;
-  font-weight: 650;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -351,7 +351,7 @@
 .cc-queue-item b {
   margin-top: 4px;
   font-size: 9.5px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .cc-queue-item em {
@@ -504,7 +504,7 @@
 
 .cc-unit-cell strong { font-size: 10.5px; }
 .cc-unit-cell span { margin-top: 2px; color: #6c6762; font-size: 8px; }
-.cc-unit-cell em { margin-top: 2px; color: var(--orange-600); font-size: 8px; font-style: normal; font-weight: 650; }
+.cc-unit-cell em { margin-top: 2px; color: var(--orange-600); font-size: 8px; font-style: normal; font-weight: 700; }
 
 .cc-metric-cell > div,
 .cc-kpi-cell {
@@ -644,7 +644,7 @@
 }
 
 .cc-inspector-identity { padding: 11px 13px 9px; }
-.cc-inspector-identity > span { display: block; font-size: 11px; font-weight: 750; }
+.cc-inspector-identity > span { display: block; font-size: 11px; font-weight: 700; }
 .cc-inspector-identity > strong { display: block; margin-top: 2px; color: #65605b; font-size: 9px; }
 .cc-inspector-identity p { display: flex; align-items: center; gap: 6px; margin: 5px 0 0; color: #4f4a46; font-size: 8.5px; }
 
@@ -701,7 +701,7 @@
 }
 
 .cc-inspector-facts dt { color: #625d58; }
-.cc-inspector-facts dd { margin: 0; font-weight: 750; }
+.cc-inspector-facts dd { margin: 0; font-weight: 700; }
 
 .cc-top-evidence {
   margin-top: 12px;
@@ -759,7 +759,7 @@
   color: #46413d;
   background: #fff;
   font-size: 8.5px;
-  font-weight: 650;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -915,12 +915,12 @@
   padding: 8px 14px;
   color: #393531;
   font-size: 12px;
-  font-weight: 570;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .module-command-sidebar nav a:hover { color: var(--orange-700); background: #fff7f2; }
-.module-command-sidebar nav a.active { border-left-color: #fff; color: #fff; background: var(--orange-600); font-weight: 750; }
+.module-command-sidebar nav a.active { border-left-color: #fff; color: #fff; background: var(--orange-600); font-weight: 700; }
 
 .module-command-account {
   display: grid;
@@ -1068,7 +1068,7 @@ body {
   min-width: 320px;
   background: var(--background);
   color: var(--ink);
-  font-family: "Noto Sans Thai Variable", "Leelawadee UI", Tahoma, sans-serif;
+  font-family: var(--font-sarabun);
   text-rendering: optimizeLegibility;
 }
 
@@ -1229,18 +1229,18 @@ a:focus-visible,
 
 .brand-block strong {
   display: block;
-  font-family: "Noto Sans Thai Variable", sans-serif;
+  font-family: var(--font-sarabun);
   font-size: 25px;
-  font-weight: 780;
+  font-weight: 800;
   letter-spacing: -0.025em;
 }
 
 .brand-block h1 {
   margin: 14px 0 0;
   color: var(--orange-700);
-  font-family: "Noto Sans Thai Variable", sans-serif;
+  font-family: var(--font-sarabun);
   font-size: 24px;
-  font-weight: 720;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
@@ -1278,7 +1278,7 @@ a:focus-visible,
   display: block;
   color: var(--orange-600);
   font-size: 14px;
-  font-weight: 680;
+  font-weight: 700;
 }
 
 .lifecycle-item small {
@@ -1320,7 +1320,7 @@ a:focus-visible,
   color: #292524;
   background: #fff;
   font-size: 11px;
-  font-weight: 560;
+  font-weight: 600;
 }
 
 .fiscal-controls button:hover,
@@ -1367,7 +1367,7 @@ a:focus-visible,
 .exception-section h2 {
   margin: 0;
   font-size: 19px;
-  font-weight: 720;
+  font-weight: 700;
   letter-spacing: -0.015em;
 }
 
@@ -1458,7 +1458,7 @@ a:focus-visible,
   height: 42px;
   color: #44403c;
   background: #faf9f8;
-  font-weight: 650;
+  font-weight: 700;
   text-align: left;
   white-space: nowrap;
 }
@@ -1494,7 +1494,7 @@ a:focus-visible,
   overflow: hidden;
   color: #292524;
   font-size: 11.5px;
-  font-weight: 680;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1543,7 +1543,7 @@ a:focus-visible,
   border-radius: 5px;
   padding: 4px 8px;
   font-size: 11.5px;
-  font-weight: 650;
+  font-weight: 700;
   line-height: 1;
   white-space: nowrap;
 }
@@ -1647,7 +1647,7 @@ a:focus-visible,
 .exception-register article > b {
   color: var(--orange-600);
   font-size: 29px;
-  font-weight: 680;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1678,7 +1678,7 @@ a:focus-visible,
 .dossier-toolbar h2 {
   margin: 0;
   font-size: 17px;
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .toolbar-actions,
@@ -1730,7 +1730,7 @@ a:focus-visible,
 .dossier-heading-block h3 {
   margin: 11px 0 2px;
   font-size: 16px;
-  font-weight: 720;
+  font-weight: 700;
   line-height: 1.45;
 }
 
@@ -1791,7 +1791,7 @@ a:focus-visible,
   display: block;
   color: #78716c;
   font-size: 11px;
-  font-weight: 450;
+  font-weight: 500;
 }
 
 .budget-block dl div {
@@ -1803,7 +1803,7 @@ a:focus-visible,
 .fact-list dt,
 .budget-block dt {
   color: #44403c;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .fact-list dd,
@@ -1834,7 +1834,7 @@ a:focus-visible,
 .evidence-block h3 {
   margin: 0;
   font-size: 13px;
-  font-weight: 720;
+  font-weight: 700;
 }
 
 .budget-block h3 { color: #17456c; }
@@ -1934,7 +1934,7 @@ a:focus-visible,
 .evidence-block li > svg { color: #57534e; }
 .evidence-block li b,
 .evidence-block li small { display: block; }
-.evidence-block li b { overflow: hidden; font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
+.evidence-block li b { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .evidence-block li small { color: #78716c; }
 .evidence-date { font-size: 12.5px; text-align: left; white-space: nowrap; }
 .evidence-date strong { color: #292524; font-weight: 700; }
@@ -1969,7 +1969,7 @@ a:focus-visible,
   color: #0f5f9c;
   background: transparent;
   font-size: 10.5px;
-  font-weight: 650;
+  font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -1988,7 +1988,7 @@ a:focus-visible,
   background: var(--orange-700);
   box-shadow: 0 8px 22px rgba(124, 45, 18, 0.2);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .notification-button {

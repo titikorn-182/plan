@@ -23,31 +23,31 @@ colors:
   status-no-data: "#8a8b8d"
 typography:
   display:
-    fontFamily: "Noto Sans Thai Variable, Leelawadee UI, Tahoma, sans-serif"
+    fontFamily: "Sarabun, Leelawadee UI, Tahoma, sans-serif"
     fontSize: "21px"
     fontWeight: 800
     lineHeight: 1.2
     letterSpacing: "-0.025em"
   headline:
-    fontFamily: "Noto Sans Thai Variable, Leelawadee UI, Tahoma, sans-serif"
+    fontFamily: "Sarabun, Leelawadee UI, Tahoma, sans-serif"
     fontSize: "14px"
     fontWeight: 800
     lineHeight: 1.25
     letterSpacing: "normal"
   title:
-    fontFamily: "Noto Sans Thai Variable, Leelawadee UI, Tahoma, sans-serif"
+    fontFamily: "Sarabun, Leelawadee UI, Tahoma, sans-serif"
     fontSize: "12px"
     fontWeight: 700
     lineHeight: 1.25
     letterSpacing: "normal"
   body:
-    fontFamily: "Noto Sans Thai Variable, Leelawadee UI, Tahoma, sans-serif"
+    fontFamily: "Sarabun, Leelawadee UI, Tahoma, sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "normal"
   label:
-    fontFamily: "Noto Sans Thai Variable, Leelawadee UI, Tahoma, sans-serif"
+    fontFamily: "Sarabun, Leelawadee UI, Tahoma, sans-serif"
     fontSize: "11px"
     fontWeight: 600
     lineHeight: 1.25
@@ -196,8 +196,9 @@ Vivid institutional orange is the single brand accent. White and a very light ne
 
 ## Typography
 
-**Display Font:** Noto Sans Thai Variable (with Leelawadee UI, Tahoma, and sans-serif fallbacks)  
-**Body Font:** Noto Sans Thai Variable (with the same fallbacks)  
+**Display Font:** Sarabun (with Leelawadee UI, Tahoma, and sans-serif fallbacks)
+
+**Body Font:** Sarabun (with the same fallbacks)
 **Numeric Treatment:** tabular numerals for budgets, percentages, fiscal years, counts, ranks, and evidence totals.
 
 **Character:** One highly functional Thai sans family keeps the system credible and compact across long institutional names and numeric comparison. Hierarchy comes from weight, alignment, and position rather than a second display face.
@@ -327,7 +328,7 @@ The dominant form is rectangular and ledger-like. Navigation rows, queue records
 - **Do** begin executive surfaces with decisions, cross-unit comparison, and evidence inspection instead of detached summary decoration.
 - **Do** preserve the organization → project → KPI → quarterly report evidence chain in data, labels, links, and responsive transformations.
 - **Do** source dashboard records and aggregates from authenticated Supabase/RLS queries; show an explicit error state when live data cannot be read.
-- **Do** use Noto Sans Thai Variable, Buddhist Era fiscal context, THB units, tabular numerals, and readable Thai wrapping.
+- **Do** use Sarabun, Buddhist Era fiscal context, THB units, tabular numerals, and readable Thai wrapping.
 - **Do** reuse the full-text command sidebar, sticky period bar, decision queue, ruled matrix, status legend, and inspector vocabulary across adjacent executive workflows.
 - **Do** retain visible keyboard focus, `aria-current`, `aria-selected`, `aria-pressed`, labelled regions, labelled icon controls, and print behavior.
 - **Do** keep server validation beside the affected field and announce form, review, and workflow outcomes through an appropriate live region.
@@ -348,7 +349,7 @@ The dominant form is rectangular and ledger-like. Navigation rows, queue records
 
 - Put the decision, comparison, source record, or evidence task before aggregate decoration.
 - Preserve the 190–206px text sidebar, 58px utility bar, 1100px inspector stack, 960px compact rail, and fixed bottom-navigation behavior where the corresponding shell applies.
-- Use named colors, the Noto Sans Thai scale, compact 4/8/12px spacing, crisp ledger rules, and square geometry.
+- Use named colors, the Sarabun scale, compact 4/8/12px spacing, crisp ledger rules, and square geometry.
 - Verify RLS-scoped empty/error states, keyboard order, focus visibility, Thai wrapping, 200% zoom, and reduced motion.
 - Verify inline error linkage, polite outcome announcements, pending/disabled actions, role-gated decisions, and the three-point project readiness calculation.
 - Capture fresh desktop and mobile screenshots when the in-app browser becomes available; until then, treat this implementation as code/build verified rather than visually reviewed.
