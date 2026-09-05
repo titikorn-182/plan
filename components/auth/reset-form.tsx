@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { requestPasswordReset, type ResetState } from "@/app/forgot-password/actions";
 
 export function ResetForm() {
-  const [state, action, pending] = useActionState(requestPasswordReset, {} as ResetState);
+  const [state, action, pending] = useActionState(requestPasswordReset, {} satisfies ResetState);
   return (
     <form action={action} className="mt-7 space-y-4">
       <label className="block" htmlFor="reset-email"><span className="text-xs font-semibold">อีเมลสถาบัน</span><input className="mt-2 h-12 w-full border border-stone-300 px-3 text-sm outline-none focus:border-[#d8470c] focus:ring-2 focus:ring-orange-100" id="reset-email" name="email" type="email" autoComplete="email" required /></label>

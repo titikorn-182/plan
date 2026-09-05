@@ -1,11 +1,73 @@
-export type AppRole = "admin" | "user" | "executive" | "staff";
+import type { Enums } from "@/types/database.generated";
+
+export type AppRole = Enums<"app_role">;
+export type DocumentStatus = Enums<"document_status">;
+export type ProjectStatus = Enums<"project_status">;
+export type ReportStatus = Enums<"report_status">;
+export type DisbursementStatus = Enums<"disbursement_status">;
+export type KpiResultStatus = Enums<"kpi_result_status">;
+export type KpiResultState = Enums<"result_state">;
+
+export const APP_ROLES = ["admin", "user", "executive", "staff"] as const satisfies readonly AppRole[];
+export const KPI_RESULT_STATUSES = ["not_started", "draft", "submitted", "revision_required", "verified", "overdue", "not_applicable"] as const satisfies readonly KpiResultStatus[];
+
+export const KPI_DIRECTIONS = ["higher_is_better", "lower_is_better", "range", "boolean"] as const;
+export type KpiDirection = (typeof KPI_DIRECTIONS)[number];
+
+export const KPI_FRAMEWORKS = ["EdPEx", "AUN-QA", "Internal"] as const;
+export type KpiFramework = (typeof KPI_FRAMEWORKS)[number];
+
+export const EVIDENCE_ENTITY_TYPES = ["budget_request", "project", "quarterly_report", "kpi_result"] as const;
+export type EvidenceEntityType = (typeof EVIDENCE_ENTITY_TYPES)[number];
+
+export const WORKFLOW_STATUSES = ["pending", "approved", "revision_required", "rejected", "cancelled"] as const;
+export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
+
+export const DECISION_STAGES = ["คำของบ", "โครงการ", "ดำเนินงาน", "เบิกจ่าย", "KPI"] as const;
+
+export function isAppRole(value: unknown): value is AppRole {
+  return typeof value === "string" && APP_ROLES.some((role) => role === value);
+}
+
+export function isKpiResultStatus(value: unknown): value is KpiResultStatus {
+  return typeof value === "string" && KPI_RESULT_STATUSES.some((status) => status === value);
+}
+
+export function isKpiDirection(value: unknown): value is KpiDirection {
+  return typeof value === "string" && KPI_DIRECTIONS.some((direction) => direction === value);
+}
+
+export function isKpiFramework(value: unknown): value is KpiFramework {
+  return typeof value === "string" && KPI_FRAMEWORKS.some((framework) => framework === value);
+}
+
+export function isEvidenceEntityType(value: unknown): value is EvidenceEntityType {
+  return typeof value === "string" && EVIDENCE_ENTITY_TYPES.some((entityType) => entityType === value);
+}
+
+export function isWorkflowStatus(value: unknown): value is WorkflowStatus {
+  return typeof value === "string" && WORKFLOW_STATUSES.some((status) => status === value);
+}
+
+export function isDecisionStage(value: unknown): value is DecisionRecord["stage"] {
+  return typeof value === "string" && DECISION_STAGES.some((stage) => stage === value);
+}
 
 export type Viewer = {
   id: string;
   email: string;
   fullName: string;
+  roles: AppRole[];
   role: AppRole;
   unreadNotifications: number;
+};
+
+export type ReportingPeriod = {
+  fiscalYearId: string | null;
+  fiscalYearLabel: string;
+  buddhistYear: number;
+  quarter: 1 | 2 | 3 | 4;
+  quarterLabel: string;
 };
 
 export type Severity = "สูงมาก" | "สูง" | "ปานกลาง";
@@ -70,6 +132,7 @@ export type BudgetRequest = {
   amount: number;
   status: BudgetStatus;
   updated: string;
+  editable: boolean;
 };
 
 export type ProjectRow = {
@@ -117,12 +180,12 @@ export type KpiRow = {
   code: string;
   name: string;
   owner: string;
-  framework: "EdPEx" | "AUN-QA" | "Internal";
+  framework: KpiFramework;
   target: number;
   actual: number | null;
   unit: string;
   status: "บรรลุ" | "เฝ้าระวัง" | "ต่ำกว่าเป้า" | "ไม่มีข้อมูล";
-  workflowStatus: string;
+  workflowStatus: KpiResultStatus;
 };
 
 export type AdminUser = {
@@ -130,7 +193,7 @@ export type AdminUser = {
   fullName: string;
   email: string;
   active: boolean;
-  roles: string[];
+  roles: AppRole[];
   organizationIds: string[];
 };
 
@@ -142,6 +205,20 @@ export type BudgetFormOptions = {
   fiscalYearLabel: string;
   budgetCycleId: string;
   defaultOwnerName: string;
+  record: BudgetFormRecord | null;
+};
+
+export type BudgetFormRecord = {
+  id: string;
+  code: string;
+  version: number;
+  title: string;
+  organizationId: string;
+  projectType: string;
+  ownerName: string;
+  rationale: string;
+  amount: number;
+  status: DocumentStatus;
 };
 
 export type DataResult<T> = { data: T; error: string | null };
@@ -165,7 +242,7 @@ export type ProjectFormRecord = {
   disbursementTarget: number;
   startsOn: string;
   endsOn: string;
-  status: string;
+  status: ProjectStatus;
   pendingApproval: boolean;
 };
 
@@ -194,7 +271,7 @@ export type QuarterlyReportFormRecord = {
   progress: number;
   summary: string;
   problems: string;
-  status: string;
+  status: ReportStatus;
 };
 
 export type QuarterlyReportFormOptions = {
@@ -213,21 +290,21 @@ export type KpiResultFormRecord = {
   version: number;
   code: string;
   name: string;
-  framework: string;
+  framework: KpiFramework;
   frameworkVersion: string;
   calculationMethod: string;
   unit: string;
   target: number;
-  direction: "higher_is_better" | "lower_is_better" | "range" | "boolean";
+  direction: KpiDirection;
   actual: number | null;
   quarter: number | null;
   explanation: string;
-  status: string;
+  status: KpiResultStatus;
   evidenceCount: number;
 };
 
 export type EvidenceEntityOption = SelectOption & {
-  entityType: "budget_request" | "project" | "quarterly_report" | "kpi_result";
+  entityType: EvidenceEntityType;
   organizationId: string;
 };
 
@@ -236,7 +313,7 @@ export type EvidenceRow = {
   businessId: string;
   title: string;
   unit: string;
-  entityType: string;
+  entityType: EvidenceEntityType;
   fileName: string;
   storagePath: string;
   mimeType: string;
@@ -247,13 +324,13 @@ export type EvidenceRow = {
 
 export type WorkflowTask = {
   id: string;
-  entityType: string;
+  entityType: EvidenceEntityType;
   entityId: string;
   businessId: string;
   title: string;
   unit: string;
-  requiredRole: string;
-  status: string;
+  requiredRole: AppRole;
+  status: WorkflowStatus;
   dueAt: string;
   createdAt: string;
   canAct: boolean;

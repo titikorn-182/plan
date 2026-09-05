@@ -5,6 +5,11 @@ import type { AppRole, Viewer } from "@/lib/domain";
 
 const priority: AppRole[] = ["admin", "executive", "user", "staff"];
 
+function readFullName(metadata: unknown) {
+  if (typeof metadata !== "object" || metadata === null || !("full_name" in metadata)) return null;
+  return typeof metadata.full_name === "string" ? metadata.full_name : null;
+}
+
 export const getViewer = cache(async (): Promise<Viewer> => {
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
@@ -18,16 +23,16 @@ export const getViewer = cache(async (): Promise<Viewer> => {
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("recipient_id", claims.sub).is("read_at", null),
   ]);
 
-  const roles = ((roleRows ?? []) as { role: AppRole }[]).map((item) => item.role);
+  const roles = (roleRows ?? []).map((item) => item.role);
   const role = priority.find((item) => roles.includes(item)) ?? "staff";
   const email = profile?.email ?? (typeof claims.email === "string" ? claims.email : "");
-  const metadata = claims.user_metadata as { full_name?: unknown } | undefined;
-  const fallbackName = typeof metadata?.full_name === "string" ? metadata.full_name : email.split("@")[0] || "ผู้ใช้งาน";
+  const fallbackName = readFullName(claims.user_metadata) ?? (email.split("@")[0] || "ผู้ใช้งาน");
 
   return {
     id: claims.sub,
     email,
     fullName: profile?.full_name ?? fallbackName,
+    roles,
     role,
     unreadNotifications: count ?? 0,
   };
@@ -35,6 +40,6 @@ export const getViewer = cache(async (): Promise<Viewer> => {
 
 export async function requireAdmin() {
   const viewer = await getViewer();
-  if (viewer.role !== "admin") redirect("/?access=denied");
+  if (!viewer.roles.includes("admin")) redirect("/?access=denied");
   return viewer;
 }

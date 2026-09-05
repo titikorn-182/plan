@@ -8,7 +8,7 @@ import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module
 import type { KpiResultFormRecord } from "@/lib/domain";
 
 export function KpiResultForm({ record }: { record: KpiResultFormRecord }) {
-  const [state, action, pending] = useActionState(saveKpiResultAction, { id: record.id, version: record.version } as OperationState);
+  const [state, action, pending] = useActionState(saveKpiResultAction, { id: record.id, version: record.version } satisfies OperationState);
   const [actual, setActual] = useState(record.actual === null ? "" : String(record.actual));
   const ratio = useMemo(() => {
     if (actual === "" || record.target === 0) return 0;

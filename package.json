@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "types:generate": "supabase gen types typescript --project-id noemwilgvrwpgqavtekm --schema public > types/database.generated.ts",
     "test:uat": "node --experimental-strip-types --test tests/*.test.mjs",
     "capture": "node scripts/capture-screenshot.mjs"
   },
@@ -28,6 +29,7 @@
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.3",
     "eslint-config-next": "16.3.4",
+    "supabase": "^2.116.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3"
   }

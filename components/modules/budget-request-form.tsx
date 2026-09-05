@@ -16,21 +16,24 @@ function Label({ children, required = false }: { children: React.ReactNode; requ
   return <span className="text-xs font-semibold text-stone-700">{children}{required ? <span className="ml-1 text-red-600">*</span> : null}</span>;
 }
 
-const initialState: BudgetRequestState = {};
-
 function FieldError({ errors }: { errors?: string[] }) {
   return errors?.map((error) => <span className="mt-1 block text-xs text-red-700" key={error}>{error}</span>);
 }
 
 export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
+  const record = options.record;
   const [step, setStep] = useState(0);
-  const [title, setTitle] = useState("");
-  const [organizationId, setOrganizationId] = useState(options.organizations[0]?.id ?? "");
-  const [projectType, setProjectType] = useState("โครงการพัฒนาการเรียนการสอน");
-  const [ownerName, setOwnerName] = useState(options.defaultOwnerName);
-  const [rationale, setRationale] = useState("");
-  const [amount, setAmount] = useState("0");
-  const [formState, action, pending] = useActionState(saveBudgetRequestAction, initialState);
+  const [title, setTitle] = useState(record?.title ?? "");
+  const [organizationId, setOrganizationId] = useState(record?.organizationId ?? options.organizations[0]?.id ?? "");
+  const [projectType, setProjectType] = useState(record?.projectType ?? "โครงการพัฒนาการเรียนการสอน");
+  const [ownerName, setOwnerName] = useState(record?.ownerName ?? options.defaultOwnerName);
+  const [rationale, setRationale] = useState(record?.rationale ?? "");
+  const [amount, setAmount] = useState(String(record?.amount ?? 0));
+  const [formState, action, pending] = useActionState(saveBudgetRequestAction, {
+    id: record?.id,
+    code: record?.code,
+    version: record?.version,
+  } satisfies BudgetRequestState);
 
   return (
     <form className="budget-request-form pb-24" action={action}>

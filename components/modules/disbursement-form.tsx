@@ -9,7 +9,7 @@ import { ProgressBar, RegisterSection } from "@/components/ui/module-primitives"
 import type { DisbursementFormOptions } from "@/lib/domain";
 
 export function DisbursementForm({ options }: { options: DisbursementFormOptions }) {
-  const [state, action, pending] = useActionState(saveDisbursementAction, {} as OperationState);
+  const [state, action, pending] = useActionState(saveDisbursementAction, {} satisfies OperationState);
   const [projectId, setProjectId] = useState(options.projects[0]?.id ?? "");
   const selected = useMemo(() => options.projects.find((item) => item.id === projectId), [options.projects, projectId]);
   const remaining = Math.max(0, (selected?.approvedBudget ?? 0) - (selected?.disbursedAmount ?? 0));

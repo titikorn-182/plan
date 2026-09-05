@@ -28,6 +28,17 @@ test("operational migration includes workflow, budget guard, private storage, an
   ["submit_entity_for_approval", "act_on_approval_task", "guard_disbursement_budget", "storage.buckets", "review_evidence", "admin_update_user_access", "workflow_inbox"].forEach((contract) => assert.equal(sql.includes(contract), true, contract));
 });
 
+test("budget submission changes status and creates its approval task atomically", () => {
+  const sql = read("supabase/migrations/202609050001_correctness_and_type_safety.sql");
+  assert.match(sql, /submit_budget_request_for_approval/);
+  assert.match(sql, /for update;/);
+  assert.match(sql, /task_id := public\.submit_entity_for_approval/);
+
+  const action = read("app/budget-requests/actions.ts");
+  assert.match(action, /rpc\("submit_budget_request_for_approval"/);
+  assert.equal(action.includes('status: parsed.data.intent === "submit" ? "submitted" : "draft"'), false);
+});
+
 test("budget and storage guards serialize spending and bind uploads to the signed-in user", () => {
   const sql = read("supabase/migrations/202609040003_operational_workflows.sql");
   assert.match(sql, /where p\.id = new\.project_id\s+for update;/);

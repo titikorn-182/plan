@@ -26,13 +26,14 @@ NEXT_PUBLIC_SITE_URL=https://<production-domain>
 1. `supabase/migrations/202609040001_initial_schema.sql`
 2. `supabase/migrations/202609040002_rls_and_views.sql`
 3. `supabase/migrations/202609040003_operational_workflows.sql`
-4. `supabase/verify-operational.sql` — เป็น read-only verification
+4. `supabase/migrations/202609050001_correctness_and_type_safety.sql`
+5. `supabase/verify-operational.sql` — เป็น read-only verification
 
-หากระบบเดิมรัน `001` และ `002` แล้ว ให้เริ่มที่ `003` ห้ามรัน seed บน production เว้นแต่ได้รับอนุมัติว่าเป็นข้อมูลตัวอย่างที่ต้องการจริง
+หากระบบเดิมรัน migration บางส่วนแล้ว ให้เริ่มจากไฟล์ถัดไปตามลำดับ ห้ามรัน seed บน production เว้นแต่ได้รับอนุมัติว่าเป็นข้อมูลตัวอย่างที่ต้องการจริง
 
 ผล verification ที่คาดหวัง:
 
-- public RPC 4 รายการ
+- public RPC 5 รายการ
 - view `workflow_inbox` และ `evidence_register`
 - private bucket `evidence` จำกัด 20 MB
 - trigger คุมวงเงิน, sync ยอด, sync หลักฐาน และ audit
@@ -89,4 +90,3 @@ npm run build
 - service role key ที่ rotate ใหม่
 - รายชื่อผู้ลงนาม UAT และผล UAT ที่ผ่านเกณฑ์
 - วันเปิดระบบ เจ้าของ incident และช่องทางแจ้งเหตุ
-

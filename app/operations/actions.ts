@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/viewer";
+import { APP_ROLES, EVIDENCE_ENTITY_TYPES, isKpiDirection } from "@/lib/domain";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { calculateKpiResultState, isProjectPeriodValid, remainingBudget } from "@/lib/operations/rules";
+import { evaluateKpiResult, isProjectPeriodValid, remainingBudget } from "@/lib/operations/rules";
 
 export type OperationState = {
   success?: boolean;
@@ -211,11 +212,13 @@ export async function saveKpiResultAction(previous: OperationState, formData: Fo
     .select("kpi_definitions!inner(target,direction)").eq("id", input.id).single();
   if (currentError || !current) return { ...previous, success: false, message: "ไม่พบตัวชี้วัดหรือคุณไม่มีสิทธิ์เข้าถึง" };
   const definition = Array.isArray(current.kpi_definitions) ? current.kpi_definitions[0] : current.kpi_definitions;
+  if (!isKpiDirection(definition.direction)) return { ...previous, success: false, message: "รูปแบบการคำนวณ KPI ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ" };
   const target = Number(definition.target);
-  const resultState = calculateKpiResultState(input.actual, target, definition.direction);
+  const evaluation = evaluateKpiResult(input.actual, target, definition.direction);
+  if (!evaluation.success) return { ...previous, success: false, message: evaluation.message };
   const { data, error } = await supabase.from("kpi_results").update({
     actual: input.actual, quarter: input.quarter === "" ? null : input.quarter, explanation: input.explanation || null,
-    result_state: resultState, status: "draft", updated_by: userId,
+    result_state: evaluation.state, status: "draft", updated_by: userId,
   }).eq("id", input.id).eq("version", input.version).in("status", ["not_started", "draft", "revision_required"]).select("id,version").maybeSingle();
   if (error) return { ...previous, success: false, message: friendlyError(error) };
   if (!data) return { ...previous, success: false, message: "ผล KPI ถูกแก้ไขหรือรับรองไปแล้ว กรุณาเปิดหน้าใหม่" };
@@ -237,7 +240,7 @@ export async function uploadEvidenceAction(previous: OperationState, formData: F
   const entityType = String(formData.get("entityType") ?? "");
   const organizationId = String(formData.get("organizationId") ?? "");
   const file = formData.get("file");
-  if (!z.string().uuid().safeParse(entityId).success || !z.string().uuid().safeParse(organizationId).success || !["budget_request", "project", "quarterly_report", "kpi_result"].includes(entityType)) {
+  if (!z.string().uuid().safeParse(entityId).success || !z.string().uuid().safeParse(organizationId).success || !EVIDENCE_ENTITY_TYPES.some((value) => value === entityType)) {
     return { ...previous, success: false, message: "กรุณาเลือกรายการที่จะผูกหลักฐาน" };
   }
   if (!(file instanceof File) || file.size === 0) return { ...previous, success: false, message: "กรุณาเลือกไฟล์หลักฐาน" };
@@ -269,7 +272,7 @@ export async function reviewEvidenceAction(previous: OperationState, formData: F
   if (parsed.data.decision === "return" && parsed.data.comment.length < 5) return { ...previous, success: false, message: "กรุณาระบุเหตุผลอย่างน้อย 5 ตัวอักษร" };
   const { supabase, userId } = await authenticated();
   if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ" };
-  const { error } = await supabase.rpc("review_evidence", { p_attachment_id: parsed.data.id, p_verified: parsed.data.decision === "verify", p_comment: parsed.data.comment || null });
+  const { error } = await supabase.rpc("review_evidence", { p_attachment_id: parsed.data.id, p_verified: parsed.data.decision === "verify", p_comment: parsed.data.comment || undefined });
   if (error) return { ...previous, success: false, message: friendlyError(error) };
   refreshOperations();
   return { success: true, message: parsed.data.decision === "verify" ? "รับรองหลักฐานแล้ว" : "ส่งหลักฐานกลับแก้ไขแล้ว" };
@@ -282,7 +285,7 @@ export async function actOnApprovalAction(previous: OperationState, formData: Fo
   if (parsed.data.decision !== "approved" && parsed.data.comment.length < 5) return { ...previous, success: false, message: "การส่งกลับหรือไม่อนุมัติต้องระบุเหตุผลอย่างน้อย 5 ตัวอักษร" };
   const { supabase, userId } = await authenticated();
   if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ" };
-  const { error } = await supabase.rpc("act_on_approval_task", { p_task_id: parsed.data.taskId, p_decision: parsed.data.decision, p_comment: parsed.data.comment || null });
+  const { error } = await supabase.rpc("act_on_approval_task", { p_task_id: parsed.data.taskId, p_decision: parsed.data.decision, p_comment: parsed.data.comment || undefined });
   if (error) return { ...previous, success: false, message: friendlyError(error) };
   refreshOperations();
   return { success: true, message: parsed.data.decision === "approved" ? "อนุมัติรายการและส่งต่อ workflow แล้ว" : "บันทึกคำตัดสินและแจ้งเจ้าของรายการแล้ว" };
@@ -309,7 +312,7 @@ export async function updateUserAccessAction(previous: OperationState, formData:
   const viewer = await requireAdmin();
   const profileId = String(formData.get("profileId") ?? "");
   const fullName = String(formData.get("fullName") ?? "").trim();
-  const roles = formData.getAll("roles").map(String).filter((role) => ["admin", "user", "executive", "staff"].includes(role));
+  const roles = formData.getAll("roles").map(String).filter((role): role is (typeof APP_ROLES)[number] => APP_ROLES.some((value) => value === role));
   const organizationIds = formData.getAll("organizationIds").map(String).filter((id) => z.string().uuid().safeParse(id).success);
   const active = formData.get("active") === "on";
   if (!z.string().uuid().safeParse(profileId).success || fullName.length < 2 || roles.length === 0) return { ...previous, success: false, message: "กรุณาระบุชื่อและเลือกอย่างน้อย 1 บทบาท" };
@@ -329,7 +332,7 @@ export async function inviteUserAction(previous: OperationState, formData: FormD
   const schema = z.object({
     email: z.string().trim().email("รูปแบบอีเมลไม่ถูกต้อง"),
     fullName: z.string().trim().min(2, "กรุณาระบุชื่อผู้ใช้งาน").max(180),
-    role: z.enum(["admin", "user", "executive", "staff"]),
+    role: z.enum(APP_ROLES),
   });
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);

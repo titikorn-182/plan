@@ -1,6 +1,21 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/auth/viewer";
+import {
+  calculateKpiAttainmentPercent,
+  COMMAND_CENTER_THRESHOLDS,
+  getQuarterProgressTarget,
+} from "@/lib/operations/rules";
+import {
+  isAppRole,
+  isDecisionStage,
+  isEvidenceEntityType,
+  isKpiDirection,
+  isKpiFramework,
+  isKpiResultStatus,
+  isWorkflowStatus,
+} from "@/lib/domain";
 import type {
   AdminUser,
   AuditRow,
@@ -16,6 +31,8 @@ import type {
   FiscalYearOption,
   KpiRow,
   KpiResultFormRecord,
+  KpiDirection,
+  KpiResultState,
   LifecycleItem,
   NotificationRow,
   OrganizationOption,
@@ -24,6 +41,7 @@ import type {
   ProjectOption,
   QuarterlyReportFormOptions,
   QuarterlyReportRow,
+  ReportingPeriod,
   Severity,
   WorkflowTask,
   WorkState,
@@ -41,6 +59,67 @@ function formatDate(value: string | null | undefined) {
 function result<T>(data: T, error?: { message: string } | null): DataResult<T> {
   return { data, error: error?.message ?? null };
 }
+
+function hasValues<T extends object, K extends keyof T>(row: T, keys: readonly K[]): row is T & { [P in K]-?: NonNullable<T[P]> } {
+  return keys.every((key) => row[key] !== null && row[key] !== undefined);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toQuarter(value: number): ReportingPeriod["quarter"] {
+  if (value <= 1) return 1;
+  if (value === 2) return 2;
+  if (value === 3) return 3;
+  return 4;
+}
+
+function fallbackReportingPeriod(now = new Date()): ReportingPeriod {
+  const month = now.getMonth();
+  const quarter: ReportingPeriod["quarter"] = month >= 9 ? 1 : month <= 2 ? 2 : month <= 5 ? 3 : 4;
+  const buddhistYear = now.getFullYear() + (month >= 9 ? 544 : 543);
+  return {
+    fiscalYearId: null,
+    fiscalYearLabel: `ปีงบประมาณ ${buddhistYear}`,
+    buddhistYear,
+    quarter,
+    quarterLabel: `ไตรมาส ${quarter}`,
+  };
+}
+
+function quarterForDate(startsOn: string, endsOn: string, now = new Date()): ReportingPeriod["quarter"] {
+  const start = new Date(`${startsOn}T00:00:00+07:00`);
+  const end = new Date(`${endsOn}T23:59:59+07:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return fallbackReportingPeriod(now).quarter;
+  if (now <= start) return 1;
+  if (now >= end) return 4;
+  const monthDifference = (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth();
+  return toQuarter(Math.floor(monthDifference / 3) + 1);
+}
+
+export const getReportingPeriod = cache(async (): Promise<ReportingPeriod> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("fiscal_years")
+    .select("id,buddhist_year,label,starts_on,ends_on,status")
+    .in("status", ["open", "closed"])
+    .order("buddhist_year", { ascending: false });
+  if (error || !data?.length) return fallbackReportingPeriod();
+  const today = new Date();
+  const todayKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Bangkok" }).format(today);
+  const active = data.find((item) => item.starts_on <= todayKey && item.ends_on >= todayKey)
+    ?? data.find((item) => item.status === "open")
+    ?? data[0];
+  const quarter = quarterForDate(active.starts_on, active.ends_on, today);
+  return {
+    fiscalYearId: active.id,
+    fiscalYearLabel: active.label,
+    buddhistYear: active.buddhist_year,
+    quarter,
+    quarterLabel: `ไตรมาส ${quarter}`,
+  };
+});
 
 const budgetStatus: Record<string, BudgetRequest["status"]> = {
   draft: "ฉบับร่าง", submitted: "รอตรวจสอบ", under_review: "รอตรวจสอบ", pending_approval: "รออนุมัติ",
@@ -63,16 +142,17 @@ const severityMap: Record<string, Severity> = { medium: "ปานกลาง",
 export async function getBudgetRequests(): Promise<DataResult<BudgetRequest[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("budget_request_register").select("*").order("updated_at", { ascending: false });
-  return result((data ?? []).map((row) => ({
+  return result((data ?? []).filter((row) => hasValues(row, ["id", "code", "title", "unit", "category", "status"])).map((row) => ({
     uuid: row.id, id: row.code, title: row.title, unit: row.unit, category: row.category,
     amount: Number(row.amount), status: budgetStatus[row.status] ?? "ฉบับร่าง", updated: formatDate(row.updated_at),
+    editable: ["draft", "revision_required"].includes(row.status),
   })), error);
 }
 
 export async function getProjects(): Promise<DataResult<ProjectRow[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("project_register").select("*").order("updated_at", { ascending: false });
-  return result((data ?? []).map((row) => ({
+  return result((data ?? []).filter((row) => hasValues(row, ["id", "code", "title", "unit", "health", "owner", "status"])).map((row) => ({
     uuid: row.id, id: row.code, title: row.title, unit: row.unit, budget: Number(row.budget), spent: Number(row.spent),
     progress: Number(row.progress), health: projectHealth[row.health] ?? "เฝ้าระวัง", owner: row.owner, due: formatDate(row.due),
     editable: row.status === "proposed" && !row.has_pending_approval,
@@ -82,7 +162,7 @@ export async function getProjects(): Promise<DataResult<ProjectRow[]>> {
 export async function getQuarterlyReports(): Promise<DataResult<QuarterlyReportRow[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("quarterly_report_register").select("*").order("due_at", { ascending: true });
-  return result((data ?? []).map((row) => ({
+  return result((data ?? []).filter((row) => hasValues(row, ["id", "project", "title", "unit", "quarter", "buddhist_year", "status"])).map((row) => ({
     uuid: row.id, project: row.project, title: row.title, unit: row.unit, quarter: `Q${row.quarter}/${row.buddhist_year}`,
     due: formatDate(row.due_at), status: reportStatus[row.status] ?? "ฉบับร่าง", progress: Number(row.progress), evidence: Number(row.evidence),
   })), error);
@@ -91,7 +171,7 @@ export async function getQuarterlyReports(): Promise<DataResult<QuarterlyReportR
 export async function getDisbursements(): Promise<DataResult<DisbursementRow[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("disbursement_register").select("*").order("id", { ascending: true });
-  return result((data ?? []).map((row) => ({
+  return result((data ?? []).filter((row) => hasValues(row, ["project_id", "id", "project", "unit", "status"])).map((row) => ({
     uuid: row.project_id, id: row.id, project: row.project, unit: row.unit, approved: Number(row.approved),
     q1: Number(row.q1), q2: Number(row.q2), q3: Number(row.q3), q4: Number(row.q4), target: Number(row.target),
     status: disbursementStatus[row.status] ?? "เฝ้าระวัง",
@@ -101,41 +181,71 @@ export async function getDisbursements(): Promise<DataResult<DisbursementRow[]>>
 export async function getKpis(): Promise<DataResult<KpiRow[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("kpi_register").select("*").order("code", { ascending: true });
-  return result((data ?? []).map((row) => ({
-    uuid: row.id, code: row.code, name: row.name, owner: row.owner, framework: row.framework,
+  return result((data ?? []).filter((row) => hasValues(row, ["id", "code", "name", "owner", "framework", "unit", "status"])).map((row) => ({
+    uuid: row.id, code: row.code, name: row.name, owner: row.owner, framework: isKpiFramework(row.framework) ? row.framework : "Internal",
     target: Number(row.target), actual: row.actual === null ? null : Number(row.actual), unit: row.unit,
-    status: kpiStatus[row.status] ?? "ไม่มีข้อมูล", workflowStatus: row.workflow_status ?? "not_started",
+    status: kpiStatus[row.status] ?? "ไม่มีข้อมูล", workflowStatus: isKpiResultStatus(row.workflow_status) ? row.workflow_status : "not_started",
   })), error);
 }
 
 export async function getDashboardData(): Promise<DataResult<{ records: DecisionRecord[]; lifecycle: LifecycleItem[]; matrix: CommandCenterRow[] }>> {
-  const supabase = await createClient();
+  const [supabase, reportingPeriod] = await Promise.all([createClient(), getReportingPeriod()]);
+  const progressTarget = getQuarterProgressTarget(reportingPeriod.quarter);
   const [queue, organizations, budgets, projects, disbursements, kpis, attachments] = await Promise.all([
     supabase.from("decision_queue").select("*").order("sort_key", { ascending: false }).limit(50),
     supabase.from("organizations").select("id,code,name_th").eq("is_active", true).order("name_th"),
     supabase.from("budget_request_register").select("organization_id,unit,amount"),
     supabase.from("project_register").select("organization_id,unit,budget,progress"),
     supabase.from("disbursement_register").select("organization_id,unit,approved,q1,q2,q3,q4,target"),
-    supabase.from("kpi_register").select("organization_id,owner,target,actual,status,evidence_count"),
+    supabase.from("kpi_results").select("id,organization_id,actual,result_state,evidence_count,kpi_definitions!inner(owner_name,target,direction)"),
     supabase.from("attachments").select("organization_id,is_verified").is("archived_at", null),
   ]);
   const dashboardError = queue.error ?? organizations.error ?? budgets.error ?? projects.error ?? disbursements.error ?? kpis.error ?? attachments.error;
   if (dashboardError) return result({ records: [], lifecycle: [], matrix: [] }, dashboardError);
 
-  const records: DecisionRecord[] = (queue.data ?? []).map((row) => {
+  type DashboardKpi = {
+    id: string;
+    organizationId: string;
+    owner: string;
+    target: number;
+    actual: number | null;
+    direction: KpiDirection;
+    resultState: KpiResultState;
+  };
+  const dashboardKpis = (kpis.data ?? []).flatMap((row): DashboardKpi[] => {
+    const definition = Array.isArray(row.kpi_definitions) ? row.kpi_definitions[0] : row.kpi_definitions;
+    if (!definition || !isKpiDirection(definition.direction)) return [];
+    return [{
+      id: row.id,
+      organizationId: row.organization_id,
+      owner: definition.owner_name,
+      target: Number(definition.target),
+      actual: row.actual === null ? null : Number(row.actual),
+      direction: definition.direction,
+      resultState: row.result_state,
+    }];
+  });
+  const dashboardKpiById = new Map(dashboardKpis.map((item) => [item.id, item]));
+
+  const records: DecisionRecord[] = (queue.data ?? [])
+    .filter((row) => hasValues(row, ["entity_id", "business_id", "title", "unit", "stage", "raw_state", "severity", "owner", "coordinator", "buddhist_year", "project_type", "progress"]))
+    .filter((row): row is typeof row & { stage: DecisionRecord["stage"] } => isDecisionStage(row.stage))
+    .map((row) => {
     const evidence = Array.isArray(row.evidence) ? row.evidence : [];
     const stateKey = row.raw_state === "submitted" && row.entity_type === "kpi_result" ? "submitted_kpi" : row.raw_state;
+    const kpi = row.stage === "KPI" ? dashboardKpiById.get(row.entity_id) : undefined;
+    const kpiProgress = kpi ? calculateKpiAttainmentPercent(kpi.actual, kpi.target, kpi.direction) : null;
     return {
       uuid: row.entity_id, id: row.business_id, title: row.title, unit: row.unit, stage: row.stage,
       state: decisionState[stateKey] ?? "รอพิจารณา",
       amount: row.amount_value === null ? (row.amount_note ?? "—") : money.format(Number(row.amount_value)),
       severity: severityMap[row.severity] ?? "ปานกลาง", owner: row.owner, coordinator: row.coordinator,
-      fiscalYear: String(row.buddhist_year), projectType: row.project_type, progress: Number(row.progress),
-      evidence: evidence.map((item: { name?: unknown; date?: unknown; verified?: unknown }) => ({
+      fiscalYear: String(row.buddhist_year), projectType: row.project_type, progress: kpiProgress ?? Number(row.progress),
+      evidence: evidence.flatMap((item) => isRecord(item) ? [{
         name: typeof item.name === "string" ? item.name : "เอกสารแนบ",
         date: typeof item.date === "string" ? formatDate(item.date) : "—",
         verified: item.verified === true,
-      })),
+      }] : []),
     };
   });
 
@@ -162,29 +272,27 @@ export async function getDashboardData(): Promise<DataResult<{ records: Decision
   };
 
   (organizations.data ?? []).forEach((row) => ensure(row.id, row.name_th, row.code));
-  (budgets.data ?? []).forEach((row) => {
+  (budgets.data ?? []).filter((row) => hasValues(row, ["organization_id", "unit"])).forEach((row) => {
     const aggregate = ensure(row.organization_id, row.unit);
     aggregate.requested += Number(row.amount);
   });
-  (projects.data ?? []).forEach((row) => {
+  (projects.data ?? []).filter((row) => hasValues(row, ["organization_id", "unit"])).forEach((row) => {
     const aggregate = ensure(row.organization_id, row.unit);
     aggregate.approved += Number(row.budget);
     aggregate.progressTotal += Number(row.progress);
     aggregate.projectCount += 1;
   });
-  (disbursements.data ?? []).forEach((row) => {
+  (disbursements.data ?? []).filter((row) => hasValues(row, ["organization_id", "unit"])).forEach((row) => {
     const aggregate = ensure(row.organization_id, row.unit);
     aggregate.disbursedAmount += Number(row.q1) + Number(row.q2) + Number(row.q3) + Number(row.q4);
     aggregate.targetTotal += Number(row.target);
   });
-  (kpis.data ?? []).forEach((row) => {
-    const aggregate = ensure(row.organization_id, row.owner);
-    const target = Number(row.target);
-    const actual = row.actual === null ? null : Number(row.actual);
-    if (actual !== null && target > 0) {
-      const ratio = Math.min(150, Math.max(0, (actual / target) * 100));
+  dashboardKpis.forEach((row) => {
+    const aggregate = ensure(row.organizationId, row.owner);
+    const ratio = calculateKpiAttainmentPercent(row.actual, row.target, row.direction);
+    if (ratio !== null) {
       aggregate.kpiRatioTotal += ratio;
-      if (actual >= target) aggregate.kpiMet += 1;
+      if (row.resultState === "achieved") aggregate.kpiMet += 1;
     }
     aggregate.kpiTotal += 1;
   });
@@ -205,11 +313,17 @@ export async function getDashboardData(): Promise<DataResult<{ records: Decision
       const hasDeliveryData = row.projectCount > 0;
       const status: CommandCenterRow["status"] = !hasDeliveryData && kpiScore === null
         ? "noData"
-        : progress < 35 || (hasDeliveryData && disbursement < Math.max(0, disbursementTarget - 15)) || (kpiScore !== null && kpiScore < 80)
+        : progress < Math.max(0, progressTarget - COMMAND_CENTER_THRESHOLDS.riskGap)
+            || (hasDeliveryData && disbursement < Math.max(0, disbursementTarget - COMMAND_CENTER_THRESHOLDS.riskGap))
+            || (kpiScore !== null && kpiScore < COMMAND_CENTER_THRESHOLDS.kpiRisk)
           ? "risk"
-          : progress >= 65 && disbursement >= disbursementTarget && (kpiScore === null || kpiScore >= 100)
+          : progress >= progressTarget + COMMAND_CENTER_THRESHOLDS.aheadGap
+              && disbursement >= disbursementTarget
+              && (kpiScore === null || kpiScore >= COMMAND_CENTER_THRESHOLDS.kpiAhead)
             ? "ahead"
-            : progress >= 50 && disbursement >= Math.max(0, disbursementTarget - 5) && (kpiScore === null || kpiScore >= 90)
+            : progress >= progressTarget
+                && disbursement >= Math.max(0, disbursementTarget - COMMAND_CENTER_THRESHOLDS.watchGap)
+                && (kpiScore === null || kpiScore >= COMMAND_CENTER_THRESHOLDS.kpiOnTrack)
               ? "onTrack"
               : "watch";
       return {
@@ -223,26 +337,58 @@ export async function getDashboardData(): Promise<DataResult<{ records: Decision
   return result({ records, lifecycle, matrix });
 }
 
-export async function getBudgetFormOptions(): Promise<DataResult<BudgetFormOptions | null>> {
+export async function getBudgetFormOptions(budgetRequestId?: string): Promise<DataResult<BudgetFormOptions | null>> {
   const [viewer, supabase] = await Promise.all([getViewer(), createClient()]);
-  const [{ data: organizations, error: orgError }, { data: cycles, error: cycleError }] = await Promise.all([
+  const currentTimestamp = new Date().toISOString();
+  const [{ data: organizations, error: orgError }, { data: cycles, error: cycleError }, recordResult] = await Promise.all([
     supabase.from("organizations").select("id,name_th").eq("is_active", true).order("name_th"),
-    supabase.from("budget_cycles").select("id,fiscal_year_id,fiscal_years!inner(label,status)").eq("status", "open").order("closes_at").limit(1),
+    supabase.from("budget_cycles").select("id,fiscal_year_id,fiscal_years!inner(label,status)").eq("status", "open").lte("opens_at", currentTimestamp).gte("closes_at", currentTimestamp).order("closes_at").limit(1),
+    budgetRequestId
+      ? supabase.from("budget_requests")
+        .select("id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label),organizations!budget_requests_organization_id_fkey(name_th)")
+        .eq("id", budgetRequestId)
+        .is("archived_at", null)
+        .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
-  const error = orgError ?? cycleError;
-  const cycle = cycles?.[0] as { id: string; fiscal_year_id: string; fiscal_years: { label: string } | { label: string }[] } | undefined;
-  if (error || !cycle) return result(null, error ?? { message: "ยังไม่มีรอบรับคำของบประมาณที่เปิดใช้งาน" });
-  const fiscal = Array.isArray(cycle.fiscal_years) ? cycle.fiscal_years[0] : cycle.fiscal_years;
+  const error = orgError ?? cycleError ?? recordResult.error;
+  if (error) return result(null, error);
+  if (budgetRequestId && !recordResult.data) return result(null, { message: "ไม่พบคำของบประมาณหรือคุณไม่มีสิทธิ์เข้าถึง" });
+  const cycle = cycles?.[0];
+  const recordRow = recordResult.data;
+  if (!recordRow && !cycle) return result(null, { message: "ยังไม่มีรอบรับคำของบประมาณที่เปิดใช้งาน" });
+  const cycleFiscal = cycle ? (Array.isArray(cycle.fiscal_years) ? cycle.fiscal_years[0] : cycle.fiscal_years) : null;
+  const recordFiscal = recordRow ? (Array.isArray(recordRow.fiscal_years) ? recordRow.fiscal_years[0] : recordRow.fiscal_years) : null;
+  const recordOrganization = recordRow ? (Array.isArray(recordRow.organizations) ? recordRow.organizations[0] : recordRow.organizations) : null;
+  const organizationOptions = (organizations ?? []).map((item) => ({ id: item.id, name: item.name_th }));
+  if (recordRow && recordOrganization && !organizationOptions.some((item) => item.id === recordRow.organization_id)) {
+    organizationOptions.push({ id: recordRow.organization_id, name: `${recordOrganization.name_th} (ปิดใช้งาน)` });
+  }
   return result({
-    organizations: (organizations ?? []).map((item) => ({ id: item.id, name: item.name_th })),
-    fiscalYearId: cycle.fiscal_year_id, fiscalYearLabel: fiscal?.label ?? "—", budgetCycleId: cycle.id, defaultOwnerName: viewer.fullName,
+    organizations: organizationOptions,
+    fiscalYearId: recordRow?.fiscal_year_id ?? cycle!.fiscal_year_id,
+    fiscalYearLabel: recordFiscal?.label ?? cycleFiscal?.label ?? "—",
+    budgetCycleId: recordRow?.budget_cycle_id ?? cycle!.id,
+    defaultOwnerName: viewer.fullName,
+    record: recordRow ? {
+      id: recordRow.id,
+      code: recordRow.code,
+      version: recordRow.version,
+      title: recordRow.title_th,
+      organizationId: recordRow.organization_id,
+      projectType: recordRow.project_type,
+      ownerName: recordRow.owner_name,
+      rationale: recordRow.rationale,
+      amount: Number(recordRow.requested_amount),
+      status: recordRow.status,
+    } : null,
   });
 }
 
 export async function getAdminData(): Promise<DataResult<{ users: AdminUser[]; audits: AuditRow[]; organizationCount: number }>> {
   const supabase = await createClient();
   const [profiles, audits, organizations] = await Promise.all([
-    supabase.from("profiles").select("id,full_name,email,is_active,user_roles(role),user_organization_scopes(organization_id)").order("full_name").limit(100),
+    supabase.from("profiles").select("id,full_name,email,is_active,user_roles!user_roles_profile_id_fkey(role),user_organization_scopes!user_organization_scopes_profile_id_fkey(organization_id)").order("full_name").limit(100),
     supabase.from("audit_events").select("id,action,entity_type,occurred_at,profiles!audit_events_actor_id_fkey(email)").order("occurred_at", { ascending: false }).limit(8),
     supabase.from("organizations").select("id", { count: "exact", head: true }),
   ]);
@@ -253,12 +399,12 @@ export async function getAdminData(): Promise<DataResult<{ users: AdminUser[]; a
       fullName: row.full_name,
       email: row.email,
       active: row.is_active,
-      roles: (row.user_roles ?? []).map((role: { role: string }) => role.role),
-      organizationIds: (row.user_organization_scopes ?? []).map((scope: { organization_id: string }) => scope.organization_id),
+      roles: (row.user_roles ?? []).map((role) => role.role),
+      organizationIds: (row.user_organization_scopes ?? []).map((scope) => scope.organization_id),
     })),
     audits: (audits.data ?? []).map((row) => {
-      const actor = row.profiles as { email?: string } | { email?: string }[] | null;
-      return { id: row.id, action: row.action, entityType: row.entity_type, createdAt: formatDate(row.occurred_at), actorEmail: (Array.isArray(actor) ? actor[0]?.email : actor?.email) ?? "ระบบ" };
+      const actor = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+      return { id: row.id, action: row.action, entityType: row.entity_type, createdAt: formatDate(row.occurred_at), actorEmail: actor?.email ?? "ระบบ" };
     }),
     organizationCount: organizations.count ?? 0,
   }, error);
@@ -355,6 +501,9 @@ export async function getKpiResultFormRecord(resultId: string): Promise<DataResu
     .eq("id", resultId).maybeSingle();
   if (error || !data) return result(null, error ?? { message: "ไม่พบผลตัวชี้วัดหรือคุณไม่มีสิทธิ์เข้าถึง" });
   const definition = Array.isArray(data.kpi_definitions) ? data.kpi_definitions[0] : data.kpi_definitions;
+  if (!definition || !isKpiFramework(definition.framework) || !isKpiDirection(definition.direction)) {
+    return result(null, { message: "ข้อมูลชนิดของ KPI ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ" });
+  }
   return result({
     id: data.id, version: data.version, code: definition.code, name: definition.name,
     framework: definition.framework, frameworkVersion: definition.framework_version,
@@ -379,18 +528,23 @@ export async function getEvidenceWorkspace(): Promise<DataResult<{ rows: Evidenc
   (projects.data ?? []).forEach((row) => entities.push({ id: row.id, entityType: "project", organizationId: row.organization_id, label: `โครงการ ${row.code} · ${row.title_th}` }));
   (reports.data ?? []).forEach((row) => {
     const project = Array.isArray(row.projects) ? row.projects[0] : row.projects;
+    if (!project) return;
     entities.push({ id: row.id, entityType: "quarterly_report", organizationId: row.organization_id, label: `รายงาน Q${row.quarter} · ${project.code} ${project.title_th}` });
   });
   (kpis.data ?? []).forEach((row) => {
     const definition = Array.isArray(row.kpi_definitions) ? row.kpi_definitions[0] : row.kpi_definitions;
+    if (!definition) return;
     entities.push({ id: row.id, entityType: "kpi_result", organizationId: row.organization_id, label: `KPI ${definition.code} · ${definition.name}` });
   });
   return result({
-    rows: (evidence.data ?? []).map((row) => ({
+    rows: (evidence.data ?? [])
+      .filter((row) => hasValues(row, ["id", "business_id", "title", "unit", "entity_type", "file_name", "storage_path", "mime_type", "is_verified"]))
+      .filter((row): row is typeof row & { entity_type: EvidenceRow["entityType"] } => isEvidenceEntityType(row.entity_type))
+      .map((row) => ({
       id: row.id, businessId: row.business_id, title: row.title, unit: row.unit, entityType: row.entity_type,
       fileName: row.file_name, storagePath: row.storage_path, mimeType: row.mime_type,
       sizeBytes: Number(row.size_bytes), verified: row.is_verified, uploadedAt: formatDate(row.uploaded_at),
-    })),
+      })),
     entities,
   }, error);
 }
@@ -398,13 +552,18 @@ export async function getEvidenceWorkspace(): Promise<DataResult<{ rows: Evidenc
 export async function getWorkflowInbox(): Promise<DataResult<WorkflowTask[]>> {
   const [viewer, supabase] = await Promise.all([getViewer(), createClient()]);
   const { data, error } = await supabase.from("workflow_inbox").select("*").order("created_at", { ascending: false }).limit(200);
-  return result((data ?? []).map((row) => ({
-    id: row.id, entityType: row.entity_type, entityId: row.entity_id, businessId: row.business_id,
-    title: row.title, unit: row.unit, requiredRole: row.required_role, status: row.status,
-    dueAt: formatDate(row.due_at), createdAt: formatDate(row.created_at),
-    canAct: row.status === "pending" && (viewer.role === "admin" || (viewer.role === row.required_role && (!row.assignee_id || row.assignee_id === viewer.id))),
-    overdue: row.status === "pending" && Boolean(row.due_at) && new Date(row.due_at).getTime() < Date.now(),
-  })), error);
+  const tasks = (data ?? []).flatMap((row): WorkflowTask[] => {
+    if (!hasValues(row, ["id", "entity_type", "entity_id", "business_id", "title", "unit", "required_role", "status", "created_at"])) return [];
+    if (!isEvidenceEntityType(row.entity_type) || !isAppRole(row.required_role) || !isWorkflowStatus(row.status)) return [];
+    return [{
+      id: row.id, entityType: row.entity_type, entityId: row.entity_id, businessId: row.business_id,
+      title: row.title, unit: row.unit, requiredRole: row.required_role, status: row.status,
+      dueAt: formatDate(row.due_at), createdAt: formatDate(row.created_at),
+      canAct: row.status === "pending" && (viewer.roles.includes("admin") || (viewer.roles.includes(row.required_role) && (!row.assignee_id || row.assignee_id === viewer.id))),
+      overdue: row.status === "pending" && row.due_at !== null && new Date(row.due_at).getTime() < Date.now(),
+    }];
+  });
+  return result(tasks, error);
 }
 
 export async function getNotifications(): Promise<DataResult<NotificationRow[]>> {

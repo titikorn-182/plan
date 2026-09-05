@@ -2,7 +2,6 @@
 
 import {
   Bell,
-  BriefcaseBusiness,
   CalendarDays,
   ChartNoAxesCombined,
   Check,
@@ -10,19 +9,15 @@ import {
   CircleCheck,
   Download,
   ExternalLink,
-  FileChartColumn,
-  FileCheck2,
   FileText,
   Filter,
   FolderKanban,
-  LayoutDashboard,
   LogOut,
   Megaphone,
   Paperclip,
   Pin,
   Printer,
   Search,
-  Settings,
   Target,
   TriangleAlert,
   WalletCards,
@@ -30,22 +25,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
-import type { CommandCenterRow, CommandCenterStatus, DecisionRecord, LifecycleItem, Viewer } from "@/lib/domain";
-
-const navItems = [
-  { label: "หน้าหลักฐาน", icon: LayoutDashboard, href: "/" },
-  { label: "ภาพรวมผู้บริหาร", icon: ChartNoAxesCombined, href: "/reports" },
-  { label: "แผนและคำของบ", icon: BriefcaseBusiness, href: "/budget-requests" },
-  { label: "งบประมาณและอนุมัติ", icon: FileCheck2, href: "/budget-requests" },
-  { label: "โครงการและการดำเนินงาน", icon: FolderKanban, href: "/projects" },
-  { label: "เบิกจ่าย", icon: WalletCards, href: "/disbursements" },
-  { label: "KPI และคุณภาพ", icon: Target, href: "/kpi" },
-  { label: "หลักฐานและเอกสาร", icon: FileText, href: "/reports/quarterly" },
-  { label: "ความเสี่ยงและประเด็น", icon: TriangleAlert, href: "/reports" },
-  { label: "รายงานและวิเคราะห์", icon: FileChartColumn, href: "/reports" },
-  { label: "ตั้งค่าและข้อมูลพื้นฐาน", icon: Settings, href: "/admin", adminOnly: true },
-] as const;
+import { isCurrentNavigationPath, primaryNavigation } from "@/components/layout/navigation";
+import type { CommandCenterRow, CommandCenterStatus, DecisionRecord, ReportingPeriod, Viewer } from "@/lib/domain";
+import { COMMAND_CENTER_THRESHOLDS, getQuarterProgressTarget } from "@/lib/operations/rules";
 
 const stageIcons: Record<DecisionRecord["stage"], LucideIcon> = {
   คำของบ: FileText,
@@ -71,6 +55,7 @@ const statusFilters: Array<{ value: "all" | CommandCenterStatus; label: string }
   { value: "risk", label: "ต่ำกว่าแผน" },
   { value: "noData", label: "ไม่มีข้อมูล" },
 ];
+const commandCenterStatuses = ["ahead", "onTrack", "watch", "risk", "noData"] as const satisfies readonly CommandCenterStatus[];
 
 function formatMillion(value: number) {
   return new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value / 1_000_000);
@@ -101,12 +86,14 @@ export function ExecutiveDashboard({
   records,
   matrix,
   viewer,
+  period,
 }: {
   records: DecisionRecord[];
-  lifecycle: LifecycleItem[];
   matrix: CommandCenterRow[];
   viewer: Viewer;
+  period: ReportingPeriod;
 }) {
+  const pathname = usePathname();
   const [selectedUnitId, setSelectedUnitId] = useState(matrix[0]?.id ?? "");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | CommandCenterStatus>("all");
@@ -117,7 +104,12 @@ export function ExecutiveDashboard({
   const selected = matrix.find((row) => row.id === selectedUnitId) ?? matrix[0];
   const selectedRecords = useMemo(() => records.filter((record) => record.unit === selected?.unit), [records, selected]);
   const selectedEvidence = useMemo(() => selectedRecords.flatMap((record) => record.evidence.map((item) => ({ ...item, recordId: record.id }))), [selectedRecords]);
-  const fiscalYear = records[0]?.fiscalYear ?? "2570";
+  const fiscalYear = String(period.buddhistYear);
+  const progressTarget = getQuarterProgressTarget(period.quarter);
+  const visibleNavigation = primaryNavigation.filter((item) => !item.adminOnly || viewer.roles.includes("admin"));
+  const currentHref = visibleNavigation
+    .filter((item) => isCurrentNavigationPath(pathname, item.href))
+    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
 
   const visibleRows = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("th");
@@ -166,13 +158,13 @@ export function ExecutiveDashboard({
       <aside className="cc-sidebar" aria-label="เมนูหลัก">
         <Link className="cc-brand" href="/" aria-label="ระบบบริหารแผน หน้าหลัก"><span>ระบบบริหารแผน</span><small>PLAN MANAGEMENT</small></Link>
         <nav className="cc-nav">
-          {navItems.filter((item) => !("adminOnly" in item) || viewer.role === "admin").map(({ label, icon: Icon, href }, index) => (
-            <Link className={`cc-nav-link ${index === 0 ? "active" : ""}`} href={href} key={`${label}-${href}`} aria-current={index === 0 ? "page" : undefined}><Icon size={18} strokeWidth={1.9} /><span>{label}</span></Link>
+          {visibleNavigation.map(({ label, icon: Icon, href }) => (
+            <Link className={`cc-nav-link ${currentHref === href ? "active" : ""}`} href={href} key={href} aria-current={currentHref === href ? "page" : undefined}><Icon size={18} strokeWidth={1.9} /><span>{label}</span></Link>
           ))}
         </nav>
         <section className="cc-legend" aria-label="คำอธิบายสถานะ">
           <h2>สถานะ:</h2>
-          {(["ahead", "onTrack", "watch", "risk", "noData"] as CommandCenterStatus[]).map((status) => <div key={status}><StatusDot status={status} /><span>{statusMeta[status].label}</span></div>)}
+          {commandCenterStatuses.map((status) => <div key={status}><StatusDot status={status} /><span>{statusMeta[status].label}</span></div>)}
         </section>
         <p className="cc-asof">ข้อมูลตามสิทธิ์ผู้ใช้งาน</p>
       </aside>
@@ -181,11 +173,11 @@ export function ExecutiveDashboard({
         <header className="cc-topbar">
           <div className="cc-period-controls">
             <button type="button">ปีงบประมาณ <strong>{fiscalYear}</strong><CalendarDays size={16} /></button>
-            <button type="button">ไตรมาส 2 (ม.ค. - มี.ค. 70)<ChevronDown size={16} /></button>
+            <button type="button">{period.quarterLabel}<ChevronDown size={16} /></button>
             <span className="cc-live-badge"><span />ข้อมูลจริง</span>
           </div>
           <div className="cc-utilities">
-            <button type="button" aria-label={`การแจ้งเตือน ${viewer.unreadNotifications} รายการ`} title="การแจ้งเตือน"><Megaphone size={17} /><span className="cc-utility-label">แจ้งเตือน</span>{viewer.unreadNotifications > 0 ? <b>{Math.min(viewer.unreadNotifications, 99)}</b> : null}</button>
+            <Link className="cc-utility-link" aria-label={`การแจ้งเตือน ${viewer.unreadNotifications} รายการ`} href="/notifications" title="การแจ้งเตือน"><Megaphone size={17} /><span className="cc-utility-label">แจ้งเตือน</span>{viewer.unreadNotifications > 0 ? <b>{Math.min(viewer.unreadNotifications, 99)}</b> : null}</Link>
             <button type="button" onClick={exportCsv} title="ส่งออก CSV"><Download size={17} /><span className="cc-utility-label">ส่งออก</span></button>
             <button type="button" onClick={() => window.print()} title="พิมพ์รายงาน"><Printer size={17} /><span className="cc-utility-label">พิมพ์</span></button>
             <button className={filterOpen ? "active" : ""} type="button" onClick={() => setFilterOpen((open) => !open)} aria-expanded={filterOpen} title="ตัวกรอง"><Filter size={17} /><span className="cc-utility-label">ตัวกรอง</span></button>
@@ -220,9 +212,9 @@ export function ExecutiveDashboard({
                         <td className="cc-unit-cell"><strong>{row.unit}</strong><span>{row.code} · {row.projectCount.toLocaleString("th-TH")} โครงการ</span><em>ยุทธศาสตร์ที่ {((index % 4) + 1).toLocaleString("th-TH")}</em></td>
                         <td><strong>{formatMillion(row.requested)}</strong><small>{row.requested > 0 ? "100%" : "—"}</small></td>
                         <td><strong>{formatMillion(row.approved)}</strong><small>{row.requested > 0 ? formatPercent(Math.min(100, (row.approved / row.requested) * 100)) : "—"}</small></td>
-                        <td><ProgressMetric value={row.progress} target={50} status={row.status} /></td>
+                        <td><ProgressMetric value={row.progress} target={progressTarget} status={row.status} /></td>
                         <td><ProgressMetric value={row.disbursement} target={row.disbursementTarget} status={row.status} /></td>
-                        <td className="cc-kpi-cell"><strong>{row.kpiScore === null ? "—" : formatPercent(row.kpiScore)}</strong><StatusDot status={row.kpiScore === null ? "noData" : row.kpiScore >= 100 ? "ahead" : row.kpiScore >= 90 ? "onTrack" : row.kpiScore >= 80 ? "watch" : "risk"} /><small>บรรลุ {row.kpiMet}/{row.kpiTotal}</small></td>
+                        <td className="cc-kpi-cell"><strong>{row.kpiScore === null ? "—" : formatPercent(row.kpiScore)}</strong><StatusDot status={row.kpiScore === null ? "noData" : row.kpiScore >= COMMAND_CENTER_THRESHOLDS.kpiAhead ? "ahead" : row.kpiScore >= COMMAND_CENTER_THRESHOLDS.kpiOnTrack ? "onTrack" : row.kpiScore >= COMMAND_CENTER_THRESHOLDS.kpiRisk ? "watch" : "risk"} /><small>บรรลุ {row.kpiMet}/{row.kpiTotal}</small></td>
                         <td className="cc-evidence-cell"><span><FileText size={15} />{row.evidenceVerified}</span><span><Paperclip size={15} />{row.evidenceTotal}</span></td>
                         <td className="cc-pin-col"><button type="button" aria-label={`ตรวจสอบ ${row.unit}`} aria-pressed={selected?.id === row.id} onClick={(event) => { event.stopPropagation(); selectUnit(row); }}><Pin size={16} /></button></td>
                       </tr>
@@ -235,7 +227,7 @@ export function ExecutiveDashboard({
 
               <div className="cc-mobile-list">{visibleRows.map((row, index) => <button type="button" className={selected?.id === row.id ? "selected" : ""} key={row.id} onClick={() => selectUnit(row)}><span className="cc-mobile-rank">{index + 1}</span><span className="cc-mobile-unit"><strong>{row.unit}</strong><small>{row.code} · {row.projectCount} โครงการ</small></span><StatusDot status={row.status} /><span className="cc-mobile-metrics"><b>คืบหน้า {formatPercent(row.progress)}</b><b>เบิกจ่าย {formatPercent(row.disbursement)}</b></span></button>)}</div>
 
-              <footer className="cc-matrix-footer"><div>{(["ahead", "onTrack", "watch", "risk", "noData"] as CommandCenterStatus[]).map((status) => <span key={status}><StatusDot status={status} />{statusMeta[status].short}</span>)}</div><p>กฎการเชื่อมหลักฐาน: หน่วยงาน → โครงการ → KPI → รายงานรายไตรมาส</p></footer>
+              <footer className="cc-matrix-footer"><div>{commandCenterStatuses.map((status) => <span key={status}><StatusDot status={status} />{statusMeta[status].short}</span>)}</div><p>กฎการเชื่อมหลักฐาน: หน่วยงาน → โครงการ → KPI → รายงานรายไตรมาส</p></footer>
             </div>
 
             {inspectorOpen && selected ? (
@@ -244,7 +236,7 @@ export function ExecutiveDashboard({
                 <div className="cc-inspector-identity"><span>{selected.unit}</span><strong>{selected.code}</strong><p><StatusDot status={selected.status} />{statusMeta[selected.status].label}</p></div>
                 <div className="cc-inspector-tabs" role="tablist" aria-label="รายละเอียดหน่วยงาน"><button type="button" role="tab" aria-selected={inspectorTab === "summary"} onClick={() => setInspectorTab("summary")}>สรุป</button><button type="button" role="tab" aria-selected={inspectorTab === "evidence"} onClick={() => setInspectorTab("evidence")}>หลักฐาน ({selected.evidenceTotal})</button><button type="button" role="tab" aria-selected={inspectorTab === "references"} onClick={() => setInspectorTab("references")}>การอ้างอิง</button></div>
 
-                {inspectorTab === "summary" ? <div className="cc-inspector-content"><section className="cc-audit-score"><span>ความก้าวหน้า ไตรมาส 2</span><strong>{formatPercent(selected.progress)}</strong><small>เป้าหมาย 50.0%</small><div><span style={{ width: `${Math.min(100, selected.progress)}%` }} /></div><em className={selected.progress >= 50 ? "positive" : "negative"}>{selected.progress >= 50 ? "ตามแผน" : "ต่ำกว่าแผน"} ({selected.progress - 50 >= 0 ? "+" : ""}{formatPercent(selected.progress - 50)})</em></section><dl className="cc-inspector-facts"><div><dt>วงเงินอนุมัติ</dt><dd>{formatMillion(selected.approved)} ลบ.</dd></div><div><dt>เบิกจ่ายสะสม</dt><dd>{formatPercent(selected.disbursement)}</dd></div><div><dt>KPI บรรลุเป้าหมาย</dt><dd>{selected.kpiMet}/{selected.kpiTotal}</dd></div><div><dt>หลักฐานตรวจแล้ว</dt><dd>{selected.evidenceVerified}/{selected.evidenceTotal}</dd></div></dl><section className="cc-top-evidence"><h3>หลักฐานเด่น (Top Evidence)</h3>{selectedEvidence.slice(0, 3).map((evidence) => <div key={`${evidence.recordId}-${evidence.name}`}><FileText size={16} /><span><strong>{evidence.recordId}</strong><small>{evidence.name}</small></span>{evidence.verified ? <Check className="verified" size={15} /> : <TriangleAlert className="pending" size={15} />}</div>)}{selectedEvidence.length === 0 ? <p>ยังไม่มีหลักฐานในรายการที่รอตัดสินใจ</p> : null}</section></div> : null}
+                {inspectorTab === "summary" ? <div className="cc-inspector-content"><section className="cc-audit-score"><span>ความก้าวหน้า {period.quarterLabel}</span><strong>{formatPercent(selected.progress)}</strong><small>เป้าหมาย {formatPercent(progressTarget)}</small><div><span style={{ width: `${Math.min(100, selected.progress)}%` }} /></div><em className={selected.progress >= progressTarget ? "positive" : "negative"}>{selected.progress >= progressTarget ? "ตามแผน" : "ต่ำกว่าแผน"} ({selected.progress - progressTarget >= 0 ? "+" : ""}{formatPercent(selected.progress - progressTarget)})</em></section><dl className="cc-inspector-facts"><div><dt>วงเงินอนุมัติ</dt><dd>{formatMillion(selected.approved)} ลบ.</dd></div><div><dt>เบิกจ่ายสะสม</dt><dd>{formatPercent(selected.disbursement)}</dd></div><div><dt>KPI บรรลุเป้าหมาย</dt><dd>{selected.kpiMet}/{selected.kpiTotal}</dd></div><div><dt>หลักฐานตรวจแล้ว</dt><dd>{selected.evidenceVerified}/{selected.evidenceTotal}</dd></div></dl><section className="cc-top-evidence"><h3>หลักฐานเด่น (Top Evidence)</h3>{selectedEvidence.slice(0, 3).map((evidence) => <div key={`${evidence.recordId}-${evidence.name}`}><FileText size={16} /><span><strong>{evidence.recordId}</strong><small>{evidence.name}</small></span>{evidence.verified ? <Check className="verified" size={15} /> : <TriangleAlert className="pending" size={15} />}</div>)}{selectedEvidence.length === 0 ? <p>ยังไม่มีหลักฐานในรายการที่รอตัดสินใจ</p> : null}</section></div> : null}
 
                 {inspectorTab === "evidence" ? <div className="cc-inspector-content cc-evidence-list">{selectedEvidence.map((evidence) => <article key={`${evidence.recordId}-${evidence.name}`}><FileText size={17} /><div><strong>{evidence.name}</strong><span>{evidence.recordId} · {evidence.date}</span></div>{evidence.verified ? <CircleCheck className="verified" size={17} /> : <TriangleAlert className="pending" size={17} />}</article>)}{selectedEvidence.length === 0 ? <p className="cc-empty-note">ยังไม่มีเอกสารในรายการที่อยู่ระหว่างตรวจสอบ</p> : null}</div> : null}
 

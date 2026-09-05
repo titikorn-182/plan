@@ -10,12 +10,12 @@ import type { AppRole, EvidenceEntityOption, EvidenceRow } from "@/lib/domain";
 const entityLabel: Record<string, string> = { budget_request: "คำของบ", project: "โครงการ", quarterly_report: "รายงานไตรมาส", kpi_result: "ผล KPI" };
 
 function EvidenceReview({ row }: { row: EvidenceRow }) {
-  const [state, action, pending] = useActionState(reviewEvidenceAction, {} as OperationState);
+  const [state, action, pending] = useActionState(reviewEvidenceAction, {} satisfies OperationState);
   return <form action={action} className="mt-3 border-t border-stone-200 pt-3"><input type="hidden" name="id" value={row.id} /><textarea className="min-h-16 w-full border border-stone-300 px-2 py-1.5 text-xs outline-none focus:border-orange-500" name="comment" placeholder="เหตุผลเมื่อส่งกลับแก้ไข" maxLength={1000} /><div className="mt-2 flex flex-wrap items-center justify-between gap-2"><span className={`text-[10px] ${state.success ? "text-emerald-700" : "text-red-700"}`} role="status" aria-live="polite">{state.message}</span><div className="flex gap-2"><button className="inline-flex items-center gap-1 border border-stone-300 px-2 py-1.5 text-[11px] font-semibold disabled:opacity-50" name="decision" value="return" disabled={pending}><RotateCcw size={13} />ส่งกลับ</button><button className="inline-flex items-center gap-1 bg-emerald-700 px-2 py-1.5 text-[11px] font-semibold text-white disabled:opacity-50" name="decision" value="verify" disabled={pending}><CheckCircle2 size={13} />รับรอง</button></div></div></form>;
 }
 
 export function EvidenceView({ rows, entities, role }: { rows: EvidenceRow[]; entities: EvidenceEntityOption[]; role: AppRole }) {
-  const [uploadState, uploadAction, uploading] = useActionState(uploadEvidenceAction, {} as OperationState);
+  const [uploadState, uploadAction, uploading] = useActionState(uploadEvidenceAction, {} satisfies OperationState);
   const [entityId, setEntityId] = useState(entities[0]?.id ?? "");
   const selected = useMemo(() => entities.find((item) => item.id === entityId), [entities, entityId]);
   const verified = rows.filter((row) => row.verified).length;

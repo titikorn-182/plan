@@ -1,8 +1,9 @@
--- Read-only verification after running 202609040003_operational_workflows.sql.
+-- Read-only verification after running all migrations through
+-- 202609050001_correctness_and_type_safety.sql.
 select routine_schema, routine_name
 from information_schema.routines
 where routine_schema = 'public'
-  and routine_name in ('submit_entity_for_approval', 'act_on_approval_task', 'review_evidence', 'admin_update_user_access')
+  and routine_name in ('submit_entity_for_approval', 'submit_budget_request_for_approval', 'act_on_approval_task', 'review_evidence', 'admin_update_user_access')
 order by routine_name;
 
 select table_schema, table_name
