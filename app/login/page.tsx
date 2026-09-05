@@ -1,4 +1,5 @@
-import { CheckCircle2, LockKeyhole } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle2 } from "lucide-react";
 import { LoginForm } from "@/components/auth/login-form";
 import { safeNextPath } from "@/lib/auth/schemas";
 
@@ -8,7 +9,31 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="grid min-h-screen bg-[#f7f5f2] lg:grid-cols-[minmax(420px,0.85fr)_1.15fr]">
       <section className="flex items-center justify-center bg-white px-6 py-12">
         <div className="w-full max-w-md">
-          <div className="mb-10 flex items-center gap-3"><span className="grid size-11 place-items-center bg-[#cf430c] text-white"><LockKeyhole size={21} /></span><span><b className="block text-xl">ระบบบริหารแผน</b><small className="text-stone-500">Planning & Budget Management</small></span></div>
+          <header className="mb-9">
+            <div className="flex items-center gap-3">
+              <span className="grid size-16 shrink-0 place-items-center border border-stone-200 bg-[#efefef]">
+                <Image
+                  alt="ตรามหาวิทยาลัยอุบลราชธานี"
+                  className="h-14 w-auto object-contain"
+                  height={1124}
+                  src="/branding/ubu-emblem.png"
+                  width={960}
+                />
+              </span>
+              <span className="grid size-16 shrink-0 place-items-center border border-stone-200 bg-[#efefef]">
+                <Image
+                  alt="ตราคณะรัฐศาสตร์ มหาวิทยาลัยอุบลราชธานี"
+                  className="size-[3.55rem] object-contain"
+                  height={447}
+                  src="/branding/political-science-ubu.png"
+                  width={447}
+                />
+              </span>
+            </div>
+            <p className="mt-3 max-w-[23rem] text-lg font-extrabold leading-[1.38] tracking-[-0.015em] text-stone-950">
+              ระบบบริหารจัดการงบประมาณและการบริหารกิจกรรมโครงการ
+            </p>
+          </header>
           <h1 className="text-3xl font-bold tracking-[-0.03em]">เข้าสู่ระบบเพื่อดำเนินงาน</h1>
           <p className="mt-2 text-sm leading-6 text-stone-500">ใช้อีเมลสถาบันและรหัสผ่านของคุณ ระบบจะแสดงข้อมูลตามบทบาทและหน่วยงานที่ได้รับสิทธิ์</p>
           {error ? <p className="mt-5 border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800" role="alert">{error === "inactive" ? "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" : "ลิงก์ยืนยันไม่ถูกต้องหรือหมดอายุ กรุณาเข้าสู่ระบบหรือขอลิงก์ใหม่"}</p> : null}
