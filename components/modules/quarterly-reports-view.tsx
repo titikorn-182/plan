@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { QuarterlyReportRow } from "@/features/quarterly-reports/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 import { EmptyData } from "@/components/ui/data-state";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiInteger } from "@/features/shared/formatters";
 
@@ -20,7 +22,13 @@ function reportTone(status: string): "orange" | "red" | "green" | "gray" {
   return "gray";
 }
 
-export function QuarterlyReportsView({ reports }: { reports: QuarterlyReportRow[] }) {
+export function QuarterlyReportsView({
+  reports,
+  pagination,
+}: {
+  reports: QuarterlyReportRow[];
+  pagination: PaginationMeta;
+}) {
   const submitted = reports.filter(
     (item) => item.status !== "ฉบับร่าง" && item.status !== "เกินกำหนด",
   ).length;
@@ -196,6 +204,7 @@ export function QuarterlyReportsView({ reports }: { reports: QuarterlyReportRow[
             />
           ) : null}
         </div>
+        <PaginationNav basePath="/reports/quarterly" pagination={pagination} />
       </RegisterSection>
 
       <section className="grid gap-px border border-stone-200 bg-stone-200 md:grid-cols-3">

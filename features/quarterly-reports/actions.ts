@@ -6,9 +6,10 @@ import {
   authenticated,
   friendlyError,
   invalid,
-  refreshOperations,
+  revalidateOperationPaths,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const reportSchema = z.object({
   id: uuidOrEmpty,
@@ -19,8 +20,8 @@ const reportSchema = z.object({
   quarter: z.coerce.number().int().min(1).max(4),
   dueAt: z.string().date("กรุณาระบุกำหนดส่ง"),
   progress: z.coerce.number().int().min(0).max(100),
-  summary: z.string().trim().max(5000),
-  problems: z.string().trim().max(5000),
+  summary: z.string().trim().max(INPUT_LIMITS.longText),
+  problems: z.string().trim().max(INPUT_LIMITS.longText),
 });
 
 export async function saveQuarterlyReportAction(
@@ -47,7 +48,14 @@ export async function saveQuarterlyReportAction(
     .select("organization_id,fiscal_year_id")
     .eq("id", input.projectId)
     .single();
-  if (projectError || !project) {
+  if (projectError) {
+    return {
+      ...previous,
+      success: false,
+      message: friendlyError(projectError, "quarterly_reports.project"),
+    };
+  }
+  if (!project) {
     return { ...previous, success: false, message: "ไม่พบโครงการหรือคุณไม่มีสิทธิ์เข้าถึง" };
   }
   if (project.fiscal_year_id !== input.fiscalYearId) {
@@ -114,7 +122,11 @@ export async function saveQuarterlyReportAction(
     }
   }
 
-  refreshOperations();
+  revalidateOperationPaths(
+    "/",
+    "/reports/quarterly",
+    ...(input.intent === "submit" ? ["/approvals", "/notifications"] : []),
+  );
   return {
     success: true,
     id: data.id,

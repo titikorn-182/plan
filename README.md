@@ -63,6 +63,8 @@ npm run build
 - `features/<feature>/types.ts` เก็บ type, enum guard และข้อความสถานะที่เป็นกติกาของฟีเจอร์
 - `features/shared` เก็บโค้ดกลางที่ใช้ร่วมกัน เช่น รอบรายงาน ตัวจัดรูปแบบตัวเลข ผลลัพธ์ query และสถานะของ server action
 - `components/layout`, `components/modules` และ `components/ui` เก็บ shell, หน้าจอโมดูล และส่วนประกอบ UI ตามลำดับ
+- `lib/config` เก็บค่าจำกัดส่วนกลาง เช่น จำนวนรายการต่อหน้าและความยาวข้อมูล เพื่อไม่ให้มี magic value กระจายอยู่ในโค้ด
+- `lib/observability` เก็บ structured error logger ซึ่งสร้างรหัสเหตุการณ์สำหรับค้นหาใน production log โดยไม่เปิดเผยรายละเอียดฐานข้อมูลต่อ browser
 - `lib` เก็บโครงสร้างพื้นฐานร่วม เช่น authentication, Supabase client ตัวช่วยฝั่ง browser และกติกาคำนวณที่ไม่มี UI
 - `app/styles` แยก CSS ตามหน้าที่ ได้แก่ design tokens, workspace shell, form และส่วนต่าง ๆ ของ Executive Command Center
 - `types/database.generated.ts` สร้างจาก schema ของ Supabase และไม่ควรแก้ด้วยมือ
@@ -79,8 +81,9 @@ npm run build
 - บันทึกและส่งตรวจรายงานผลรายไตรมาส
 - บันทึกเบิกจ่ายพร้อม database guard ป้องกันยอดเกินวงเงิน
 - กรอกและส่งรับรอง KPI พร้อมคำนวณสถานะเทียบเป้าหมาย
-- อัปโหลดหลักฐานเข้า private bucket ดาวน์โหลดด้วย signed URL และรับรอง/ส่งกลับได้
+- อัปโหลดหลักฐานจาก browser ตรงเข้า private bucket แล้วลงทะเบียน metadata ผ่าน Route Handler ที่ตรวจ session, path, ชนิดและขนาดไฟล์ ดาวน์โหลดด้วย signed URL และรับรอง/ส่งกลับได้
 - Workflow สองระดับ, notification center และ audit trail
 - Admin แก้บทบาท ขอบเขตหน่วยงาน สถานะบัญชี และเชิญผู้ใช้ได้
+- ทะเบียนข้อมูลขนาดใหญ่แบ่งหน้าที่ Supabase ฝั่งเซิร์ฟเวอร์ ไม่โหลดข้อมูลทั้งหมดเข้า browser
 
 คู่มือทดสอบและนำขึ้นระบบอยู่ที่ `docs/UAT.md` และ `docs/DEPLOYMENT.md` ส่วน import/export แบบกลุ่มและรายการงบประมาณย่อยยังอยู่นอกลำดับงานรอบนี้

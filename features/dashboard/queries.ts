@@ -19,6 +19,7 @@ import {
   getQuarterProgressTarget,
 } from "@/lib/operations/rules";
 import { createClient } from "@/lib/supabase/server";
+import { QUERY_LIMITS } from "@/lib/config/limits";
 
 interface DashboardKpi {
   id: string;
@@ -44,7 +45,11 @@ export async function getDashboardData(): Promise<
   const progressTarget = getQuarterProgressTarget(reportingPeriod.quarter);
   const [queue, organizations, budgets, projects, disbursements, kpis, attachments] =
     await Promise.all([
-      supabase.from("decision_queue").select("*").order("sort_key", { ascending: false }).limit(50),
+      supabase
+        .from("decision_queue")
+        .select("*")
+        .order("sort_key", { ascending: false })
+        .limit(QUERY_LIMITS.dashboardDecisionQueue),
       supabase
         .from("organizations")
         .select("id,code,name_th")

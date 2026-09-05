@@ -1,21 +1,38 @@
 import "server-only";
 
 import type { WorkflowTask } from "@/features/approvals/types";
+import type { ApprovalView } from "@/features/approvals/types";
 import { isWorkflowStatus } from "@/features/approvals/types";
 import { isAppRole } from "@/features/auth/types";
 import { isEvidenceEntityType } from "@/features/evidence/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
+import {
+  createPagination,
+  getPaginationRange,
+  type PaginatedData,
+} from "@/features/shared/pagination";
 import type { DataResult } from "@/features/shared/types";
 import { getViewer } from "@/lib/auth/viewer";
+import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getWorkflowInbox(): Promise<DataResult<WorkflowTask[]>> {
+export function parseApprovalView(value: string | string[] | undefined): ApprovalView {
+  return (Array.isArray(value) ? value[0] : value) === "history" ? "history" : "pending";
+}
+
+export async function getWorkflowInbox(
+  page = 1,
+  view: ApprovalView = "pending",
+): Promise<DataResult<PaginatedData<WorkflowTask>>> {
   const [viewer, supabase] = await Promise.all([getViewer(), createClient()]);
-  const { data, error } = await supabase
-    .from("workflow_inbox")
-    .select("*")
+  const pageSize = QUERY_LIMITS.defaultPageSize;
+  const [from, to] = getPaginationRange(page, pageSize);
+  const baseQuery = supabase.from("workflow_inbox").select("*", { count: "exact" });
+  const scopedQuery =
+    view === "pending" ? baseQuery.eq("status", "pending") : baseQuery.neq("status", "pending");
+  const { data, error, count } = await scopedQuery
     .order("created_at", { ascending: false })
-    .limit(200);
+    .range(from, to);
   const tasks = (data ?? []).flatMap((row): WorkflowTask[] => {
     if (
       !hasValues(row, [
@@ -63,5 +80,9 @@ export async function getWorkflowInbox(): Promise<DataResult<WorkflowTask[]>> {
       },
     ];
   });
-  return result(tasks, error);
+  return result(
+    { items: tasks, pagination: createPagination(count, page, pageSize) },
+    error,
+    "approvals.inbox",
+  );
 }

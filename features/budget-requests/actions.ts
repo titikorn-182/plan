@@ -1,20 +1,25 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { INPUT_LIMITS } from "@/lib/config/limits";
+import { friendlyError, revalidateOperationPaths } from "@/features/shared/server-actions";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
   version: z.coerce.number().int().positive().default(1),
   intent: z.enum(["save", "submit"]),
-  title: z.string().trim().min(5, "ชื่อกิจกรรม/โครงการต้องมีอย่างน้อย 5 ตัวอักษร").max(300),
+  title: z
+    .string()
+    .trim()
+    .min(5, "ชื่อกิจกรรม/โครงการต้องมีอย่างน้อย 5 ตัวอักษร")
+    .max(INPUT_LIMITS.title),
   organizationId: z.string().uuid("กรุณาเลือกหน่วยงาน"),
   fiscalYearId: z.string().uuid(),
   budgetCycleId: z.string().uuid(),
-  projectType: z.string().trim().min(2, "กรุณาเลือกประเภทคำขอ").max(120),
-  ownerName: z.string().trim().min(2, "กรุณาระบุผู้รับผิดชอบหลัก").max(180),
-  rationale: z.string().trim().max(5000),
+  projectType: z.string().trim().min(2, "กรุณาเลือกประเภทคำขอ").max(INPUT_LIMITS.shortText),
+  ownerName: z.string().trim().min(2, "กรุณาระบุผู้รับผิดชอบหลัก").max(INPUT_LIMITS.personName),
+  rationale: z.string().trim().max(INPUT_LIMITS.longText),
   amount: z.coerce.number().min(0).max(999_999_999_999),
 });
 
@@ -61,7 +66,14 @@ export async function saveBudgetRequestAction(
     .select("buddhist_year")
     .eq("id", parsed.data.fiscalYearId)
     .single();
-  if (fiscalError || !fiscalYear) {
+  if (fiscalError) {
+    return {
+      ...previous,
+      success: false,
+      message: friendlyError(fiscalError, "budget_requests.fiscal_year"),
+    };
+  }
+  if (!fiscalYear) {
     return {
       ...previous,
       success: false,
@@ -118,7 +130,7 @@ export async function saveBudgetRequestAction(
     return {
       ...previous,
       success: false,
-      message: conflict ?? denied ?? `บันทึกไม่สำเร็จ: ${error.message}`,
+      message: conflict ?? denied ?? friendlyError(error, "budget_requests.save"),
       id: parsed.data.id || previous.id,
       version: parsed.data.version,
     };
@@ -139,7 +151,10 @@ export async function saveBudgetRequestAction(
     if (workflowError) {
       return {
         success: false,
-        message: `บันทึก ${data.code} เป็นฉบับร่างแล้ว แต่ส่งอนุมัติไม่สำเร็จ กรุณาลองส่งอีกครั้ง`,
+        message: `บันทึก ${data.code} เป็นฉบับร่างแล้ว แต่ส่งอนุมัติไม่สำเร็จ: ${friendlyError(
+          workflowError,
+          "budget_requests.submit",
+        )}`,
         id: data.id,
         code: data.code,
         version: data.version,
@@ -147,9 +162,11 @@ export async function saveBudgetRequestAction(
     }
   }
 
-  revalidatePath("/");
-  revalidatePath("/budget-requests");
-  revalidatePath("/approvals");
+  revalidateOperationPaths(
+    "/",
+    "/budget-requests",
+    ...(parsed.data.intent === "submit" ? ["/approvals", "/notifications"] : []),
+  );
   return {
     success: true,
     message:

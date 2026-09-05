@@ -7,33 +7,48 @@ import type {
   QuarterlyReportRow,
 } from "@/features/quarterly-reports/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
+import {
+  createPagination,
+  getPaginationRange,
+  type PaginatedData,
+} from "@/features/shared/pagination";
 import { getOrganizationsAndYears } from "@/features/shared/queries";
 import type { DataResult } from "@/features/shared/types";
+import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getQuarterlyReports(): Promise<DataResult<QuarterlyReportRow[]>> {
+export async function getQuarterlyReports(
+  page = 1,
+): Promise<DataResult<PaginatedData<QuarterlyReportRow>>> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const pageSize = QUERY_LIMITS.defaultPageSize;
+  const [from, to] = getPaginationRange(page, pageSize);
+  const { data, error, count } = await supabase
     .from("quarterly_report_register")
-    .select("*")
-    .order("due_at", { ascending: true });
+    .select("*", { count: "exact" })
+    .order("due_at", { ascending: true })
+    .range(from, to);
   return result(
-    (data ?? [])
-      .filter((row) =>
-        hasValues(row, ["id", "project", "title", "unit", "quarter", "buddhist_year", "status"]),
-      )
-      .map((row) => ({
-        uuid: row.id,
-        project: row.project,
-        title: row.title,
-        unit: row.unit,
-        quarter: `Q${row.quarter}/${row.buddhist_year}`,
-        due: formatDate(row.due_at),
-        status: REPORT_STATUS_LABELS[row.status] ?? "ฉบับร่าง",
-        progress: Number(row.progress),
-        evidence: Number(row.evidence),
-      })),
+    {
+      items: (data ?? [])
+        .filter((row) =>
+          hasValues(row, ["id", "project", "title", "unit", "quarter", "buddhist_year", "status"]),
+        )
+        .map((row) => ({
+          uuid: row.id,
+          project: row.project,
+          title: row.title,
+          unit: row.unit,
+          quarter: `Q${row.quarter}/${row.buddhist_year}`,
+          due: formatDate(row.due_at),
+          status: REPORT_STATUS_LABELS[row.status] ?? "ฉบับร่าง",
+          progress: Number(row.progress),
+          evidence: Number(row.evidence),
+        })),
+      pagination: createPagination(count, page, pageSize),
+    },
     error,
+    "quarterly_reports.list",
   );
 }
 

@@ -13,8 +13,10 @@ import {
   Users,
 } from "lucide-react";
 import type { ProjectRow } from "@/features/projects/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatters";
 import { EmptyData } from "@/components/ui/data-state";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 
 function healthTone(health: string): "orange" | "red" | "green" {
@@ -23,7 +25,13 @@ function healthTone(health: string): "orange" | "red" | "green" {
   return "orange";
 }
 
-export function ProjectsView({ projects }: { projects: ProjectRow[] }) {
+export function ProjectsView({
+  projects,
+  pagination,
+}: {
+  projects: ProjectRow[];
+  pagination: PaginationMeta;
+}) {
   const [selectedId, setSelectedId] = useState(projects[0]?.id ?? "");
   const selected = projects.find((project) => project.id === selectedId) ?? projects[0];
 
@@ -48,10 +56,10 @@ export function ProjectsView({ projects }: { projects: ProjectRow[] }) {
       <section className="grid border border-stone-200 bg-white lg:grid-cols-[1fr_auto]">
         <div className="grid sm:grid-cols-4">
           {[
-            { n: projects.length, label: "โครงการทั้งหมด" },
-            { n: activeCount, label: "กำลังดำเนินงาน" },
-            { n: watchCount, label: "ต้องเฝ้าระวัง" },
-            { n: delayedCount, label: "ล่าช้า" },
+            { n: pagination.total, label: "โครงการทั้งหมด" },
+            { n: activeCount, label: "กำลังดำเนินงาน (หน้านี้)" },
+            { n: watchCount, label: "ต้องเฝ้าระวัง (หน้านี้)" },
+            { n: delayedCount, label: "ล่าช้า (หน้านี้)" },
           ].map((item, index) => (
             <article
               className={`flex items-center gap-3 px-5 py-4 ${index < 3 ? "border-b border-stone-200 sm:border-r sm:border-b-0" : ""}`}
@@ -137,6 +145,7 @@ export function ProjectsView({ projects }: { projects: ProjectRow[] }) {
               </tbody>
             </table>
           </div>
+          <PaginationNav basePath="/projects" pagination={pagination} />
         </RegisterSection>
 
         <aside className="h-fit border border-stone-200 bg-white xl:sticky xl:top-[120px]">

@@ -8,36 +8,49 @@ import {
   type KpiResultFormRecord,
   type KpiRow,
 } from "@/features/kpi/types";
-import { hasValues, result } from "@/features/shared/query-utils";
+import { expectedResultError, hasValues, result } from "@/features/shared/query-utils";
+import {
+  createPagination,
+  getPaginationRange,
+  type PaginatedData,
+} from "@/features/shared/pagination";
 import type { DataResult } from "@/features/shared/types";
+import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getKpis(): Promise<DataResult<KpiRow[]>> {
+export async function getKpis(page = 1): Promise<DataResult<PaginatedData<KpiRow>>> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const pageSize = QUERY_LIMITS.defaultPageSize;
+  const [from, to] = getPaginationRange(page, pageSize);
+  const { data, error, count } = await supabase
     .from("kpi_register")
-    .select("*")
-    .order("code", { ascending: true });
+    .select("*", { count: "exact" })
+    .order("code", { ascending: true })
+    .range(from, to);
   return result(
-    (data ?? [])
-      .filter((row) =>
-        hasValues(row, ["id", "code", "name", "owner", "framework", "unit", "status"]),
-      )
-      .map((row) => ({
-        uuid: row.id,
-        code: row.code,
-        name: row.name,
-        owner: row.owner,
-        framework: isKpiFramework(row.framework) ? row.framework : "Internal",
-        target: Number(row.target),
-        actual: row.actual === null ? null : Number(row.actual),
-        unit: row.unit,
-        status: KPI_STATUS_LABELS[row.status] ?? "ไม่มีข้อมูล",
-        workflowStatus: isKpiResultStatus(row.workflow_status)
-          ? row.workflow_status
-          : "not_started",
-      })),
+    {
+      items: (data ?? [])
+        .filter((row) =>
+          hasValues(row, ["id", "code", "name", "owner", "framework", "unit", "status"]),
+        )
+        .map((row) => ({
+          uuid: row.id,
+          code: row.code,
+          name: row.name,
+          owner: row.owner,
+          framework: isKpiFramework(row.framework) ? row.framework : "Internal",
+          target: Number(row.target),
+          actual: row.actual === null ? null : Number(row.actual),
+          unit: row.unit,
+          status: KPI_STATUS_LABELS[row.status] ?? "ไม่มีข้อมูล",
+          workflowStatus: isKpiResultStatus(row.workflow_status)
+            ? row.workflow_status
+            : "not_started",
+        })),
+      pagination: createPagination(count, page, pageSize),
+    },
     error,
+    "kpi.list",
   );
 }
 
@@ -52,9 +65,8 @@ export async function getKpiResultFormRecord(
     )
     .eq("id", resultId)
     .maybeSingle();
-  if (error || !data) {
-    return result(null, error ?? { message: "ไม่พบผลตัวชี้วัดหรือคุณไม่มีสิทธิ์เข้าถึง" });
-  }
+  if (error) return result(null, error, "kpi.form");
+  if (!data) return expectedResultError(null, "ไม่พบผลตัวชี้วัดหรือคุณไม่มีสิทธิ์เข้าถึง");
 
   const definition = Array.isArray(data.kpi_definitions)
     ? data.kpi_definitions[0]
@@ -64,7 +76,7 @@ export async function getKpiResultFormRecord(
     !isKpiFramework(definition.framework) ||
     !isKpiDirection(definition.direction)
   ) {
-    return result(null, { message: "ข้อมูลชนิดของ KPI ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ" });
+    return expectedResultError(null, "ข้อมูลชนิดของ KPI ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ");
   }
   return result({
     id: data.id,

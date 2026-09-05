@@ -6,10 +6,11 @@ import {
   authenticated,
   friendlyError,
   invalid,
-  refreshOperations,
+  revalidateOperationPaths,
 } from "@/features/shared/server-actions";
 import { remainingBudget } from "@/lib/operations/rules";
 import { formatThaiInteger } from "@/features/shared/formatters";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const disbursementSchema = z.object({
   projectId: z.string().uuid("กรุณาเลือกโครงการ"),
@@ -17,7 +18,7 @@ const disbursementSchema = z.object({
   quarter: z.coerce.number().int().min(1).max(4),
   amount: z.coerce.number().finite().positive("ยอดเบิกจ่ายต้องมากกว่า 0"),
   disbursedOn: z.string().date("กรุณาระบุวันที่เบิกจ่าย"),
-  referenceNo: z.string().trim().max(120),
+  referenceNo: z.string().trim().max(INPUT_LIMITS.shortText),
   status: z.enum(["recorded", "reconciled", "pending_docs", "delayed"]),
 });
 
@@ -37,7 +38,14 @@ export async function saveDisbursementAction(
     .select("organization_id,fiscal_year_id,approved_budget,disbursed_amount")
     .eq("id", input.projectId)
     .single();
-  if (projectError || !project) {
+  if (projectError) {
+    return {
+      ...previous,
+      success: false,
+      message: friendlyError(projectError, "disbursements.project"),
+    };
+  }
+  if (!project) {
     return { ...previous, success: false, message: "ไม่พบโครงการหรือคุณไม่มีสิทธิ์เข้าถึง" };
   }
   if (project.fiscal_year_id !== input.fiscalYearId) {
@@ -75,7 +83,7 @@ export async function saveDisbursementAction(
     .single();
   if (error) return { ...previous, success: false, message: friendlyError(error) };
 
-  refreshOperations();
+  revalidateOperationPaths("/", "/disbursements", "/projects");
   return {
     success: true,
     id: data.id,

@@ -8,6 +8,7 @@ import { friendlyError, invalid } from "@/features/shared/server-actions";
 import { requireAdmin } from "@/lib/auth/viewer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export async function updateUserAccessAction(
   previous: OperationState,
@@ -54,7 +55,7 @@ export async function updateUserAccessAction(
 
 const invitationSchema = z.object({
   email: z.string().trim().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  fullName: z.string().trim().min(2, "กรุณาระบุชื่อผู้ใช้งาน").max(180),
+  fullName: z.string().trim().min(2, "กรุณาระบุชื่อผู้ใช้งาน").max(INPUT_LIMITS.personName),
   role: z.enum(APP_ROLES),
 });
 
@@ -81,15 +82,29 @@ export async function inviteUserAction(
     redirectTo,
   });
   if (error || !data.user) {
-    return { ...previous, success: false, message: error?.message ?? "สร้างผู้ใช้ไม่สำเร็จ" };
+    return {
+      ...previous,
+      success: false,
+      message: error ? friendlyError(error, "admin.invite_user") : "สร้างผู้ใช้ไม่สำเร็จ",
+    };
   }
 
-  await admin.from("profiles").upsert({
+  const { error: profileError } = await admin.from("profiles").upsert({
     id: data.user.id,
     email: parsed.data.email,
     full_name: parsed.data.fullName,
     is_active: true,
   });
+  if (profileError) {
+    return {
+      ...previous,
+      success: false,
+      message: `ส่งคำเชิญแล้ว แต่สร้างข้อมูลผู้ใช้ไม่สำเร็จ: ${friendlyError(
+        profileError,
+        "admin.create_profile",
+      )}`,
+    };
+  }
   const { error: roleError } = await admin.from("user_roles").insert({
     profile_id: data.user.id,
     role: parsed.data.role,
@@ -98,7 +113,10 @@ export async function inviteUserAction(
     return {
       ...previous,
       success: false,
-      message: `ส่งคำเชิญแล้ว แต่กำหนดบทบาทไม่สำเร็จ: ${roleError.message}`,
+      message: `ส่งคำเชิญแล้ว แต่กำหนดบทบาทไม่สำเร็จ: ${friendlyError(
+        roleError,
+        "admin.assign_role",
+      )}`,
     };
   }
 

@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, ChevronDown, Download, FilePlus2, Search } from "lucide-react";
 import type { BudgetRequest } from "@/features/budget-requests/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatThaiInteger, formatThaiMoney, formatThaiNumber } from "@/features/shared/formatters";
 import { downloadCsv } from "@/lib/browser/download";
 
@@ -17,16 +19,19 @@ const statusTone: Record<BudgetRequest["status"], "orange" | "red" | "green" | "
   ยกเลิก: "gray",
 };
 
-const pageSize = 10;
-
 function csvCell(value: string | number) {
   return `"${String(value).replaceAll('"', '""')}"`;
 }
 
-export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) {
+export function BudgetRequestsView({
+  requests,
+  pagination,
+}: {
+  requests: BudgetRequest[];
+  pagination: PaginationMeta;
+}) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ทั้งหมด");
-  const [page, setPage] = useState(1);
 
   const rows = useMemo(
     () =>
@@ -39,9 +44,6 @@ export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) 
       }),
     [query, requests, status],
   );
-  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-  const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
-
   function exportCsv() {
     const header = [
       "รหัสคำขอ",
@@ -68,7 +70,7 @@ export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) 
   const summary = [
     [
       "คำขอทั้งหมด",
-      requests.length,
+      pagination.total,
       `วงเงิน ${formatThaiNumber(requests.reduce((sum, item) => sum + item.amount, 0) / 1_000_000, {
         maximumFractionDigits: 2,
       })} ล้านบาท`,
@@ -126,9 +128,8 @@ export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) 
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
-                setPage(1);
               }}
-              placeholder="ค้นหารหัส รายการ หรือหน่วยงาน"
+              placeholder="ค้นหาในหน้าปัจจุบัน"
             />
           </label>
           <label className="relative flex h-10 items-center border border-stone-300 bg-white px-3">
@@ -138,7 +139,6 @@ export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) 
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
-                setPage(1);
               }}
             >
               <option>ทั้งหมด</option>
@@ -183,7 +183,7 @@ export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) 
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((item) => (
+              {rows.map((item) => (
                 <tr
                   className="border-b border-stone-200 bg-white transition-colors hover:bg-orange-50/60"
                   key={item.uuid}
@@ -222,33 +222,7 @@ export function BudgetRequestsView({ requests }: { requests: BudgetRequest[] }) 
           ) : null}
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-stone-500">
-          <span>
-            หน้า {formatThaiInteger(page)} จาก {formatThaiInteger(totalPages)} · แสดง{" "}
-            {formatThaiInteger(pageRows.length)} รายการ
-          </span>
-          <div className="flex gap-1">
-            <button
-              className="border border-stone-300 px-3 py-1.5 disabled:opacity-40"
-              type="button"
-              disabled={page === 1}
-              onClick={() => setPage((value) => Math.max(1, value - 1))}
-            >
-              ก่อนหน้า
-            </button>
-            <span className="bg-[#cf430c] px-3 py-1.5 text-white" aria-current="page">
-              {formatThaiInteger(page)}
-            </span>
-            <button
-              className="border border-stone-300 px-3 py-1.5 disabled:opacity-40"
-              type="button"
-              disabled={page === totalPages}
-              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-            >
-              ถัดไป
-            </button>
-          </div>
-        </footer>
+        <PaginationNav basePath="/budget-requests" pagination={pagination} />
       </RegisterSection>
     </div>
   );

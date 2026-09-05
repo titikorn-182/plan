@@ -7,6 +7,7 @@ import type {
   ReportingPeriod,
 } from "@/features/shared/types";
 import { createClient } from "@/lib/supabase/server";
+import { reportServerError } from "@/lib/observability/server-logger";
 
 function toQuarter(value: number): ReportingPeriod["quarter"] {
   if (value <= 1) return 1;
@@ -52,7 +53,11 @@ export const getReportingPeriod = cache(async (): Promise<ReportingPeriod> => {
     .select("id,buddhist_year,label,starts_on,ends_on,status")
     .in("status", ["open", "closed"])
     .order("buddhist_year", { ascending: false });
-  if (error || !data?.length) return fallbackReportingPeriod();
+  if (error) {
+    reportServerError("reporting_period.load", error);
+    return fallbackReportingPeriod();
+  }
+  if (!data?.length) return fallbackReportingPeriod();
 
   const today = new Date();
   const todayKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Bangkok" }).format(today);

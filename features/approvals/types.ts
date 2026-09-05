@@ -9,6 +9,7 @@ export const WORKFLOW_STATUSES = [
   "cancelled",
 ] as const;
 export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
+export type ApprovalView = "pending" | "history";
 
 export const WORKFLOW_STATUS_LABELS: Readonly<Record<WorkflowStatus, string>> = {
   pending: "รอดำเนินการ",

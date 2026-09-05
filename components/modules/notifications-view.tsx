@@ -5,7 +5,9 @@ import { Bell, Check, CheckCheck, LoaderCircle } from "lucide-react";
 import { markNotificationAction } from "@/features/notifications/actions";
 import type { OperationState } from "@/features/shared/action-state";
 import { RegisterSection } from "@/components/ui/module-primitives";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import type { NotificationRow } from "@/features/notifications/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 
 function ReadButton({ id }: { id: string }) {
   const [, action, pending] = useActionState(markNotificationAction, {} satisfies OperationState);
@@ -23,19 +25,26 @@ function ReadButton({ id }: { id: string }) {
   );
 }
 
-export function NotificationsView({ notifications }: { notifications: NotificationRow[] }) {
+export function NotificationsView({
+  notifications,
+  pagination,
+  unreadCount,
+}: {
+  notifications: NotificationRow[];
+  pagination: PaginationMeta;
+  unreadCount: number;
+}) {
   const [state, action, pending] = useActionState(
     markNotificationAction,
     {} satisfies OperationState,
   );
-  const unread = notifications.filter((item) => !item.read).length;
   return (
     <div className="space-y-5">
       <section className="grid border border-stone-200 bg-white sm:grid-cols-[1fr_auto]">
         <div className="flex items-center gap-4 p-5">
           <Bell className="text-[#c9440b]" />
           <span>
-            <b className="block text-2xl">{unread}</b>
+            <b className="block text-2xl">{unreadCount}</b>
             <small className="text-stone-500">การแจ้งเตือนที่ยังไม่อ่าน</small>
           </span>
         </div>
@@ -46,7 +55,7 @@ export function NotificationsView({ notifications }: { notifications: Notificati
           <input type="hidden" name="all" value="true" />
           <button
             className="inline-flex w-full items-center justify-center gap-2 border border-stone-300 px-4 py-2 text-xs font-semibold hover:border-orange-400 disabled:opacity-50"
-            disabled={pending || unread === 0}
+            disabled={pending || unreadCount === 0}
           >
             {pending ? (
               <LoaderCircle className="animate-spin" size={15} />
@@ -98,6 +107,7 @@ export function NotificationsView({ notifications }: { notifications: Notificati
             <li className="p-10 text-center text-sm text-stone-500">ยังไม่มีการแจ้งเตือน</li>
           ) : null}
         </ul>
+        <PaginationNav basePath="/notifications" pagination={pagination} />
       </RegisterSection>
     </div>
   );

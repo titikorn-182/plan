@@ -3,8 +3,14 @@ import "server-only";
 import type { ProjectFormOptions, ProjectOption, ProjectRow } from "@/features/projects/types";
 import type { DataResult } from "@/features/shared/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
+import {
+  createPagination,
+  getPaginationRange,
+  type PaginatedData,
+} from "@/features/shared/pagination";
 import { getOrganizationsAndYears } from "@/features/shared/queries";
 import { getViewer } from "@/lib/auth/viewer";
+import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
 const PROJECT_HEALTH_LABELS: Record<string, ProjectRow["health"]> = {
@@ -14,29 +20,38 @@ const PROJECT_HEALTH_LABELS: Record<string, ProjectRow["health"]> = {
   delayed: "ล่าช้า",
 };
 
-export async function getProjects(): Promise<DataResult<ProjectRow[]>> {
+export async function getProjects(page = 1): Promise<DataResult<PaginatedData<ProjectRow>>> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const pageSize = QUERY_LIMITS.defaultPageSize;
+  const [from, to] = getPaginationRange(page, pageSize);
+  const { data, error, count } = await supabase
     .from("project_register")
-    .select("*")
-    .order("updated_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("updated_at", { ascending: false })
+    .range(from, to);
   return result(
-    (data ?? [])
-      .filter((row) => hasValues(row, ["id", "code", "title", "unit", "health", "owner", "status"]))
-      .map((row) => ({
-        uuid: row.id,
-        id: row.code,
-        title: row.title,
-        unit: row.unit,
-        budget: Number(row.budget),
-        spent: Number(row.spent),
-        progress: Number(row.progress),
-        health: PROJECT_HEALTH_LABELS[row.health] ?? "เฝ้าระวัง",
-        owner: row.owner,
-        due: formatDate(row.due),
-        editable: row.status === "proposed" && !row.has_pending_approval,
-      })),
+    {
+      items: (data ?? [])
+        .filter((row) =>
+          hasValues(row, ["id", "code", "title", "unit", "health", "owner", "status"]),
+        )
+        .map((row) => ({
+          uuid: row.id,
+          id: row.code,
+          title: row.title,
+          unit: row.unit,
+          budget: Number(row.budget),
+          spent: Number(row.spent),
+          progress: Number(row.progress),
+          health: PROJECT_HEALTH_LABELS[row.health] ?? "เฝ้าระวัง",
+          owner: row.owner,
+          due: formatDate(row.due),
+          editable: row.status === "proposed" && !row.has_pending_approval,
+        })),
+      pagination: createPagination(count, page, pageSize),
+    },
     error,
+    "projects.list",
   );
 }
 
@@ -50,7 +65,8 @@ export async function getAccessibleProjects(): Promise<{
     .select("id,code,title_th,organization_id,fiscal_year_id,approved_budget,disbursed_amount")
     .in("status", ["proposed", "active", "on_hold", "completed"])
     .is("archived_at", null)
-    .order("code");
+    .order("code")
+    .limit(QUERY_LIMITS.selectOptions);
   return {
     data: (query.data ?? []).map((row) => ({
       id: row.id,
@@ -78,7 +94,8 @@ export async function getProjectFormOptions(
       .select("id,code,title_th")
       .eq("status", "approved")
       .is("archived_at", null)
-      .order("code"),
+      .order("code")
+      .limit(QUERY_LIMITS.selectOptions),
     projectId
       ? supabase
           .from("projects")

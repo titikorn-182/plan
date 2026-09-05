@@ -91,3 +91,70 @@ test("service role is server-only and absent from public variable names", () => 
   assert.match(adminSource, /import "server-only"/);
   assert.equal(adminSource.includes("NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY"), false);
 });
+
+test("large operational registers use server-side pagination", () => {
+  const queryFiles = [
+    "features/admin/queries.ts",
+    "features/approvals/queries.ts",
+    "features/budget-requests/queries.ts",
+    "features/disbursements/queries.ts",
+    "features/evidence/queries.ts",
+    "features/kpi/queries.ts",
+    "features/notifications/queries.ts",
+    "features/projects/queries.ts",
+    "features/quarterly-reports/queries.ts",
+  ];
+  queryFiles.forEach((path) => {
+    const source = read(path);
+    assert.match(source, /count:\s*"exact"/, `${path} requests a total count`);
+    assert.match(source, /\.range\(from, to\)/, `${path} fetches only the requested page`);
+  });
+  assert.equal(existsSync(resolve(root, "components/ui/pagination-nav.tsx")), true);
+});
+
+test("evidence files bypass Server Actions and are registered by an authenticated route", () => {
+  const component = read("components/modules/evidence-view.tsx");
+  const actions = read("features/evidence/actions.ts");
+  const route = read("app/api/evidence/route.ts");
+  const nextConfig = read("next.config.ts");
+
+  assert.match(component, /\.storage\s*\.from\(EVIDENCE_BUCKET\)\s*\.upload\(/s);
+  assert.equal(actions.includes("uploadEvidenceAction"), false);
+  assert.match(route, /authenticated\(\)/);
+  assert.match(route, /isExpectedEvidenceStoragePath/);
+  assert.match(route, /\.from\("attachments"\)/);
+  assert.equal(nextConfig.includes("bodySizeLimit"), false);
+  assert.equal(component.includes("uploadError.message"), false);
+});
+
+test("mutations revalidate only their affected paths", () => {
+  const helper = read("features/shared/server-actions.ts");
+  const actionSources = [
+    "features/approvals/actions.ts",
+    "features/budget-requests/actions.ts",
+    "features/disbursements/actions.ts",
+    "features/evidence/actions.ts",
+    "features/kpi/actions.ts",
+    "features/projects/actions.ts",
+    "features/quarterly-reports/actions.ts",
+  ].map(read);
+
+  assert.equal(helper.includes("refreshOperations"), false);
+  assert.equal(
+    actionSources.every((source) => source.includes("revalidateOperationPaths")),
+    true,
+  );
+});
+
+test("unexpected server errors are logged with an incident id and hidden from browser output", () => {
+  const logger = read("lib/observability/server-logger.ts");
+  const queryHelper = read("features/shared/query-utils.ts");
+  const actionHelper = read("features/shared/server-actions.ts");
+
+  assert.match(logger, /crypto\.randomUUID\(\)/);
+  assert.match(logger, /\[application-error\]/);
+  assert.match(queryHelper, /publicFailureMessage\(eventId\)/);
+  assert.match(actionHelper, /publicFailureMessage\(reportServerError/);
+  assert.equal(actionHelper.includes("return error.message"), false);
+  assert.equal(existsSync(resolve(root, "instrumentation.ts")), true);
+});

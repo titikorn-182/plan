@@ -6,6 +6,8 @@ import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Upload } from "
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { EmptyData } from "@/components/ui/data-state";
 import type { DisbursementRow } from "@/features/disbursements/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatters";
 
 function tone(status: string): "green" | "orange" | "red" {
@@ -14,7 +16,13 @@ function tone(status: string): "green" | "orange" | "red" {
   return "orange";
 }
 
-export function DisbursementsView({ rows }: { rows: DisbursementRow[] }) {
+export function DisbursementsView({
+  rows,
+  pagination,
+}: {
+  rows: DisbursementRow[];
+  pagination: PaginationMeta;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState("ยังไม่เลือกไฟล์สำหรับนำเข้า");
   const totals = rows.reduce(
@@ -228,6 +236,7 @@ export function DisbursementsView({ rows }: { rows: DisbursementRow[] }) {
             />
           ) : null}
         </div>
+        <PaginationNav basePath="/disbursements" pagination={pagination} />
       </RegisterSection>
 
       <section className="grid gap-px border border-stone-200 bg-stone-200 lg:grid-cols-3">

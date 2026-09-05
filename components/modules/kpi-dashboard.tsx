@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, CheckCircle2, FileWarning, Target } from "lucide-react";
 import type { KpiRow } from "@/features/kpi/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 import { EmptyData } from "@/components/ui/data-state";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatters";
 
@@ -14,7 +16,7 @@ function resultTone(status: string): "green" | "orange" | "red" {
   return "orange";
 }
 
-export function KpiDashboard({ kpis }: { kpis: KpiRow[] }) {
+export function KpiDashboard({ kpis, pagination }: { kpis: KpiRow[]; pagination: PaginationMeta }) {
   const [framework, setFramework] = useState<"ทั้งหมด" | "EdPEx" | "AUN-QA">("ทั้งหมด");
   const rows = useMemo(
     () => kpis.filter((row) => framework === "ทั้งหมด" || row.framework === framework),
@@ -38,7 +40,7 @@ export function KpiDashboard({ kpis }: { kpis: KpiRow[] }) {
     <div className="space-y-5">
       <section className="grid border border-stone-200 bg-white lg:grid-cols-[260px_1fr]">
         <div className="border-b border-stone-200 bg-[#fff4eb] p-5 lg:border-r lg:border-b-0">
-          <span className="text-xs font-semibold text-[#b53807]">ผลการดำเนินงานภาพรวม</span>
+          <span className="text-xs font-semibold text-[#b53807]">ผลการดำเนินงานในหน้าปัจจุบัน</span>
           <div className="mt-2 flex items-end gap-2">
             <strong className="text-4xl tabular-nums">
               {formatThaiNumber(overall, { maximumFractionDigits: 1 })}
@@ -51,16 +53,26 @@ export function KpiDashboard({ kpis }: { kpis: KpiRow[] }) {
         </div>
         <div className="grid sm:grid-cols-4">
           {[
-            { label: "ตัวชี้วัดทั้งหมด", value: kpis.length, icon: Target, color: "text-sky-800" },
             {
-              label: "บรรลุเป้าหมาย",
+              label: "ตัวชี้วัดทั้งหมด",
+              value: pagination.total,
+              icon: Target,
+              color: "text-sky-800",
+            },
+            {
+              label: "บรรลุเป้าหมาย (หน้านี้)",
               value: achieved,
               icon: CheckCircle2,
               color: "text-emerald-700",
             },
-            { label: "เฝ้าระวัง", value: watch, icon: AlertTriangle, color: "text-orange-700" },
             {
-              label: "มีช่องว่างข้อมูล/ผลลัพธ์",
+              label: "เฝ้าระวัง (หน้านี้)",
+              value: watch,
+              icon: AlertTriangle,
+              color: "text-orange-700",
+            },
+            {
+              label: "มีช่องว่าง (หน้านี้)",
               value: gaps,
               icon: FileWarning,
               color: "text-red-700",
@@ -167,6 +179,7 @@ export function KpiDashboard({ kpis }: { kpis: KpiRow[] }) {
               />
             ) : null}
           </div>
+          <PaginationNav basePath="/kpi" pagination={pagination} />
         </RegisterSection>
 
         <aside className="space-y-5">

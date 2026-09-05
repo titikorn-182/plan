@@ -3,6 +3,7 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { OperationState } from "@/features/shared/action-state";
+import { publicFailureMessage, reportServerError } from "@/lib/observability/server-logger";
 import { createClient } from "@/lib/supabase/server";
 
 export const uuidOrEmpty = z.string().uuid().optional().or(z.literal(""));
@@ -17,7 +18,10 @@ export function invalid(previous: OperationState, error: z.ZodError): OperationS
   };
 }
 
-export function friendlyError(error: { code?: string; message: string }): string {
+export function friendlyError(
+  error: { code?: string; message: string },
+  operation = "database_mutation",
+): string {
   if (error.code === "42501") return "คุณไม่มีสิทธิ์ดำเนินการกับข้อมูลนี้";
   if (error.code === "23505") return "มีรายการของรอบนี้อยู่แล้ว กรุณาเปิดรายการเดิมเพื่อแก้ไข";
   if (error.code === "23514") {
@@ -26,7 +30,7 @@ export function friendlyError(error: { code?: string; message: string }): string
     }
     return "ข้อมูลไม่ผ่านเงื่อนไขของระบบ กรุณาตรวจสอบสถานะและค่าที่กรอก";
   }
-  return error.message;
+  return publicFailureMessage(reportServerError(operation, error, { code: error.code }));
 }
 
 export async function authenticated() {
@@ -38,16 +42,6 @@ export async function authenticated() {
   return { supabase, userId };
 }
 
-export function refreshOperations(): void {
-  [
-    "/",
-    "/projects",
-    "/reports/quarterly",
-    "/disbursements",
-    "/kpi",
-    "/evidence",
-    "/approvals",
-    "/notifications",
-    "/admin",
-  ].forEach((path) => revalidatePath(path));
+export function revalidateOperationPaths(...paths: string[]): void {
+  new Set(paths).forEach((path) => revalidatePath(path));
 }

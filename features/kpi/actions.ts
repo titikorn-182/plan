@@ -7,9 +7,10 @@ import {
   authenticated,
   friendlyError,
   invalid,
-  refreshOperations,
+  revalidateOperationPaths,
 } from "@/features/shared/server-actions";
 import { evaluateKpiResult } from "@/lib/operations/rules";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const kpiSchema = z.object({
   id: z.string().uuid(),
@@ -17,7 +18,7 @@ const kpiSchema = z.object({
   intent: z.enum(["save", "submit"]),
   actual: z.coerce.number().finite(),
   quarter: z.union([z.coerce.number().int().min(1).max(4), z.literal("")]),
-  explanation: z.string().trim().max(5000),
+  explanation: z.string().trim().max(INPUT_LIMITS.longText),
 });
 
 export async function saveKpiResultAction(
@@ -44,7 +45,14 @@ export async function saveKpiResultAction(
     .select("kpi_definitions!inner(target,direction)")
     .eq("id", input.id)
     .single();
-  if (currentError || !current) {
+  if (currentError) {
+    return {
+      ...previous,
+      success: false,
+      message: friendlyError(currentError, "kpi.current_result"),
+    };
+  }
+  if (!current) {
     return { ...previous, success: false, message: "ไม่พบตัวชี้วัดหรือคุณไม่มีสิทธิ์เข้าถึง" };
   }
   const definition = Array.isArray(current.kpi_definitions)
@@ -102,7 +110,11 @@ export async function saveKpiResultAction(
     }
   }
 
-  refreshOperations();
+  revalidateOperationPaths(
+    "/",
+    "/kpi",
+    ...(input.intent === "submit" ? ["/approvals", "/notifications"] : []),
+  );
   return {
     success: true,
     id: data.id,

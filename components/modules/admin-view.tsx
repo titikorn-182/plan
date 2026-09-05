@@ -17,9 +17,11 @@ import { inviteUserAction, updateUserAccessAction } from "@/features/admin/actio
 import type { OperationState } from "@/features/shared/action-state";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import type { AdminUser, AuditRow } from "@/features/admin/types";
 import { APP_ROLE_NAMES, APP_ROLES } from "@/features/auth/types";
 import type { OrganizationOption } from "@/features/shared/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 
 const permissionRows = [
   ["Dashboard ส่วนบุคคล", true, true, true, true],
@@ -171,7 +173,12 @@ export function AdminView({
   organizations,
   viewerId,
 }: {
-  data: { users: AdminUser[]; audits: AuditRow[]; organizationCount: number };
+  data: {
+    users: AdminUser[];
+    audits: AuditRow[];
+    organizationCount: number;
+    pagination: PaginationMeta;
+  };
   organizations: OrganizationOption[];
   viewerId: string;
 }) {
@@ -192,9 +199,9 @@ export function AdminView({
     <div className="space-y-5">
       <section className="grid border border-stone-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "ผู้ใช้งานทั้งหมด", value: data.users.length, icon: Users },
+          { label: "ผู้ใช้งานทั้งหมด", value: data.pagination.total, icon: Users },
           {
-            label: "ระงับการใช้งาน",
+            label: "ระงับการใช้งาน (หน้านี้)",
             value: data.users.filter((user) => !user.active).length,
             icon: UserCog,
           },
@@ -224,7 +231,7 @@ export function AdminView({
                   className="w-44 text-xs outline-none"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="ค้นหาชื่อ อีเมล บทบาท"
+                  placeholder="ค้นหาในหน้านี้"
                 />
               </label>
             }
@@ -270,6 +277,7 @@ export function AdminView({
                 </tbody>
               </table>
             </div>
+            <PaginationNav basePath="/admin" pagination={data.pagination} />
           </RegisterSection>
           <RegisterSection
             title="สิทธิ์มาตรฐานตามบทบาท"

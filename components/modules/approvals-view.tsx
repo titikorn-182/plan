@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState } from "react";
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -14,11 +14,14 @@ import {
 import { actOnApprovalAction } from "@/features/approvals/actions";
 import type { OperationState } from "@/features/shared/action-state";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import {
   APPROVAL_ROLE_LABELS,
   WORKFLOW_STATUS_LABELS,
+  type ApprovalView,
   type WorkflowTask,
 } from "@/features/approvals/types";
+import type { PaginationMeta } from "@/features/shared/pagination";
 
 const typeLabel: Record<string, string> = {
   budget_request: "คำของบ",
@@ -96,15 +99,15 @@ function DecisionForm({ task }: { task: WorkflowTask }) {
   );
 }
 
-export function ApprovalsView({ tasks }: { tasks: WorkflowTask[] }) {
-  const [filter, setFilter] = useState<"pending" | "history">("pending");
-  const visible = useMemo(
-    () =>
-      tasks.filter((task) =>
-        filter === "pending" ? task.status === "pending" : task.status !== "pending",
-      ),
-    [filter, tasks],
-  );
+export function ApprovalsView({
+  tasks,
+  pagination,
+  view,
+}: {
+  tasks: WorkflowTask[];
+  pagination: PaginationMeta;
+  view: ApprovalView;
+}) {
   const actionable = tasks.filter((task) => task.canAct).length;
   const overdue = tasks.filter((task) => task.overdue).length;
   return (
@@ -114,7 +117,7 @@ export function ApprovalsView({ tasks }: { tasks: WorkflowTask[] }) {
           <ShieldCheck className="text-[#c9440b]" />
           <span>
             <b className="block text-2xl">{actionable}</b>
-            <small className="text-stone-500">งานที่คุณตัดสินใจได้</small>
+            <small className="text-stone-500">งานที่ตัดสินใจได้ (หน้านี้)</small>
           </span>
         </article>
         <article className="flex items-center gap-4 border-b border-stone-200 p-5 sm:border-r sm:border-b-0">
@@ -123,14 +126,14 @@ export function ApprovalsView({ tasks }: { tasks: WorkflowTask[] }) {
             <b className="block text-2xl">
               {tasks.filter((task) => task.status === "pending").length}
             </b>
-            <small className="text-stone-500">รอใน workflow</small>
+            <small className="text-stone-500">รอใน workflow (หน้านี้)</small>
           </span>
         </article>
         <article className="flex items-center gap-4 p-5">
           <XCircle className="text-red-700" />
           <span>
             <b className="block text-2xl">{overdue}</b>
-            <small className="text-stone-500">เกิน SLA</small>
+            <small className="text-stone-500">เกิน SLA (หน้านี้)</small>
           </span>
         </article>
       </section>
@@ -139,19 +142,19 @@ export function ApprovalsView({ tasks }: { tasks: WorkflowTask[] }) {
         aside={
           <div className="flex border border-stone-300">
             {(["pending", "history"] as const).map((item) => (
-              <button
-                className={`px-3 py-2 text-xs font-semibold ${filter === item ? "bg-[#cf430c] text-white" : "bg-white"}`}
+              <Link
+                className={`px-3 py-2 text-xs font-semibold ${view === item ? "bg-[#cf430c] text-white" : "bg-white"}`}
+                href={item === "pending" ? "/approvals" : "/approvals?view=history"}
                 key={item}
-                onClick={() => setFilter(item)}
               >
                 {item === "pending" ? "งานค้าง" : "ประวัติ"}
-              </button>
+              </Link>
             ))}
           </div>
         }
       >
         <div className="grid gap-px bg-stone-200 md:grid-cols-2 xl:grid-cols-3">
-          {visible.map((task) => (
+          {tasks.map((task) => (
             <article className="bg-white p-4" key={task.id}>
               <div className="flex items-start justify-between gap-3">
                 <span>
@@ -205,12 +208,13 @@ export function ApprovalsView({ tasks }: { tasks: WorkflowTask[] }) {
               ) : null}
             </article>
           ))}
-          {visible.length === 0 ? (
+          {tasks.length === 0 ? (
             <p className="bg-white p-10 text-center text-sm text-stone-500 md:col-span-2 xl:col-span-3">
               ไม่มีรายการในมุมมองนี้
             </p>
           ) : null}
         </div>
+        <PaginationNav basePath="/approvals" pagination={pagination} query={{ view }} />
       </RegisterSection>
     </div>
   );

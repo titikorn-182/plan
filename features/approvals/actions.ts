@@ -6,13 +6,21 @@ import {
   authenticated,
   friendlyError,
   invalid,
-  refreshOperations,
+  revalidateOperationPaths,
 } from "@/features/shared/server-actions";
+import { INPUT_LIMITS } from "@/lib/config/limits";
+
+const entityPath: Readonly<Record<string, string>> = {
+  budget_request: "/budget-requests",
+  project: "/projects",
+  quarterly_report: "/reports/quarterly",
+  kpi_result: "/kpi",
+};
 
 const approvalSchema = z.object({
   taskId: z.string().uuid(),
   decision: z.enum(["approved", "revision_required", "rejected"]),
-  comment: z.string().trim().max(1000),
+  comment: z.string().trim().max(INPUT_LIMITS.reviewComment),
 });
 
 export async function actOnApprovalAction(
@@ -31,6 +39,19 @@ export async function actOnApprovalAction(
 
   const { supabase, userId } = await authenticated();
   if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ" };
+  const { data: task, error: taskError } = await supabase
+    .from("approval_tasks")
+    .select("entity_type")
+    .eq("id", parsed.data.taskId)
+    .maybeSingle();
+  if (taskError) {
+    return {
+      ...previous,
+      success: false,
+      message: friendlyError(taskError, "approvals.lookup"),
+    };
+  }
+  if (!task) return { ...previous, success: false, message: "ไม่พบงานอนุมัติหรือคุณไม่มีสิทธิ์" };
   const { error } = await supabase.rpc("act_on_approval_task", {
     p_task_id: parsed.data.taskId,
     p_decision: parsed.data.decision,
@@ -38,7 +59,12 @@ export async function actOnApprovalAction(
   });
   if (error) return { ...previous, success: false, message: friendlyError(error) };
 
-  refreshOperations();
+  revalidateOperationPaths(
+    "/",
+    "/approvals",
+    "/notifications",
+    entityPath[task.entity_type] ?? "/approvals",
+  );
   return {
     success: true,
     message:

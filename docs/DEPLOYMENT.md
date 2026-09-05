@@ -63,7 +63,7 @@ npm run build
 
 ตั้งค่า build command เป็น `npm run build`, start command เป็น `npm start`, Node.js ให้ตรงกับ runtime ที่ hosting รองรับ และเปิด HTTPS เท่านั้น หากใช้ reverse proxy ต้องส่ง `Host`/`X-Forwarded-Host` ให้ถูกต้องเพื่อให้ CSRF origin check ของ Server Actions ผ่าน
 
-ระบบรับไฟล์สูงสุด 20 MB และตั้ง Server Action body limit ไว้ 21 MB ดังนั้น proxy/CDN ต้องยอมรับ request อย่างน้อย 21 MB เช่นกัน
+ไฟล์หลักฐานถูกอัปโหลดจาก browser ตรงไปยัง private bucket ของ Supabase จึงไม่ผ่าน Server Action หรือ Vercel Function body ระบบจำกัดไฟล์ไว้ที่ 20 MB ทั้งใน UI, Route Handler และ bucket policy ควรตรวจว่าเครือข่ายองค์กรอนุญาตการเชื่อมต่อ HTTPS ไปยัง Supabase Storage
 
 ## 6. Smoke test หลัง deploy
 
@@ -78,7 +78,7 @@ npm run build
 
 ## 7. Monitoring และ rollback
 
-- เปิด server/error log โดยห้ามบันทึก JWT, cookie, service role key หรือเนื้อหาไฟล์
+- เปิด server/error log และค้นหาเหตุการณ์ด้วย `eventId` จาก structured log `[application-error]` โดยห้ามบันทึก JWT, cookie, service role key หรือเนื้อหาไฟล์
 - ตั้ง alert สำหรับ HTTP 5xx, auth error, storage error และ response time ของ Server Actions
 - เปิด Supabase Point-in-Time Recovery หรือกำหนดรอบ backup ตามนโยบายองค์กร
 - ก่อน migration ให้บันทึก backup และ release tag; rollback application ด้วย release ก่อนหน้า

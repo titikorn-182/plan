@@ -3,31 +3,46 @@ import "server-only";
 import { BUDGET_STATUS_LABELS } from "@/features/budget-requests/types";
 import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-requests/types";
 import type { DataResult } from "@/features/shared/types";
-import { formatDate, hasValues, result } from "@/features/shared/query-utils";
+import { expectedResultError, formatDate, hasValues, result } from "@/features/shared/query-utils";
+import {
+  createPagination,
+  getPaginationRange,
+  type PaginatedData,
+} from "@/features/shared/pagination";
 import { getViewer } from "@/lib/auth/viewer";
+import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getBudgetRequests(): Promise<DataResult<BudgetRequest[]>> {
+export async function getBudgetRequests(
+  page = 1,
+): Promise<DataResult<PaginatedData<BudgetRequest>>> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const pageSize = QUERY_LIMITS.defaultPageSize;
+  const [from, to] = getPaginationRange(page, pageSize);
+  const { data, error, count } = await supabase
     .from("budget_request_register")
-    .select("*")
-    .order("updated_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("updated_at", { ascending: false })
+    .range(from, to);
   return result(
-    (data ?? [])
-      .filter((row) => hasValues(row, ["id", "code", "title", "unit", "category", "status"]))
-      .map((row) => ({
-        uuid: row.id,
-        id: row.code,
-        title: row.title,
-        unit: row.unit,
-        category: row.category,
-        amount: Number(row.amount),
-        status: BUDGET_STATUS_LABELS[row.status] ?? "ฉบับร่าง",
-        updated: formatDate(row.updated_at),
-        editable: ["draft", "revision_required"].includes(row.status),
-      })),
+    {
+      items: (data ?? [])
+        .filter((row) => hasValues(row, ["id", "code", "title", "unit", "category", "status"]))
+        .map((row) => ({
+          uuid: row.id,
+          id: row.code,
+          title: row.title,
+          unit: row.unit,
+          category: row.category,
+          amount: Number(row.amount),
+          status: BUDGET_STATUS_LABELS[row.status] ?? "ฉบับร่าง",
+          updated: formatDate(row.updated_at),
+          editable: ["draft", "revision_required"].includes(row.status),
+        })),
+      pagination: createPagination(count, page, pageSize),
+    },
     error,
+    "budget_requests.list",
   );
 }
 
@@ -65,12 +80,12 @@ export async function getBudgetFormOptions(
   const error = orgError ?? cycleError ?? recordResult.error;
   if (error) return result(null, error);
   if (budgetRequestId && !recordResult.data) {
-    return result(null, { message: "ไม่พบคำของบประมาณหรือคุณไม่มีสิทธิ์เข้าถึง" });
+    return expectedResultError(null, "ไม่พบคำของบประมาณหรือคุณไม่มีสิทธิ์เข้าถึง");
   }
   const cycle = cycles?.[0];
   const recordRow = recordResult.data;
   if (!recordRow && !cycle) {
-    return result(null, { message: "ยังไม่มีรอบรับคำของบประมาณที่เปิดใช้งาน" });
+    return expectedResultError(null, "ยังไม่มีรอบรับคำของบประมาณที่เปิดใช้งาน");
   }
 
   const cycleFiscal = cycle

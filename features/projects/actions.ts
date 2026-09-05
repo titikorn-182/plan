@@ -7,10 +7,11 @@ import {
   friendlyError,
   invalid,
   moneySchema,
-  refreshOperations,
+  revalidateOperationPaths,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
 import { isProjectPeriodValid } from "@/lib/operations/rules";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const projectSchema = z.object({
   id: uuidOrEmpty,
@@ -19,10 +20,10 @@ const projectSchema = z.object({
   organizationId: z.string().uuid("กรุณาเลือกหน่วยงาน"),
   fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
   budgetRequestId: uuidOrEmpty,
-  title: z.string().trim().min(5, "ชื่อโครงการต้องมีอย่างน้อย 5 ตัวอักษร").max(300),
-  projectType: z.string().trim().min(2, "กรุณาระบุประเภทโครงการ").max(120),
-  ownerName: z.string().trim().min(2, "กรุณาระบุเจ้าของโครงการ").max(180),
-  coordinatorName: z.string().trim().min(2, "กรุณาระบุผู้ประสานงาน").max(180),
+  title: z.string().trim().min(5, "ชื่อโครงการต้องมีอย่างน้อย 5 ตัวอักษร").max(INPUT_LIMITS.title),
+  projectType: z.string().trim().min(2, "กรุณาระบุประเภทโครงการ").max(INPUT_LIMITS.shortText),
+  ownerName: z.string().trim().min(2, "กรุณาระบุเจ้าของโครงการ").max(INPUT_LIMITS.personName),
+  coordinatorName: z.string().trim().min(2, "กรุณาระบุผู้ประสานงาน").max(INPUT_LIMITS.personName),
   approvedBudget: moneySchema,
   disbursementTarget: z.coerce.number().min(0).max(100),
   startsOn: z.string().date("กรุณาระบุวันเริ่มต้น"),
@@ -63,8 +64,14 @@ export async function saveProjectAction(
     .select("buddhist_year")
     .eq("id", input.fiscalYearId)
     .single();
-  if (fiscalError || !fiscal)
-    return { ...previous, success: false, message: "ไม่พบปีงบประมาณที่เลือก" };
+  if (fiscalError) {
+    return {
+      ...previous,
+      success: false,
+      message: friendlyError(fiscalError, "projects.fiscal_year"),
+    };
+  }
+  if (!fiscal) return { ...previous, success: false, message: "ไม่พบปีงบประมาณที่เลือก" };
 
   const values = {
     organization_id: input.organizationId,
@@ -136,7 +143,11 @@ export async function saveProjectAction(
     }
   }
 
-  refreshOperations();
+  revalidateOperationPaths(
+    "/",
+    "/projects",
+    ...(input.intent === "submit" ? ["/approvals", "/notifications"] : []),
+  );
   return {
     success: true,
     id: data.id,
