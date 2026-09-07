@@ -8,9 +8,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"features/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"tests/**/*.{ts,mjs}\" \"*.{ts,mjs}\"",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"features/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"tests/**/*.{ts,mjs}\" \"*.{ts,mjs}\"",
-    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"features/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"tests/**/*.{ts,mjs}\" \"*.{ts,mjs}\" \"scripts/run-e2e.mjs\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"features/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"tests/**/*.{ts,mjs}\" \"*.{ts,mjs}\" \"scripts/run-e2e.mjs\" \".github/workflows/*.yml\"",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:db": "vitest run tests/database",
+    "test:e2e": "node scripts/run-e2e.mjs smoke",
+    "test:e2e:workflow": "node scripts/run-e2e.mjs workflow",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:uat",
     "types:generate": "supabase gen types typescript --project-id noemwilgvrwpgqavtekm --schema public > types/database.generated.ts",
     "test:uat": "node --experimental-strip-types --test tests/*.test.mjs",
     "capture": "node scripts/capture-screenshot.mjs"
@@ -25,6 +33,8 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "26.4.1",
     "@types/react": "19.2.18",
@@ -34,6 +44,7 @@
     "prettier": "^3.9.6",
     "supabase": "^2.116.0",
     "tailwindcss": "4.3.3",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^5.0.0"
   }
 }

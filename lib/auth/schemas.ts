@@ -22,5 +22,9 @@ export const updatePasswordSchema = z
 
 export function safeNextPath(value: string | null | undefined, fallback = "/") {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
+  // Browsers normalize backslashes and strip control characters from URLs.
+  if (value.includes("\\") || [...value].some((character) => character.charCodeAt(0) < 32)) {
+    return fallback;
+  }
   return value;
 }

@@ -47,6 +47,9 @@ export function evaluateKpiResult(
   target: number,
   direction: KpiDirection,
 ): KpiEvaluation {
+  if (!Number.isFinite(actual) || !Number.isFinite(target)) {
+    return { success: false, message: "ผลดำเนินงานและค่าเป้าหมายต้องเป็นตัวเลขที่ถูกต้อง" };
+  }
   if (direction === "range") {
     return {
       success: false,

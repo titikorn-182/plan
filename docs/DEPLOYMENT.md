@@ -27,7 +27,8 @@ NEXT_PUBLIC_SITE_URL=https://<production-domain>
 2. `supabase/migrations/202609040002_rls_and_views.sql`
 3. `supabase/migrations/202609040003_operational_workflows.sql`
 4. `supabase/migrations/202609050001_correctness_and_type_safety.sql`
-5. `supabase/verify-operational.sql` — เป็น read-only verification
+5. `supabase/migrations/202609070001_fix_admin_access_audit_columns.sql`
+6. `supabase/verify-operational.sql` — เป็น read-only verification
 
 หากระบบเดิมรัน migration บางส่วนแล้ว ให้เริ่มจากไฟล์ถัดไปตามลำดับ ห้ามรัน seed บน production เว้นแต่ได้รับอนุมัติว่าเป็นข้อมูลตัวอย่างที่ต้องการจริง
 
@@ -51,9 +52,7 @@ NEXT_PUBLIC_SITE_URL=https://<production-domain>
 
 ```bash
 npm ci
-npm run typecheck
-npm run lint
-npm run test:uat
+npm run check
 npm run build
 ```
 
@@ -61,7 +60,9 @@ npm run build
 
 ## 5. Deploy
 
-ตั้งค่า build command เป็น `npm run build`, start command เป็น `npm start`, Node.js ให้ตรงกับ runtime ที่ hosting รองรับ และเปิด HTTPS เท่านั้น หากใช้ reverse proxy ต้องส่ง `Host`/`X-Forwarded-Host` ให้ถูกต้องเพื่อให้ CSRF origin check ของ Server Actions ผ่าน
+Vercel ใช้ build command จาก `vercel.json`: `npm run check && npm run build` ส่วน hosting แบบอื่นให้ใช้คำสั่งเดียวกันและ start command เป็น `npm start` ใช้ Node.js 24 ให้ตรงกับ CI และเปิด HTTPS เท่านั้น หากใช้ reverse proxy ต้องส่ง `Host`/`X-Forwarded-Host` ให้ถูกต้องเพื่อให้ CSRF origin check ของ Server Actions ผ่าน
+
+ต้องตรวจ `quality-gate` บน GitHub ให้ผ่านก่อน merge และเปิด branch protection ตาม [TESTING.md](TESTING.md) หากยังไม่เปิด Vercel อาจเริ่ม deploy ไปพร้อมกับ CI ได้ การ deploy ไม่ได้รัน SQL migration และห้ามใช้ test fixtures กับ production
 
 ไฟล์หลักฐานถูกอัปโหลดจาก browser ตรงไปยัง private bucket ของ Supabase จึงไม่ผ่าน Server Action หรือ Vercel Function body ระบบจำกัดไฟล์ไว้ที่ 20 MB ทั้งใน UI, Route Handler และ bucket policy ควรตรวจว่าเครือข่ายองค์กรอนุญาตการเชื่อมต่อ HTTPS ไปยัง Supabase Storage
 
