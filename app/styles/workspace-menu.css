@@ -1,0 +1,102 @@
+.workspace-menu {
+  position: relative;
+  flex: 0 0 auto;
+  color: var(--ink);
+}
+
+.workspace-menu > summary {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  padding: 0 10px;
+  background: #fff;
+  color: #49443f;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.workspace-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.workspace-menu > summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.workspace-menu[open] > summary,
+.workspace-menu > summary:hover {
+  border-color: var(--orange-600);
+  color: var(--orange-700);
+  background: #fff7f2;
+}
+
+.workspace-menu-panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  width: min(420px, calc(100vw - 24px));
+  max-height: calc(100dvh - 150px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow-y: auto;
+  border: 1px solid #c9c5c1;
+  padding: 6px;
+  background: #fff;
+}
+
+.workspace-menu-panel a {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.workspace-menu-panel svg {
+  flex: 0 0 auto;
+}
+
+.workspace-menu-panel a:hover {
+  color: var(--orange-700);
+  background: #fff7f2;
+}
+
+.workspace-menu-panel a[aria-current="page"] {
+  color: #fff;
+  background: var(--orange-600);
+}
+
+@media (max-width: 700px) {
+  .module-command-topbar {
+    flex-wrap: wrap;
+    padding-block: 6px;
+  }
+
+  .module-command-tools {
+    margin-left: auto;
+  }
+
+  .workspace-menu-panel {
+    position: fixed;
+    top: auto;
+    right: 12px;
+    margin-top: 8px;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .workspace-menu {
+    display: none;
+  }
+}

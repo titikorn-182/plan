@@ -1,5 +1,6 @@
 import {
   ChartNoAxesCombined,
+  Bell,
   FileChartColumn,
   FileCheck2,
   FileText,
@@ -11,6 +12,7 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
+import type { AppRole } from "@/features/auth/types";
 
 export type NavigationItem = {
   label: string;
@@ -29,8 +31,22 @@ export const primaryNavigation: readonly NavigationItem[] = [
   { label: "KPI และคุณภาพ", href: "/kpi", icon: Target },
   { label: "หลักฐานและเอกสาร", href: "/evidence", icon: FileCheck2 },
   { label: "Workflow อนุมัติ", href: "/approvals", icon: Stamp },
+  { label: "การแจ้งเตือน", href: "/notifications", icon: Bell },
   { label: "กำกับและตั้งค่าระบบ", href: "/admin", icon: ShieldCheck, adminOnly: true },
 ];
+
+export function getVisibleNavigation(roles: readonly AppRole[]): readonly NavigationItem[] {
+  return primaryNavigation.filter((item) => !item.adminOnly || roles.includes("admin"));
+}
+
+export function getCurrentNavigationHref(
+  pathname: string,
+  items: readonly NavigationItem[],
+): string | undefined {
+  return items
+    .filter((item) => isCurrentNavigationPath(pathname, item.href))
+    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
+}
 
 const WORKSPACE_TITLES: ReadonlyArray<{
   matches: (pathname: string) => boolean;

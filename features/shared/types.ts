@@ -8,6 +8,11 @@ export type ReportingPeriod = {
   quarterLabel: string;
 };
 
+export type ReportingContext = {
+  period: ReportingPeriod;
+  fiscalYears: FiscalYearOption[];
+};
+
 export type SelectOption = { id: string; label: string };
 export type OrganizationOption = SelectOption & { code: string };
 export type FiscalYearOption = SelectOption & { buddhistYear: number };

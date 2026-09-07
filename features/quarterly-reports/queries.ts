@@ -12,7 +12,7 @@ import {
   getPaginationRange,
   type PaginatedData,
 } from "@/features/shared/pagination";
-import { getOrganizationsAndYears } from "@/features/shared/queries";
+import { getOrganizationsAndYears, getReportingPeriod } from "@/features/shared/queries";
 import type { DataResult } from "@/features/shared/types";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
@@ -20,12 +20,14 @@ import { createClient } from "@/lib/supabase/server";
 export async function getQuarterlyReports(
   page = 1,
 ): Promise<DataResult<PaginatedData<QuarterlyReportRow>>> {
-  const supabase = await createClient();
+  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   const { data, error, count } = await supabase
     .from("quarterly_report_register")
     .select("*", { count: "exact" })
+    .eq("buddhist_year", period.buddhistYear)
+    .eq("quarter", period.quarter)
     .order("due_at", { ascending: true })
     .range(from, to);
   return result(

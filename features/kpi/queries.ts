@@ -17,14 +17,17 @@ import {
 import type { DataResult } from "@/features/shared/types";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
+import { getReportingPeriod } from "@/features/shared/queries";
 
 export async function getKpis(page = 1): Promise<DataResult<PaginatedData<KpiRow>>> {
-  const supabase = await createClient();
+  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   const { data, error, count } = await supabase
     .from("kpi_register")
     .select("*", { count: "exact" })
+    .eq("fiscal_year_id", period.fiscalYearId ?? "00000000-0000-0000-0000-000000000000")
+    .or(`quarter.is.null,quarter.eq.${period.quarter}`)
     .order("code", { ascending: true })
     .range(from, to);
   return result(

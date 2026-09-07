@@ -27,11 +27,14 @@ test("every mutating action performs an authenticated session check", () => {
     "features/approvals/actions.ts",
     "features/budget-requests/actions.ts",
     "features/disbursements/actions.ts",
+    "features/disbursements/import-actions.ts",
     "features/evidence/actions.ts",
     "features/kpi/actions.ts",
     "features/notifications/actions.ts",
     "features/projects/actions.ts",
     "features/quarterly-reports/actions.ts",
+    "features/reports/actions.ts",
+    "features/shared/period-actions.ts",
   ];
   const source = actionFiles.map(read).join("\n");
   const actions = source.match(/export async function \w+Action/g) ?? [];
@@ -45,6 +48,20 @@ test("every mutating action performs an authenticated session check", () => {
     true,
   );
   assert.match(source, /requireAdmin\(\)/);
+});
+
+test("reporting tools use authenticated data, period filters, validation, and RLS", () => {
+  const queries = read("features/reports/queries.ts");
+  const importActions = read("features/disbursements/import-actions.ts");
+  const migration = read("supabase/migrations/202609070003_reporting_tools.sql");
+
+  assert.match(queries, /getReportingPeriod\(\)/);
+  assert.match(importActions, /importedDisbursementSchema/);
+  assert.match(importActions, /fiscal_years/);
+  assert.match(importActions, /\.from\("disbursements"\)\s*\.insert\(payload\)/);
+  assert.match(migration, /alter table public\.report_schedules enable row level security/);
+  assert.match(migration, /disbursement scope does not match project/);
+  assert.match(migration, /disbursement date is outside fiscal year/);
 });
 
 test("operational migration includes workflow, budget guard, private storage, and admin access RPCs", () => {
@@ -117,13 +134,15 @@ test("evidence files bypass Server Actions and are registered by an authenticate
   const actions = read("features/evidence/actions.ts");
   const route = read("app/api/evidence/route.ts");
   const nextConfig = read("next.config.ts");
+  const importConfig = read("features/disbursements/import-types.ts");
 
   assert.match(component, /\.storage\s*\.from\(EVIDENCE_BUCKET\)\s*\.upload\(/s);
   assert.equal(actions.includes("uploadEvidenceAction"), false);
   assert.match(route, /authenticated\(\)/);
   assert.match(route, /isExpectedEvidenceStoragePath/);
   assert.match(route, /\.from\("attachments"\)/);
-  assert.equal(nextConfig.includes("bodySizeLimit"), false);
+  assert.match(nextConfig, /bodySizeLimit:\s*"2100kb"/);
+  assert.match(importConfig, /DISBURSEMENT_IMPORT_MAX_BYTES\s*=\s*2\s*\*\s*1024\s*\*\s*1024/);
   assert.equal(component.includes("uploadError.message"), false);
 });
 

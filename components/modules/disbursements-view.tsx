@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Upload } from "lucide-react";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
@@ -9,6 +9,8 @@ import type { DisbursementRow } from "@/features/disbursements/types";
 import type { PaginationMeta } from "@/features/shared/pagination";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatters";
+import type { ReportingPeriod } from "@/features/shared/types";
+import { DisbursementImportPanel } from "@/components/modules/disbursement-import-panel";
 
 function tone(status: string): "green" | "orange" | "red" {
   if (status === "ตามแผน") return "green";
@@ -19,12 +21,13 @@ function tone(status: string): "green" | "orange" | "red" {
 export function DisbursementsView({
   rows,
   pagination,
+  period,
 }: {
   rows: DisbursementRow[];
   pagination: PaginationMeta;
+  period: ReportingPeriod;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [notice, setNotice] = useState("ยังไม่เลือกไฟล์สำหรับนำเข้า");
+  const [showImport, setShowImport] = useState(false);
   const totals = rows.reduce(
     (sum, row) => ({
       approved: sum.approved + row.approved,
@@ -98,16 +101,17 @@ export function DisbursementsView({
         title="ทะเบียนการเบิกจ่ายรายไตรมาส"
         aside={
           <div className="flex gap-2">
-            <button
+            <Link
               className="inline-flex items-center gap-2 border border-stone-300 px-3 py-2 text-xs font-semibold"
-              type="button"
+              href="/api/disbursements/export"
             >
               <Download size={15} /> ส่งออก
-            </button>
+            </Link>
             <button
               className="inline-flex items-center gap-2 border border-stone-300 px-3 py-2 text-xs font-semibold"
               type="button"
-              onClick={() => inputRef.current?.click()}
+              aria-expanded={showImport}
+              onClick={() => setShowImport((current) => !current)}
             >
               <Upload size={15} /> นำเข้า
             </button>
@@ -120,28 +124,9 @@ export function DisbursementsView({
           </div>
         }
       >
-        <input
-          className="sr-only"
-          ref={inputRef}
-          type="file"
-          accept=".csv,.xlsx"
-          onChange={(event) =>
-            setNotice(
-              event.target.files?.[0]
-                ? `พร้อมตรวจสอบไฟล์: ${event.target.files[0].name}`
-                : "ยังไม่เลือกไฟล์สำหรับนำเข้า",
-            )
-          }
-        />
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-[#fffdfa] px-4 py-3 text-xs">
-          <span className="flex items-center gap-2 text-stone-600">
-            <FileSpreadsheet size={16} className="text-[#c9440b]" />
-            {notice}
-          </span>
-          <span className="text-stone-500">
-            ไฟล์นำเข้าจะผ่านหน้า Preview และ Validation ก่อนบันทึกจริง
-          </span>
-        </div>
+        {showImport ? (
+          <DisbursementImportPanel period={period} onClose={() => setShowImport(false)} />
+        ) : null}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1150px] text-left text-xs">
             <thead className="bg-stone-50 text-stone-600">

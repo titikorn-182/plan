@@ -6,6 +6,8 @@
 @import "./styles/command-center/inspector.css";
 @import "./styles/command-center/responsive.css";
 @import "./styles/workspace-shell.css";
+@import "./styles/workspace-menu.css";
+@import "./styles/period-selector.css";
 @import "./styles/base.css";
 @import "./styles/motion.css";
 @import "./styles/forms.css";

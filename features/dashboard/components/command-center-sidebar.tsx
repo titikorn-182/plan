@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { isCurrentNavigationPath, primaryNavigation } from "@/components/layout/navigation";
+import { getCurrentNavigationHref, getVisibleNavigation } from "@/components/layout/navigation";
 import type { Viewer } from "@/features/auth/types";
 import {
   COMMAND_CENTER_STATUSES,
@@ -8,12 +8,8 @@ import {
 import { StatusDot } from "@/features/dashboard/components/status-metric";
 
 export function CommandCenterSidebar({ pathname, viewer }: { pathname: string; viewer: Viewer }) {
-  const visibleNavigation = primaryNavigation.filter(
-    (item) => !item.adminOnly || viewer.roles.includes("admin"),
-  );
-  const currentHref = visibleNavigation
-    .filter((item) => isCurrentNavigationPath(pathname, item.href))
-    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
+  const visibleNavigation = getVisibleNavigation(viewer.roles);
+  const currentHref = getCurrentNavigationHref(pathname, visibleNavigation);
 
   return (
     <aside className="cc-sidebar" aria-label="เมนูหลัก">
@@ -27,6 +23,8 @@ export function CommandCenterSidebar({ pathname, viewer }: { pathname: string; v
             className={`cc-nav-link ${currentHref === href ? "active" : ""}`}
             href={href}
             key={href}
+            aria-label={label}
+            title={label}
             aria-current={currentHref === href ? "page" : undefined}
           >
             <Icon size={18} strokeWidth={1.9} />

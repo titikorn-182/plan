@@ -14,6 +14,7 @@ export type ProjectRow = {
   health: "ปกติ" | "เฝ้าระวัง" | "เสี่ยงสูง" | "ล่าช้า";
   owner: string;
   due: string;
+  status: ProjectStatus;
   editable: boolean;
 };
 

@@ -2,13 +2,13 @@ import { ExecutiveDashboard } from "@/features/dashboard/components/executive-da
 import { DataError } from "@/components/ui/data-state";
 import { getViewer } from "@/lib/auth/viewer";
 import { getDashboardData } from "@/features/dashboard/queries";
-import { getReportingPeriod } from "@/features/shared/queries";
+import { getReportingContext } from "@/features/shared/queries";
 
 export default async function Home() {
-  const [viewer, result, period] = await Promise.all([
+  const [viewer, result, reporting] = await Promise.all([
     getViewer(),
     getDashboardData(),
-    getReportingPeriod(),
+    getReportingContext(),
   ]);
   if (result.error)
     return (
@@ -21,7 +21,8 @@ export default async function Home() {
       records={result.data.records}
       matrix={result.data.matrix}
       viewer={viewer}
-      period={period}
+      period={reporting.period}
+      fiscalYears={reporting.fiscalYears}
     />
   );
 }

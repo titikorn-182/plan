@@ -1,7 +1,10 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { signedInLocalClient, TEST_PASSWORD } from "./local-api";
 
-async function login(browser: Browser, role: "staff" | "user" | "executive" | "inactive") {
+async function login(
+  browser: Browser,
+  role: "admin" | "staff" | "user" | "executive" | "inactive",
+) {
   const context = await browser.newContext({ baseURL: "http://127.0.0.1:3206" });
   const page = await context.newPage();
   await page.goto("/login");
@@ -19,6 +22,43 @@ async function approve(page: Page, title: string) {
   await card.getByRole("button", { name: "อนุมัติ", exact: true }).click();
   await expect(card.getByRole("button", { name: "อนุมัติ", exact: true })).toHaveCount(0);
 }
+
+test("Admin can reach every module through the complete menu", async ({ browser }) => {
+  const admin = await login(browser, "admin");
+  try {
+    const destinations = [
+      ["ภาพรวมผู้บริหาร", "/reports"],
+      ["แผนและคำของบ", "/budget-requests"],
+      ["โครงการและการดำเนินงาน", "/projects"],
+      ["รายงานรายไตรมาส", "/reports/quarterly"],
+      ["เบิกจ่ายงบประมาณ", "/disbursements"],
+      ["KPI และคุณภาพ", "/kpi"],
+      ["หลักฐานและเอกสาร", "/evidence"],
+      ["Workflow อนุมัติ", "/approvals"],
+      ["การแจ้งเตือน", "/notifications"],
+      ["กำกับและตั้งค่าระบบ", "/admin"],
+      ["หน้าหลักฐาน", "/"],
+    ] as const;
+    for (const [label, href] of destinations) {
+      await admin.page.locator(".workspace-menu > summary").click();
+      const menu = admin.page.getByRole("navigation", { name: "เมนูทั้งหมด", exact: true });
+      await expect(menu.getByRole("link")).toHaveCount(destinations.length);
+      await menu.getByRole("link", { name: label, exact: true }).click();
+      await expect(admin.page).toHaveURL(href);
+      await expect(admin.page.getByRole("main")).toBeVisible();
+      await expect(admin.page.getByText("ยังอ่านข้อมูลจาก Supabase ไม่สำเร็จ")).toHaveCount(0);
+    }
+    await admin.page.setViewportSize({ width: 390, height: 844 });
+    await admin.page.locator(".workspace-menu > summary").click();
+    const menu = admin.page.getByRole("navigation", { name: "เมนูทั้งหมด", exact: true });
+    await expect(menu.getByRole("link", { name: "กำกับและตั้งค่าระบบ" })).toBeVisible();
+    await menu.getByRole("link").first().press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(admin.page.locator(".workspace-menu > summary")).toBeFocused();
+  } finally {
+    await admin.context.close();
+  }
+});
 
 test("staff creates, edits, submits; user reviews; executive approves; staff is notified", async ({
   browser,

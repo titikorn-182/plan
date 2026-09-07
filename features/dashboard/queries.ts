@@ -48,6 +48,7 @@ export async function getDashboardData(): Promise<
       supabase
         .from("decision_queue")
         .select("*")
+        .eq("buddhist_year", reportingPeriod.buddhistYear)
         .order("sort_key", { ascending: false })
         .limit(QUERY_LIMITS.dashboardDecisionQueue),
       supabase
@@ -55,16 +56,34 @@ export async function getDashboardData(): Promise<
         .select("id,code,name_th")
         .eq("is_active", true)
         .order("name_th"),
-      supabase.from("budget_request_register").select("organization_id,unit,amount"),
-      supabase.from("project_register").select("organization_id,unit,budget,progress"),
+      supabase
+        .from("budget_request_register")
+        .select("organization_id,unit,amount")
+        .eq("buddhist_year", reportingPeriod.buddhistYear),
+      supabase
+        .from("project_register")
+        .select("organization_id,unit,budget,progress")
+        .eq(
+          "fiscal_year_id",
+          reportingPeriod.fiscalYearId ?? "00000000-0000-0000-0000-000000000000",
+        ),
       supabase
         .from("disbursement_register")
-        .select("organization_id,unit,approved,q1,q2,q3,q4,target"),
+        .select("organization_id,unit,approved,q1,q2,q3,q4,target")
+        .eq(
+          "fiscal_year_id",
+          reportingPeriod.fiscalYearId ?? "00000000-0000-0000-0000-000000000000",
+        ),
       supabase
         .from("kpi_results")
         .select(
           "id,organization_id,actual,result_state,evidence_count,kpi_definitions!inner(owner_name,target,direction)",
-        ),
+        )
+        .eq(
+          "fiscal_year_id",
+          reportingPeriod.fiscalYearId ?? "00000000-0000-0000-0000-000000000000",
+        )
+        .or(`quarter.is.null,quarter.eq.${reportingPeriod.quarter}`),
       supabase.from("attachments").select("organization_id,is_verified").is("archived_at", null),
     ]);
   const dashboardError =

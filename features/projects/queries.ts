@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ProjectFormOptions, ProjectOption, ProjectRow } from "@/features/projects/types";
+import { isProjectStatus, type ProjectFilters } from "@/features/projects/filters";
 import type { DataResult } from "@/features/shared/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
@@ -8,7 +9,7 @@ import {
   getPaginationRange,
   type PaginatedData,
 } from "@/features/shared/pagination";
-import { getOrganizationsAndYears } from "@/features/shared/queries";
+import { getOrganizationsAndYears, getReportingPeriod } from "@/features/shared/queries";
 import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
@@ -20,20 +21,56 @@ const PROJECT_HEALTH_LABELS: Record<string, ProjectRow["health"]> = {
   delayed: "ล่าช้า",
 };
 
-export async function getProjects(page = 1): Promise<DataResult<PaginatedData<ProjectRow>>> {
-  const supabase = await createClient();
+export async function getProjects(
+  page = 1,
+  filters?: ProjectFilters,
+): Promise<DataResult<PaginatedData<ProjectRow>>> {
+  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
-  const { data, error, count } = await supabase
-    .from("project_register")
-    .select("*", { count: "exact" })
+  let query = supabase.from("project_register").select("*", { count: "exact" });
+  if (period.fiscalYearId) query = query.eq("fiscal_year_id", period.fiscalYearId);
+  if (filters?.organizationId) query = query.eq("organization_id", filters.organizationId);
+  if (filters?.health) query = query.eq("health", filters.health);
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.minBudget !== null && filters?.minBudget !== undefined)
+    query = query.gte("budget", filters.minBudget);
+  if (filters?.maxBudget !== null && filters?.maxBudget !== undefined)
+    query = query.lte("budget", filters.maxBudget);
+  if (filters?.minProgress !== null && filters?.minProgress !== undefined)
+    query = query.gte("progress", filters.minProgress);
+  if (filters?.maxProgress !== null && filters?.maxProgress !== undefined)
+    query = query.lte("progress", filters.maxProgress);
+  if (filters?.search) {
+    const term = filters.search
+      .normalize("NFKC")
+      .replace(/[^\p{L}\p{N}\s_-]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (term) query = query.or(`code.ilike.%${term}%,title.ilike.%${term}%,owner.ilike.%${term}%`);
+  }
+  const { data, error, count } = await query
     .order("updated_at", { ascending: false })
     .range(from, to);
   return result(
     {
       items: (data ?? [])
-        .filter((row) =>
-          hasValues(row, ["id", "code", "title", "unit", "health", "owner", "status"]),
+        .filter(
+          (
+            row,
+          ): row is typeof row & {
+            id: string;
+            code: string;
+            title: string;
+            unit: string;
+            health: string;
+            owner: string;
+            status: ProjectRow["status"];
+          } => {
+            if (!hasValues(row, ["id", "code", "title", "unit", "health", "owner", "status"]))
+              return false;
+            return isProjectStatus(row.status);
+          },
         )
         .map((row) => ({
           uuid: row.id,
@@ -46,6 +83,7 @@ export async function getProjects(page = 1): Promise<DataResult<PaginatedData<Pr
           health: PROJECT_HEALTH_LABELS[row.health] ?? "เฝ้าระวัง",
           owner: row.owner,
           due: formatDate(row.due),
+          status: row.status,
           editable: row.status === "proposed" && !row.has_pending_approval,
         })),
       pagination: createPagination(count, page, pageSize),

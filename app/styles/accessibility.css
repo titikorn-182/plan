@@ -8,3 +8,23 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .print-report {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .print-report table {
+    font-size: 8pt;
+  }
+}

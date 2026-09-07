@@ -1,46 +1,36 @@
-import {
-  CalendarDays,
-  ChevronDown,
-  Download,
-  Filter,
-  LogOut,
-  Megaphone,
-  Printer,
-} from "lucide-react";
+import { Download, Filter, LogOut, Megaphone, Printer } from "lucide-react";
 import Link from "next/link";
+import { PeriodSelector } from "@/components/layout/period-selector";
+import { WorkspaceMenu } from "@/components/layout/workspace-menu";
 import type { Viewer } from "@/features/auth/types";
-import type { ReportingPeriod } from "@/features/shared/types";
+import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
 
 export function CommandCenterToolbar({
   filterOpen,
   onExport,
   onToggleFilter,
   period,
+  fiscalYears,
   viewer,
 }: {
   filterOpen: boolean;
   onExport: () => void;
   onToggleFilter: () => void;
   period: ReportingPeriod;
+  fiscalYears: FiscalYearOption[];
   viewer: Viewer;
 }) {
   return (
     <header className="cc-topbar">
       <div className="cc-period-controls">
-        <button type="button">
-          ปีงบประมาณ <strong>{period.buddhistYear}</strong>
-          <CalendarDays size={16} />
-        </button>
-        <button type="button">
-          {period.quarterLabel}
-          <ChevronDown size={16} />
-        </button>
+        <PeriodSelector fiscalYears={fiscalYears} period={period} />
         <span className="cc-live-badge">
           <span />
           ข้อมูลจริง
         </span>
       </div>
       <div className="cc-utilities">
+        <WorkspaceMenu pathname="/" roles={viewer.roles} />
         <Link
           className="cc-utility-link"
           aria-label={`การแจ้งเตือน ${viewer.unreadNotifications} รายการ`}

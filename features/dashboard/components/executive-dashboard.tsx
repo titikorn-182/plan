@@ -22,7 +22,7 @@ import type {
   CommandCenterStatus,
   DecisionRecord,
 } from "@/features/dashboard/types";
-import type { ReportingPeriod } from "@/features/shared/types";
+import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
 import { downloadCsv } from "@/lib/browser/download";
 import { getQuarterProgressTarget } from "@/lib/operations/rules";
 
@@ -31,11 +31,13 @@ export function ExecutiveDashboard({
   matrix,
   viewer,
   period,
+  fiscalYears,
 }: {
   records: DecisionRecord[];
   matrix: CommandCenterRow[];
   viewer: Viewer;
   period: ReportingPeriod;
+  fiscalYears: FiscalYearOption[];
 }) {
   const pathname = usePathname();
   const [selectedUnitId, setSelectedUnitId] = useState(matrix[0]?.id ?? "");
@@ -104,6 +106,7 @@ export function ExecutiveDashboard({
           onExport={exportCsv}
           onToggleFilter={() => setFilterOpen((open) => !open)}
           period={period}
+          fiscalYears={fiscalYears}
           viewer={viewer}
         />
 

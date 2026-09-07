@@ -1,9 +1,15 @@
 import "server-only";
 
 import { cache } from "react";
+import { cookies } from "next/headers";
+import {
+  parseReportingPeriodPreference,
+  REPORTING_PERIOD_COOKIE,
+} from "@/features/shared/period-preference";
 import type {
   FiscalYearOption,
   OrganizationOption,
+  ReportingContext,
   ReportingPeriod,
 } from "@/features/shared/types";
 import { createClient } from "@/lib/supabase/server";
@@ -46,34 +52,53 @@ function quarterForDate(
   return toQuarter(Math.floor(monthDifference / 3) + 1);
 }
 
-export const getReportingPeriod = cache(async (): Promise<ReportingPeriod> => {
+export const getReportingContext = cache(async (): Promise<ReportingContext> => {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("fiscal_years")
-    .select("id,buddhist_year,label,starts_on,ends_on,status")
-    .in("status", ["open", "closed"])
-    .order("buddhist_year", { ascending: false });
+  const [query, cookieStore] = await Promise.all([
+    supabase
+      .from("fiscal_years")
+      .select("id,buddhist_year,label,starts_on,ends_on,status")
+      .in("status", ["open", "closed"])
+      .order("buddhist_year", { ascending: false }),
+    cookies(),
+  ]);
+  const { data, error } = query;
   if (error) {
     reportServerError("reporting_period.load", error);
-    return fallbackReportingPeriod();
+    return { period: fallbackReportingPeriod(), fiscalYears: [] };
   }
-  if (!data?.length) return fallbackReportingPeriod();
+  if (!data?.length) return { period: fallbackReportingPeriod(), fiscalYears: [] };
 
   const today = new Date();
   const todayKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Bangkok" }).format(today);
+  const preferred = parseReportingPeriodPreference(cookieStore.get(REPORTING_PERIOD_COOKIE)?.value);
   const active =
+    data.find((item) => item.id === preferred?.fiscalYearId) ??
     data.find((item) => item.starts_on <= todayKey && item.ends_on >= todayKey) ??
     data.find((item) => item.status === "open") ??
     data[0];
-  const quarter = quarterForDate(active.starts_on, active.ends_on, today);
+  const quarter = toQuarter(
+    preferred?.quarter ?? quarterForDate(active.starts_on, active.ends_on, today),
+  );
   return {
-    fiscalYearId: active.id,
-    fiscalYearLabel: active.label,
-    buddhistYear: active.buddhist_year,
-    quarter,
-    quarterLabel: `ไตรมาส ${quarter}`,
+    period: {
+      fiscalYearId: active.id,
+      fiscalYearLabel: active.label,
+      buddhistYear: active.buddhist_year,
+      quarter,
+      quarterLabel: `ไตรมาส ${quarter}`,
+    },
+    fiscalYears: data.map((item) => ({
+      id: item.id,
+      buddhistYear: item.buddhist_year,
+      label: item.label,
+    })),
   };
 });
+
+export async function getReportingPeriod(): Promise<ReportingPeriod> {
+  return (await getReportingContext()).period;
+}
 
 export async function getOrganizationsAndYears(): Promise<{
   organizations: OrganizationOption[];

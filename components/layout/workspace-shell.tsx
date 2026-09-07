@@ -3,32 +3,32 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarDays, ChevronDown, LogOut, Settings } from "lucide-react";
+import { Bell, LogOut, Settings } from "lucide-react";
 import {
   getWorkspaceTitle,
-  isCurrentNavigationPath,
-  primaryNavigation,
+  getCurrentNavigationHref,
+  getVisibleNavigation,
 } from "@/components/layout/navigation";
+import { WorkspaceMenu } from "@/components/layout/workspace-menu";
+import { PeriodSelector } from "@/components/layout/period-selector";
 import { APP_ROLE_LABELS, type Viewer } from "@/features/auth/types";
-import type { ReportingPeriod } from "@/features/shared/types";
+import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
 
 export function WorkspaceShell({
   children,
   viewer,
   period,
+  fiscalYears,
 }: {
   children: ReactNode;
   viewer: Viewer;
   period: ReportingPeriod;
+  fiscalYears: FiscalYearOption[];
 }) {
   const pathname = usePathname();
   const title = getWorkspaceTitle(pathname);
-  const visibleNavItems = primaryNavigation.filter(
-    (item) => !item.adminOnly || viewer.roles.includes("admin"),
-  );
-  const currentHref = visibleNavItems
-    .filter((item) => isCurrentNavigationPath(pathname, item.href))
-    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
+  const visibleNavItems = getVisibleNavigation(viewer.roles);
+  const currentHref = getCurrentNavigationHref(pathname, visibleNavItems);
   const roleLabel = APP_ROLE_LABELS[viewer.role];
 
   if (pathname === "/") return children;
@@ -48,6 +48,8 @@ export function WorkspaceShell({
                 className={active ? "active" : ""}
                 href={href}
                 key={href}
+                aria-label={label}
+                title={label}
                 aria-current={active ? "page" : undefined}
               >
                 <Icon size={18} strokeWidth={1.9} />
@@ -68,20 +70,14 @@ export function WorkspaceShell({
       <div className="module-command-workspace">
         <header className="module-command-topbar">
           <div className="module-command-period">
-            <button type="button">
-              ปีงบประมาณ <strong>{period.buddhistYear}</strong>
-              <CalendarDays size={15} />
-            </button>
-            <button type="button">
-              {period.quarterLabel}
-              <ChevronDown size={15} />
-            </button>
+            <PeriodSelector fiscalYears={fiscalYears} period={period} />
             <span>
               <i />
               ข้อมูลจริง
             </span>
           </div>
           <div className="module-command-tools">
+            <WorkspaceMenu pathname={pathname} roles={viewer.roles} />
             <Link
               aria-label={`การแจ้งเตือน ${viewer.unreadNotifications} รายการ`}
               href="/notifications"

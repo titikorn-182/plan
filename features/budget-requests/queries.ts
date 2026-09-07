@@ -12,16 +12,18 @@ import {
 import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
+import { getReportingPeriod } from "@/features/shared/queries";
 
 export async function getBudgetRequests(
   page = 1,
 ): Promise<DataResult<PaginatedData<BudgetRequest>>> {
-  const supabase = await createClient();
+  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   const { data, error, count } = await supabase
     .from("budget_request_register")
     .select("*", { count: "exact" })
+    .eq("buddhist_year", period.buddhistYear)
     .order("updated_at", { ascending: false })
     .range(from, to);
   return result(

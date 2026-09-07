@@ -21,6 +21,16 @@ Migration `202609070002_fix_project_insert_returning_rls.sql` ตรวจหน
 
 ติดตามผลเต็มของ commit ล่าสุดที่ [GitHub Actions — Quality checks](https://github.com/titikorn-182/plan/actions/workflows/quality.yml) การทดสอบใช้ฐานแยก ไม่ได้ apply SQL ให้ฐานจริง
 
+## ผลตรวจเครื่องมือเลือกรอบ นำเข้า และรายงาน วันที่ 7 กันยายน 2569
+
+- เพิ่มชุดตรวจ parser สำหรับ CSV/XLSX, ตัวกรองโครงการ และ cookie รอบรายงาน
+- เพิ่มการตรวจฐานข้อมูลสำหรับ RLS ของกำหนดการ, คอลัมน์ปีงบประมาณใน view, rollback การนำเข้าหลายแถว และการปฏิเสธหน่วยงาน/ปี/วันที่ที่ไม่ตรงกับโครงการ
+- `npm run check` ผ่าน Vitest 134 กรณีและ Node contract tests 22 กรณี
+- `npm audit` ไม่พบช่องโหว่ โดยบังคับ transitive `uuid` ของ ExcelJS เป็นรุ่น 11.1.1
+- `npm run build` ผ่านบน Next.js 16.3.4 และมี route สร้าง XLSX/หน้าพิมพ์รายงานครบ 4 ประเภท
+
+การทดสอบนี้ยังไม่ apply migration ให้ Supabase production และไม่บันทึกข้อมูลในฐานจริง
+
 ## คำสั่งที่ใช้บ่อย
 
 ใช้ Node.js 24 และติดตั้งตาม lockfile ด้วย `npm ci` บน Windows หาก PowerShell ไม่อนุญาต `npm.ps1` ให้ใช้ `npm.cmd` / `npx.cmd` แทน

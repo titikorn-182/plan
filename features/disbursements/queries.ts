@@ -9,7 +9,7 @@ import {
   getPaginationRange,
   type PaginatedData,
 } from "@/features/shared/pagination";
-import { getOrganizationsAndYears } from "@/features/shared/queries";
+import { getOrganizationsAndYears, getReportingPeriod } from "@/features/shared/queries";
 import type { DataResult } from "@/features/shared/types";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
@@ -17,12 +17,13 @@ import { createClient } from "@/lib/supabase/server";
 export async function getDisbursements(
   page = 1,
 ): Promise<DataResult<PaginatedData<DisbursementRow>>> {
-  const supabase = await createClient();
+  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   const { data, error, count } = await supabase
     .from("disbursement_register")
     .select("*", { count: "exact" })
+    .eq("fiscal_year_id", period.fiscalYearId ?? "00000000-0000-0000-0000-000000000000")
     .order("id", { ascending: true })
     .range(from, to);
   return result(
