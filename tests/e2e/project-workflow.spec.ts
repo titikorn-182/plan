@@ -75,10 +75,11 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.getByLabel("วันเริ่มต้น").fill("2026-10-01");
     await staff.page.getByLabel("วันสิ้นสุด").fill("2027-09-30");
     await staff.page.getByRole("button", { name: "บันทึกฉบับร่าง", exact: true }).click();
-    await expect(staff.page.getByRole("status")).toContainText("บันทึกฉบับร่าง");
+    const projectForm = staff.page.locator(".budget-request-form");
+    await expect(projectForm.getByRole("status")).toContainText("บันทึกฉบับร่าง");
     await staff.page.getByLabel("ชื่อโครงการ", { exact: false }).first().fill(revisedTitle);
     await staff.page.getByRole("button", { name: "ส่งอนุมัติ", exact: true }).click();
-    await expect(staff.page.getByRole("status")).toContainText("เข้าสู่ workflow แล้ว");
+    await expect(projectForm.getByRole("status")).toContainText("เข้าสู่ workflow แล้ว");
     await approve(user.page, revisedTitle);
     await approve(executive.page, revisedTitle);
 

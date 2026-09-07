@@ -58,9 +58,11 @@ export function PeriodSelector({
           {pending ? "กำลังเปลี่ยน" : "ใช้รอบนี้"}
         </span>
       </button>
-      <span className="sr-only" role="status" aria-live="polite">
-        {state.message}
-      </span>
+      {state.message ? (
+        <span className="sr-only" role="status" aria-live="polite">
+          {state.message}
+        </span>
+      ) : null}
     </form>
   );
 }
