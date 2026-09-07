@@ -28,9 +28,14 @@ NEXT_PUBLIC_SITE_URL=https://<production-domain>
 3. `supabase/migrations/202609040003_operational_workflows.sql`
 4. `supabase/migrations/202609050001_correctness_and_type_safety.sql`
 5. `supabase/migrations/202609070001_fix_admin_access_audit_columns.sql`
-6. `supabase/verify-operational.sql` — เป็น read-only verification
+6. `supabase/migrations/202609070002_fix_project_insert_returning_rls.sql`
+7. `supabase/verify-operational.sql` — เป็น read-only verification
 
 หากระบบเดิมรัน migration บางส่วนแล้ว ให้เริ่มจากไฟล์ถัดไปตามลำดับ ห้ามรัน seed บน production เว้นแต่ได้รับอนุมัติว่าเป็นข้อมูลตัวอย่างที่ต้องการจริง
+
+ไฟล์ `202609070002` แก้การสร้างโครงการพร้อมอ่านผลกลับ (`INSERT ... RETURNING`) โดยเปลี่ยนเฉพาะ policy การอ่านแถว ไม่ได้ปิด RLS หรือเปลี่ยนสิทธิ์การเพิ่ม/แก้ไข/ลบ การ Push หรือ Deploy Vercel ไม่ได้รันไฟล์นี้ให้: ผู้ดูแลต้องสำรองข้อมูลและ apply migration ที่ยังขาดบน Supabase ก่อนทดสอบสร้างโครงการในระบบจริง
+
+หลัง apply ตรวจแบบอ่านอย่างเดียวได้ด้วย `select policyname, cmd, roles, qual from pg_policies where schemaname = 'public' and tablename = 'projects' and policyname = 'projects_select';` เงื่อนไขควรมีการตรวจ `organization_id`, `owner_id`, `coordinator_id` และ helper เดิม `can_access_project` จากนั้นทดสอบด้วยบัญชี Staff ที่ได้รับอนุมัติสำหรับ UAT ไม่ใช้ test fixtures บนฐานจริง
 
 ผล verification ที่คาดหวัง:
 

@@ -2,13 +2,24 @@
 
 ชุดทดสอบนี้เพิ่มการตรวจโค้ดก่อนรวมงาน โดยไม่ใช้บัญชีหรือฐานข้อมูล production และไม่แทนการลงนาม UAT ของผู้ใช้งานจริง
 
-## ผลตรวจบนเครื่อง วันที่ 7 กันยายน 2569
+## ผลตรวจพื้นฐานก่อน CI ครั้งแรก วันที่ 7 กันยายน 2569
 
 - `npm run check` ผ่าน: format, lint, TypeScript, Vitest 92 กรณี (unit 43, actions 17, database 32) และชุด Node tests เดิม 21 กรณี
 - `npm run test:e2e` ผ่าน 8 smoke tests ด้วย Chromium หลัง production build
 - `npm run build` ผ่าน และสร้าง build ปกติใหม่หลังจบ E2E แล้ว
-- Full-stack suite ค้นพบครบ 16 tests แต่ยังไม่ได้รันทั้งชุดบนเครื่องนี้เพราะไม่มี Docker: 8 smoke tests ข้างต้นรันแล้ว อีก 8 กรณีที่ต้องใช้ Supabase stack ยังรอตรวจบน CI
-- ยังไม่ได้ push, deploy, เปิด branch protection หรือ apply migration ไปยัง Supabase จริงในขั้นตอนนี้
+- บนเครื่องนี้ไม่มี Docker จึงรัน full-stack suite บน GitHub Actions แทน ข้อความในส่วนนี้เป็นผลตรวจพื้นฐานก่อนเผยแพร่ ไม่ใช่สถานะ deployment ปัจจุบัน
+
+## การแก้การสร้างโครงการหลังตรวจ CI
+
+CI ก่อนแก้ผ่าน 15/16 กรณี แต่กรณีสร้างโครงการพบว่า `INSERT ... RETURNING` ถูก policy การอ่านปฏิเสธ คำสั่งจึงย้อนกลับทั้งรายการ สาเหตุคือ helper แบบ `STABLE` ค้นหาโครงการในข้อมูล ณ จุดเริ่มคำสั่ง ซึ่งยังไม่มีแถวที่เพิ่งสร้างในคำสั่งเดียวกัน
+
+Migration `202609070002_fix_project_insert_returning_rls.sql` ตรวจหน่วยงาน/เจ้าของ/ผู้ประสานงานจากแถวที่กำลังตรวจสิทธิ์โดยตรง และคง helper เดิมสำหรับสมาชิกโครงการ โดยไม่ปิด RLS หรือเปลี่ยน policy เพิ่ม/แก้ไข/ลบ
+
+เพิ่ม `tests/database/project-insert.test.ts` จำนวน 16 กรณี: ก่อนแก้ล้มเหลว 6 กรณี หลังแก้ผ่าน 16/16 และชุดฐานข้อมูลรวมผ่าน 48 กรณี ครอบคลุมการสร้างของ Staff/User/Admin, การมอบหมายเจ้าของ, ผู้ใช้นอกสิทธิ์, สิทธิ์หมดอายุ, การปลอมเจ้าของ/ผู้สร้าง และสิทธิ์สมาชิกเดิม
+
+รอบแก้นี้ `npm run check` ผ่านครบ: format, lint, TypeScript, Vitest รวม 108 กรณี และชุด Node tests เดิม 21 กรณี พร้อม `npm run build` สำเร็จ
+
+ติดตามผลเต็มของ commit ล่าสุดที่ [GitHub Actions — Quality checks](https://github.com/titikorn-182/plan/actions/workflows/quality.yml) การทดสอบใช้ฐานแยก ไม่ได้ apply SQL ให้ฐานจริง
 
 ## คำสั่งที่ใช้บ่อย
 
@@ -108,9 +119,10 @@ workflow ใช้สิทธิ์ GitHub แบบอ่าน repository ไ
 
 ## Migration ที่ต้องนำขึ้นฐานจริงแยกต่างหาก
 
-`supabase/migrations/202609070001_fix_admin_access_audit_columns.sql` แก้ RPC จัดการสิทธิ์ที่เดิมอ้าง `granted_by` แต่ตารางใช้ `created_by` และป้องกันค่า null ลอดเงื่อนไข Admin ลบสิทธิ์ตัวเอง มี regression tests รองรับแล้ว
+1. `supabase/migrations/202609070001_fix_admin_access_audit_columns.sql` แก้ RPC จัดการสิทธิ์ที่เดิมอ้าง `granted_by` แต่ตารางใช้ `created_by` และป้องกันค่า null ลอดเงื่อนไข Admin ลบสิทธิ์ตัวเอง
+2. `supabase/migrations/202609070002_fix_project_insert_returning_rls.sql` แก้ policy การอ่านโครงการให้รองรับการสร้างพร้อมอ่านผลกลับ โดยรักษาขอบเขตการเข้าถึงเดิม
 
-ฐานที่มี migration ก่อนหน้านี้ครบแล้วให้รันเฉพาะไฟล์ใหม่นี้ หลังสำรองข้อมูลและได้รับอนุมัติ ไม่ต้องรัน migrations เก่าหรือ test fixtures ซ้ำ การ deploy แอปบน Vercel ไม่ได้ apply SQL ให้เอง
+ฐานที่มี migration ก่อนหน้านี้ครบแล้วให้รันเฉพาะไฟล์ใหม่ที่ยังไม่ได้ apply ตามลำดับ หลังสำรองข้อมูลและได้รับอนุมัติ ไม่ต้องรัน migrations เก่าหรือ test fixtures ซ้ำ การ deploy แอปบน Vercel ไม่ได้ apply SQL ให้เอง และการผ่าน CI ยังไม่ยืนยันว่าฐานจริงได้รับ migration แล้ว
 
 ## แหล่งอ้างอิง
 
@@ -118,4 +130,6 @@ workflow ใช้สิทธิ์ GitHub แบบอ่าน repository ไ
 - [Playwright web server](https://playwright.dev/docs/test-webserver)
 - [Supabase local testing / CI](https://supabase.com/docs/guides/deployment/ci/testing)
 - [PGlite extensions](https://pglite.dev/extensions/)
+- [PostgreSQL function snapshots](https://www.postgresql.org/docs/current/xfunc-volatility.html)
+- [PostgreSQL SELECT policies และ RETURNING](https://www.postgresql.org/docs/current/sql-createpolicy.html)
 - [Vercel buildCommand](https://vercel.com/docs/project-configuration#buildcommand)
