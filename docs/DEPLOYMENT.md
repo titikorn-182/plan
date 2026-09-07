@@ -30,13 +30,16 @@ NEXT_PUBLIC_SITE_URL=https://<production-domain>
 5. `supabase/migrations/202609070001_fix_admin_access_audit_columns.sql`
 6. `supabase/migrations/202609070002_fix_project_insert_returning_rls.sql`
 7. `supabase/migrations/202609070003_reporting_tools.sql`
-8. `supabase/verify-operational.sql` — เป็น read-only verification
+8. `supabase/migrations/202609070004_admin_center.sql`
+9. `supabase/verify-operational.sql` — เป็น read-only verification
 
 หากระบบเดิมรัน migration บางส่วนแล้ว ให้เริ่มจากไฟล์ถัดไปตามลำดับ ห้ามรัน seed บน production เว้นแต่ได้รับอนุมัติว่าเป็นข้อมูลตัวอย่างที่ต้องการจริง
 
 ไฟล์ `202609070002` แก้การสร้างโครงการพร้อมอ่านผลกลับ (`INSERT ... RETURNING`) โดยเปลี่ยนเฉพาะ policy การอ่านแถว ไม่ได้ปิด RLS หรือเปลี่ยนสิทธิ์การเพิ่ม/แก้ไข/ลบ การ Push หรือ Deploy Vercel ไม่ได้รันไฟล์นี้ให้: ผู้ดูแลต้องสำรองข้อมูลและ apply migration ที่ยังขาดบน Supabase ก่อนทดสอบสร้างโครงการในระบบจริง
 
 ไฟล์ `202609070003` เพิ่มตารางกำหนดการรายงานพร้อม RLS และเพิ่มคอลัมน์ปีงบประมาณใน view สำหรับกรองข้อมูลจากตัวเลือกส่วนกลาง ต้อง apply ก่อนทดสอบตัวเลือกปี/ไตรมาส ตัวกรอง รายงาน และกำหนดการบนเว็บไซต์จริง ส่วนการส่งรายงานตามเวลาอัตโนมัติยังต้องเชื่อม Scheduled Runner และช่องทางส่งขององค์กรแยกจาก migration นี้
+
+ไฟล์ `202609070004` เพิ่มศูนย์ดูแลระบบ ตารางตั้งค่ากลาง นโยบาย RLS การกู้คืนข้อมูล และกำหนดสิทธิ์ Admin ให้ `titikornrasmi.s@ubu.ac.th` ต้อง apply ก่อนเปิดหน้า Admin เวอร์ชันใหม่บนเว็บไซต์จริง
 
 หลัง apply ตรวจแบบอ่านอย่างเดียวได้ด้วย `select policyname, cmd, roles, qual from pg_policies where schemaname = 'public' and tablename = 'projects' and policyname = 'projects_select';` เงื่อนไขควรมีการตรวจ `organization_id`, `owner_id`, `coordinator_id` และ helper เดิม `can_access_project` จากนั้นทดสอบด้วยบัญชี Staff ที่ได้รับอนุมัติสำหรับ UAT ไม่ใช้ test fixtures บนฐานจริง
 

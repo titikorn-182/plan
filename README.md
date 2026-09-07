@@ -12,6 +12,8 @@ Next.js 16 App Router + TypeScript + Tailwind CSS + Supabase สำหรับ�
    - `supabase/migrations/202609050001_correctness_and_type_safety.sql`
    - `supabase/migrations/202609070001_fix_admin_access_audit_columns.sql`
    - `supabase/migrations/202609070002_fix_project_insert_returning_rls.sql`
+   - `supabase/migrations/202609070003_reporting_tools.sql`
+   - `supabase/migrations/202609070004_admin_center.sql`
    - `supabase/seed.sql`
 3. ไปที่ **Authentication > Users** และสร้างผู้ใช้คนแรก
 4. แก้อีเมลตัวอย่างใน `supabase/bootstrap-admin.example.sql` แล้วรันไฟล์นั้นเพื่อให้ผู้ใช้คนแรกเป็น Admin

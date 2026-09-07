@@ -1,27 +1,15 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import {
-  Check,
-  Database,
-  History,
-  LoaderCircle,
-  MailPlus,
-  Save,
-  Search,
-  ShieldCheck,
-  UserCog,
-  Users,
-} from "lucide-react";
+import { Check, LoaderCircle, MailPlus, Save, Search } from "lucide-react";
 import { inviteUserAction, updateUserAccessAction } from "@/features/admin/actions";
 import type { OperationState } from "@/features/shared/action-state";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import type { AdminUser, AuditRow } from "@/features/admin/types";
+import type { AdminUsersData, AdminUser } from "@/features/admin/types";
 import { APP_ROLE_NAMES, APP_ROLES } from "@/features/auth/types";
 import type { OrganizationOption } from "@/features/shared/types";
-import type { PaginationMeta } from "@/features/shared/pagination";
 
 const permissionRows = [
   ["Dashboard ส่วนบุคคล", true, true, true, true],
@@ -173,12 +161,7 @@ export function AdminView({
   organizations,
   viewerId,
 }: {
-  data: {
-    users: AdminUser[];
-    audits: AuditRow[];
-    organizationCount: number;
-    pagination: PaginationMeta;
-  };
+  data: AdminUsersData;
   organizations: OrganizationOption[];
   viewerId: string;
 }) {
@@ -194,32 +177,8 @@ export function AdminView({
     );
   }, [data.users, query]);
   const selected = data.users.find((user) => user.id === selectedId) ?? data.users[0];
-  const actionLabel: Record<string, string> = { insert: "เพิ่ม", update: "แก้ไข", delete: "ลบ" };
   return (
     <div className="space-y-5">
-      <section className="grid border border-stone-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { label: "ผู้ใช้งานทั้งหมด", value: data.pagination.total, icon: Users },
-          {
-            label: "ระงับการใช้งาน (หน้านี้)",
-            value: data.users.filter((user) => !user.active).length,
-            icon: UserCog,
-          },
-          { label: "บทบาทในระบบ", value: 4, icon: ShieldCheck },
-          { label: "หน่วยงาน", value: data.organizationCount, icon: Database },
-        ].map(({ label, value, icon: Icon }, index) => (
-          <article
-            className={`flex items-center gap-4 px-5 py-4 ${index < 3 ? "border-b border-stone-200 sm:border-r xl:border-b-0" : ""}`}
-            key={label}
-          >
-            <Icon className="text-[#c9440b]" size={21} />
-            <span>
-              <b className="block text-2xl tabular-nums">{value}</b>
-              <small className="text-[11px] text-stone-500">{label}</small>
-            </span>
-          </article>
-        ))}
-      </section>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <RegisterSection
@@ -317,27 +276,6 @@ export function AdminView({
             </section>
           ) : null}
           <InvitePanel />
-          <section className="border border-stone-200 bg-white">
-            <header className="flex items-center gap-2 border-b border-stone-200 px-4 py-3">
-              <History size={16} className="text-[#c9440b]" />
-              <h2 className="text-sm font-bold">Audit ล่าสุด</h2>
-            </header>
-            <ul className="divide-y divide-stone-200 text-xs">
-              {data.audits.map((audit) => (
-                <li className="p-4" key={audit.id}>
-                  <b>
-                    {actionLabel[audit.action] ?? audit.action} {audit.entityType}
-                  </b>
-                  <small className="mt-1 block text-stone-500">
-                    {audit.actorEmail} · {audit.createdAt}
-                  </small>
-                </li>
-              ))}
-              {data.audits.length === 0 ? (
-                <li className="p-4 text-stone-500">ยังไม่มีประวัติการเปลี่ยนแปลง</li>
-              ) : null}
-            </ul>
-          </section>
         </aside>
       </div>
     </div>

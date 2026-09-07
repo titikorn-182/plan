@@ -54,12 +54,17 @@ function quarterForDate(
 
 export const getReportingContext = cache(async (): Promise<ReportingContext> => {
   const supabase = await createClient();
-  const [query, cookieStore] = await Promise.all([
+  const [query, settingsQuery, cookieStore] = await Promise.all([
     supabase
       .from("fiscal_years")
       .select("id,buddhist_year,label,starts_on,ends_on,status")
       .in("status", ["open", "closed"])
       .order("buddhist_year", { ascending: false }),
+    supabase
+      .from("system_settings")
+      .select("default_fiscal_year_id,default_quarter")
+      .limit(1)
+      .maybeSingle(),
     cookies(),
   ]);
   const { data, error } = query;
@@ -72,13 +77,17 @@ export const getReportingContext = cache(async (): Promise<ReportingContext> => 
   const today = new Date();
   const todayKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Bangkok" }).format(today);
   const preferred = parseReportingPeriodPreference(cookieStore.get(REPORTING_PERIOD_COOKIE)?.value);
+  const defaults = settingsQuery.data;
   const active =
     data.find((item) => item.id === preferred?.fiscalYearId) ??
+    data.find((item) => item.id === defaults?.default_fiscal_year_id) ??
     data.find((item) => item.starts_on <= todayKey && item.ends_on >= todayKey) ??
     data.find((item) => item.status === "open") ??
     data[0];
   const quarter = toQuarter(
-    preferred?.quarter ?? quarterForDate(active.starts_on, active.ends_on, today),
+    preferred?.quarter ??
+      defaults?.default_quarter ??
+      quarterForDate(active.starts_on, active.ends_on, today),
   );
   return {
     period: {

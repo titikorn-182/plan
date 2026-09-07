@@ -131,6 +131,8 @@ workflow ใช้สิทธิ์ GitHub แบบอ่าน repository ไ
 
 1. `supabase/migrations/202609070001_fix_admin_access_audit_columns.sql` แก้ RPC จัดการสิทธิ์ที่เดิมอ้าง `granted_by` แต่ตารางใช้ `created_by` และป้องกันค่า null ลอดเงื่อนไข Admin ลบสิทธิ์ตัวเอง
 2. `supabase/migrations/202609070002_fix_project_insert_returning_rls.sql` แก้ policy การอ่านโครงการให้รองรับการสร้างพร้อมอ่านผลกลับ โดยรักษาขอบเขตการเข้าถึงเดิม
+3. `supabase/migrations/202609070003_reporting_tools.sql` เพิ่มเครื่องมือรายงาน ตัวกรองรอบ และกำหนดการรายงาน
+4. `supabase/migrations/202609070004_admin_center.sql` เพิ่มศูนย์ดูแลระบบ การตั้งค่ากลาง สิทธิ์ Admin และการกู้คืนข้อมูลแบบตรวจสอบย้อนหลังได้
 
 ฐานที่มี migration ก่อนหน้านี้ครบแล้วให้รันเฉพาะไฟล์ใหม่ที่ยังไม่ได้ apply ตามลำดับ หลังสำรองข้อมูลและได้รับอนุมัติ ไม่ต้องรัน migrations เก่าหรือ test fixtures ซ้ำ การ deploy แอปบน Vercel ไม่ได้ apply SQL ให้เอง และการผ่าน CI ยังไม่ยืนยันว่าฐานจริงได้รับ migration แล้ว
 

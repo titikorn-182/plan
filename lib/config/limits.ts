@@ -2,6 +2,8 @@ export const QUERY_LIMITS = {
   defaultPageSize: 20,
   evidencePageSize: 18,
   adminPageSize: 20,
+  adminAuditPageSize: 30,
+  adminTrashRows: 100,
   selectOptions: 500,
   dashboardDecisionQueue: 50,
   recentAuditEvents: 8,

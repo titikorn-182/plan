@@ -84,7 +84,7 @@ const WORKSPACE_TITLES: ReadonlyArray<{
   { matches: (pathname) => pathname === "/evidence", title: "หลักฐานและเอกสาร" },
   { matches: (pathname) => pathname === "/approvals", title: "Workflow อนุมัติ" },
   { matches: (pathname) => pathname === "/notifications", title: "การแจ้งเตือน" },
-  { matches: (pathname) => pathname === "/admin", title: "ผู้ใช้ สิทธิ์ และข้อมูลหลัก" },
+  { matches: (pathname) => pathname === "/admin", title: "ศูนย์ดูแลระบบ" },
 ];
 
 export function getWorkspaceTitle(pathname: string): string {
