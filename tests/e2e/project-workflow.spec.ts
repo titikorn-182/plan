@@ -69,7 +69,7 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
 test("inactive account cannot enter the workspace", async ({ browser }) => {
   const account = await login(browser, "inactive");
   try {
-    await expect(account.page.getByRole("alert")).toContainText("ถูกระงับ");
+    await expect(account.page.getByRole("main").getByRole("alert")).toContainText("ถูกระงับ");
     await account.page.goto("/projects");
     await expect(account.page).toHaveURL(/\/login/);
   } finally {
