@@ -13,6 +13,10 @@ import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 import { getReportingPeriod } from "@/features/shared/queries";
+import {
+  BUDGET_REQUEST_ORGANIZATION_NAMES,
+  getBudgetRequestOrganizationOrder,
+} from "@/features/budget-requests/organization-options";
 
 export async function getBudgetRequests(
   page = 1,
@@ -58,7 +62,11 @@ export async function getBudgetFormOptions(
     { data: cycles, error: cycleError },
     recordResult,
   ] = await Promise.all([
-    supabase.from("organizations").select("id,name_th").eq("is_active", true).order("name_th"),
+    supabase
+      .from("organizations")
+      .select("id,name_th")
+      .eq("is_active", true)
+      .in("name_th", BUDGET_REQUEST_ORGANIZATION_NAMES),
     supabase
       .from("budget_cycles")
       .select("id,fiscal_year_id,fiscal_years!inner(label,status)")
@@ -105,10 +113,16 @@ export async function getBudgetFormOptions(
       ? recordRow.organizations[0]
       : recordRow.organizations
     : null;
-  const organizationOptions = (organizations ?? []).map((item) => ({
-    id: item.id,
-    name: item.name_th,
-  }));
+  const organizationOptions = (organizations ?? [])
+    .toSorted(
+      (left, right) =>
+        getBudgetRequestOrganizationOrder(left.name_th) -
+        getBudgetRequestOrganizationOrder(right.name_th),
+    )
+    .map((item) => ({
+      id: item.id,
+      name: item.name_th,
+    }));
   if (
     recordRow &&
     recordOrganization &&

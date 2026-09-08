@@ -56,15 +56,23 @@ function GeneralStep({
           className={fieldClass}
           value={organizationId}
           onChange={(event) => onOrganizationChange(event.target.value)}
+          aria-describedby="budget-request-organization-help budget-request-organization-error"
+          aria-invalid={Boolean(errors?.organizationId?.length)}
           required
         >
+          {options.organizations.length === 0 ? (
+            <option value="">ไม่พบหน่วยงานที่เปิดใช้งาน</option>
+          ) : null}
           {options.organizations.map((organization) => (
             <option value={organization.id} key={organization.id}>
               {organization.name}
             </option>
           ))}
         </select>
-        <FieldError errors={errors?.organizationId} />
+        <span id="budget-request-organization-help" className="mt-1.5 block text-xs text-stone-500">
+          รายการหน่วยงานตามโครงสร้างคณะรัฐศาสตร์ มหาวิทยาลัยอุบลราชธานี
+        </span>
+        <FieldError errors={errors?.organizationId} id="budget-request-organization-error" />
       </label>
       <label>
         <FieldLabel required>ประเภทคำขอ</FieldLabel>
