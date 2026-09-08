@@ -61,23 +61,40 @@ export async function saveBudgetRequestAction(
     return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
   }
 
-  const { data: fiscalYear, error: fiscalError } = await supabase
-    .from("fiscal_years")
-    .select("buddhist_year")
-    .eq("id", parsed.data.fiscalYearId)
-    .single();
-  if (fiscalError) {
+  const [fiscalYearResult, budgetCycleResult] = await Promise.all([
+    supabase
+      .from("fiscal_years")
+      .select("buddhist_year")
+      .eq("id", parsed.data.fiscalYearId)
+      .single(),
+    supabase
+      .from("budget_cycles")
+      .select("fiscal_year_id")
+      .eq("id", parsed.data.budgetCycleId)
+      .single(),
+  ]);
+  const periodError = fiscalYearResult.error ?? budgetCycleResult.error;
+  if (periodError) {
     return {
       ...previous,
       success: false,
-      message: friendlyError(fiscalError, "budget_requests.fiscal_year"),
+      message: friendlyError(periodError, "budget_requests.fiscal_year"),
     };
   }
-  if (!fiscalYear) {
+  const fiscalYear = fiscalYearResult.data;
+  if (!fiscalYear || !budgetCycleResult.data) {
     return {
       ...previous,
       success: false,
-      message: "ไม่พบปีงบประมาณที่เลือก กรุณาเปิดแบบฟอร์มใหม่",
+      message: "ไม่พบปีงบประมาณหรือรอบรับคำขอที่เลือก กรุณาเปิดแบบฟอร์มใหม่",
+    };
+  }
+  if (budgetCycleResult.data.fiscal_year_id !== parsed.data.fiscalYearId) {
+    return {
+      ...previous,
+      success: false,
+      errors: { fiscalYearId: ["ปีงบประมาณไม่ตรงกับรอบรับคำขอ กรุณาเลือกใหม่"] },
+      message: "ปีงบประมาณที่เลือกไม่ถูกต้อง",
     };
   }
 

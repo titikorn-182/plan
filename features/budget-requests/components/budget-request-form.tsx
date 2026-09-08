@@ -24,10 +24,14 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   const [organizationId, setOrganizationId] = useState(
     record?.organizationId ?? options.organizations[0]?.id ?? "",
   );
+  const initialFiscalYear =
+    options.fiscalYears.find((item) => item.id === record?.fiscalYearId) ?? options.fiscalYears[0];
+  const [fiscalYearId, setFiscalYearId] = useState(initialFiscalYear?.id ?? "");
+  const [budgetCycleId, setBudgetCycleId] = useState(initialFiscalYear?.budgetCycleId ?? "");
   const [projectType, setProjectType] = useState(
     record?.projectType ?? "โครงการพัฒนาการเรียนการสอน",
   );
-  const [ownerName, setOwnerName] = useState(record?.ownerName ?? options.defaultOwnerName);
+  const [ownerName, setOwnerName] = useState(record?.ownerName ?? "");
   const [rationale, setRationale] = useState(record?.rationale ?? "");
   const [amount, setAmount] = useState(String(record?.amount ?? 0));
   const [formState, action, pending] = useActionState(saveBudgetRequestAction, {
@@ -42,8 +46,8 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
       <input type="hidden" name="version" value={formState.version ?? 1} />
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="fiscalYearId" value={options.fiscalYearId} />
-      <input type="hidden" name="budgetCycleId" value={options.budgetCycleId} />
+      <input type="hidden" name="fiscalYearId" value={fiscalYearId} />
+      <input type="hidden" name="budgetCycleId" value={budgetCycleId} />
       <input type="hidden" name="projectType" value={projectType} />
       <input type="hidden" name="ownerName" value={ownerName} />
       <input type="hidden" name="rationale" value={rationale} />
@@ -78,7 +82,13 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
             <BudgetRequestStepContent
               amount={amount}
               errors={formState.errors}
+              fiscalYearId={fiscalYearId}
               onAmountChange={setAmount}
+              onFiscalYearChange={(value) => {
+                const fiscalYear = options.fiscalYears.find((item) => item.id === value);
+                setFiscalYearId(value);
+                setBudgetCycleId(fiscalYear?.budgetCycleId ?? "");
+              }}
               onOrganizationChange={setOrganizationId}
               onOwnerChange={setOwnerName}
               onProjectTypeChange={setProjectType}

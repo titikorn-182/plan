@@ -8,12 +8,14 @@ interface BudgetRequestStepContentProps {
   amount: string;
   errors: BudgetRequestState["errors"];
   onAmountChange: (value: string) => void;
+  onFiscalYearChange: (value: string) => void;
   onOrganizationChange: (value: string) => void;
   onOwnerChange: (value: string) => void;
   onProjectTypeChange: (value: string) => void;
   onRationaleChange: (value: string) => void;
   onTitleChange: (value: string) => void;
   options: BudgetFormOptions;
+  fiscalYearId: string;
   organizationId: string;
   ownerName: string;
   projectType: string;
@@ -25,7 +27,9 @@ interface BudgetRequestStepContentProps {
 
 function GeneralStep({
   errors,
+  fiscalYearId,
   onOrganizationChange,
+  onFiscalYearChange,
   onOwnerChange,
   onProjectTypeChange,
   onRationaleChange,
@@ -94,6 +98,8 @@ function GeneralStep({
           className={fieldClass}
           value={ownerName}
           onChange={(event) => onOwnerChange(event.target.value)}
+          placeholder="กรอกชื่อ-นามสกุล"
+          autoComplete="off"
           maxLength={180}
           required
         />
@@ -101,12 +107,21 @@ function GeneralStep({
       </label>
       <label>
         <FieldLabel required>ปีงบประมาณ</FieldLabel>
-        <input
-          className={`${fieldClass} bg-stone-50`}
-          value={options.fiscalYearLabel}
-          readOnly
-          aria-readonly="true"
-        />
+        <select
+          className={fieldClass}
+          value={fiscalYearId}
+          onChange={(event) => onFiscalYearChange(event.target.value)}
+          required
+          aria-invalid={Boolean(errors?.fiscalYearId?.length)}
+          aria-describedby={errors?.fiscalYearId?.length ? "budget-fiscal-year-error" : undefined}
+        >
+          {options.fiscalYears.map((fiscalYear) => (
+            <option value={fiscalYear.id} key={fiscalYear.id}>
+              {fiscalYear.label}
+            </option>
+          ))}
+        </select>
+        <FieldError errors={errors?.fiscalYearId} id="budget-fiscal-year-error" />
       </label>
       <label className="md:col-span-2">
         <FieldLabel required>หลักการและเหตุผล</FieldLabel>

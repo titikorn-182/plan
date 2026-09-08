@@ -155,7 +155,9 @@ describe("project action orchestration", () => {
 
 describe("budget, approval, and spending actions", () => {
   it("uses the atomic budget submission RPC", async () => {
-    savedProject();
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    response({ id: projectId, code: "TEST-P1", version: 4 });
     const result = await saveBudgetRequestAction(
       {},
       form({
@@ -171,6 +173,26 @@ describe("budget, approval, and spending actions", () => {
       "submit_budget_request_for_approval",
       expect.objectContaining({ p_entity_id: projectId }),
     );
+  });
+  it("rejects a budget cycle from a different fiscal year", async () => {
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: "30000000-0000-4000-8000-000000000002" });
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "save",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบ",
+        amount: "1000",
+      }),
+    );
+    expect(result).toMatchObject({
+      success: false,
+      message: "ปีงบประมาณที่เลือกไม่ถูกต้อง",
+    });
+    expect(mock.chain.insert).not.toHaveBeenCalled();
+    expect(mock.chain.update).not.toHaveBeenCalled();
   });
   it("requires a reason when returning a task before calling its RPC", async () => {
     expect(

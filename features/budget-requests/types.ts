@@ -30,11 +30,14 @@ export type BudgetRequest = {
 
 export type BudgetFormOptions = {
   organizations: { id: string; name: string }[];
-  fiscalYearId: string;
-  fiscalYearLabel: string;
-  budgetCycleId: string;
-  defaultOwnerName: string;
+  fiscalYears: BudgetFiscalYearOption[];
   record: BudgetFormRecord | null;
+};
+
+export type BudgetFiscalYearOption = {
+  id: string;
+  label: string;
+  budgetCycleId: string;
 };
 
 export type BudgetFormRecord = {
@@ -43,6 +46,8 @@ export type BudgetFormRecord = {
   version: number;
   title: string;
   organizationId: string;
+  fiscalYearId: string;
+  budgetCycleId: string;
   projectType: string;
   ownerName: string;
   rationale: string;

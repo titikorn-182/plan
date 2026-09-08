@@ -9,7 +9,6 @@ import {
   getPaginationRange,
   type PaginatedData,
 } from "@/features/shared/pagination";
-import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 import { getReportingPeriod } from "@/features/shared/queries";
@@ -55,7 +54,7 @@ export async function getBudgetRequests(
 export async function getBudgetFormOptions(
   budgetRequestId?: string,
 ): Promise<DataResult<BudgetFormOptions | null>> {
-  const [viewer, supabase] = await Promise.all([getViewer(), createClient()]);
+  const supabase = await createClient();
   const currentTimestamp = new Date().toISOString();
   const [
     { data: organizations, error: orgError },
@@ -69,12 +68,11 @@ export async function getBudgetFormOptions(
       .in("name_th", BUDGET_REQUEST_ORGANIZATION_NAMES),
     supabase
       .from("budget_cycles")
-      .select("id,fiscal_year_id,fiscal_years!inner(label,status)")
+      .select("id,fiscal_year_id,fiscal_years!inner(label,status,buddhist_year)")
       .eq("status", "open")
       .lte("opens_at", currentTimestamp)
       .gte("closes_at", currentTimestamp)
-      .order("closes_at")
-      .limit(1),
+      .order("closes_at"),
     budgetRequestId
       ? supabase
           .from("budget_requests")
@@ -92,17 +90,11 @@ export async function getBudgetFormOptions(
   if (budgetRequestId && !recordResult.data) {
     return expectedResultError(null, "ไม่พบคำของบประมาณหรือคุณไม่มีสิทธิ์เข้าถึง");
   }
-  const cycle = cycles?.[0];
   const recordRow = recordResult.data;
-  if (!recordRow && !cycle) {
+  if (!recordRow && !cycles?.length) {
     return expectedResultError(null, "ยังไม่มีรอบรับคำของบประมาณที่เปิดใช้งาน");
   }
 
-  const cycleFiscal = cycle
-    ? Array.isArray(cycle.fiscal_years)
-      ? cycle.fiscal_years[0]
-      : cycle.fiscal_years
-    : null;
   const recordFiscal = recordRow
     ? Array.isArray(recordRow.fiscal_years)
       ? recordRow.fiscal_years[0]
@@ -134,12 +126,42 @@ export async function getBudgetFormOptions(
     });
   }
 
+  const fiscalYearOptions = new Map<
+    string,
+    { id: string; label: string; budgetCycleId: string; buddhistYear: number }
+  >();
+  for (const cycle of cycles ?? []) {
+    const fiscalYear = Array.isArray(cycle.fiscal_years)
+      ? cycle.fiscal_years[0]
+      : cycle.fiscal_years;
+    if (fiscalYear && !fiscalYearOptions.has(cycle.fiscal_year_id)) {
+      fiscalYearOptions.set(cycle.fiscal_year_id, {
+        id: cycle.fiscal_year_id,
+        label: fiscalYear.label,
+        budgetCycleId: cycle.id,
+        buddhistYear: fiscalYear.buddhist_year,
+      });
+    }
+  }
+  const fiscalYears = Array.from(fiscalYearOptions.values())
+    .toSorted((left, right) => right.buddhistYear - left.buddhistYear)
+    .map((option) => ({
+      id: option.id,
+      label: option.label,
+      budgetCycleId: option.budgetCycleId,
+    }));
+
+  if (recordRow && !fiscalYears.some((item) => item.id === recordRow.fiscal_year_id)) {
+    fiscalYears.push({
+      id: recordRow.fiscal_year_id,
+      label: recordFiscal?.label ?? "ปีงบประมาณของรายการเดิม",
+      budgetCycleId: recordRow.budget_cycle_id,
+    });
+  }
+
   return result({
     organizations: organizationOptions,
-    fiscalYearId: recordRow?.fiscal_year_id ?? cycle!.fiscal_year_id,
-    fiscalYearLabel: recordFiscal?.label ?? cycleFiscal?.label ?? "—",
-    budgetCycleId: recordRow?.budget_cycle_id ?? cycle!.id,
-    defaultOwnerName: viewer.fullName,
+    fiscalYears,
     record: recordRow
       ? {
           id: recordRow.id,
@@ -147,6 +169,8 @@ export async function getBudgetFormOptions(
           version: recordRow.version,
           title: recordRow.title_th,
           organizationId: recordRow.organization_id,
+          fiscalYearId: recordRow.fiscal_year_id,
+          budgetCycleId: recordRow.budget_cycle_id,
           projectType: recordRow.project_type,
           ownerName: recordRow.owner_name,
           rationale: recordRow.rationale,
