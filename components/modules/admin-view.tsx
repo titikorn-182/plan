@@ -8,7 +8,7 @@ import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-fo
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import type { AdminUsersData, AdminUser } from "@/features/admin/types";
-import { APP_ROLE_NAMES, APP_ROLES } from "@/features/auth/types";
+import { APP_ROLE_NAMES, APP_ROLE_LABELS, APP_ROLES } from "@/features/auth/types";
 import type { OrganizationOption } from "@/features/shared/types";
 
 const permissionRows = [
@@ -53,13 +53,17 @@ function InvitePanel() {
         <label className="block">
           <FieldLabel required>บทบาทเริ่มต้น</FieldLabel>
           <select className={fieldClass} name="role" defaultValue="staff">
-            <option value="staff">Staff</option>
-            <option value="user">User</option>
-            <option value="executive">Executive</option>
-            <option value="admin">Admin</option>
+            {APP_ROLES.map((role) => (
+              <option key={role} value={role}>
+                {APP_ROLE_LABELS[role]} ({roleLabel[role]})
+              </option>
+            ))}
           </select>
         </label>
-        <FormNotice state={state} idle="ต้องตั้งค่า service role key เฉพาะฝั่งเซิร์ฟเวอร์" />
+        <FormNotice
+          state={state}
+          idle="ระบบจะส่งคำเชิญไปยังอีเมลที่ระบุ ตรวจสอบอีเมลและบทบาทก่อนส่ง"
+        />
         <button
           className="inline-flex w-full items-center justify-center gap-2 bg-[#cf430c] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           disabled={pending}
@@ -113,7 +117,7 @@ function AccessEditor({
                 value={value}
                 defaultChecked={user.roles.includes(value)}
               />
-              {roleLabel[value]}
+              {APP_ROLE_LABELS[value]} ({roleLabel[value]})
             </label>
           ))}
         </div>
@@ -144,7 +148,10 @@ function AccessEditor({
         เปิดใช้งานบัญชี
         <input name="active" type="checkbox" defaultChecked={user.active} />
       </label>
-      <FormNotice state={state} idle="การแก้ไขมีผลกับ RLS หลังบันทึกทันที" />
+      <FormNotice
+        state={state}
+        idle="สิทธิ์และสถานะบัญชีจะเปลี่ยนหลังบันทึก ตรวจสอบบทบาทและหน่วยงานให้ครบก่อนยืนยัน"
+      />
       <button
         className="inline-flex w-full items-center justify-center gap-2 bg-[#cf430c] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
         disabled={pending}
@@ -166,37 +173,116 @@ export function AdminView({
   viewerId: string;
 }) {
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState(data.users[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState("");
+  const [showInvite, setShowInvite] = useState(false);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const matchingUsers = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("th");
-    return data.users.filter((user) =>
-      [user.fullName, user.email, ...user.roles]
-        .join(" ")
-        .toLocaleLowerCase("th")
-        .includes(normalized),
+    return data.users.filter(
+      (user) =>
+        (!roleFilter || user.roles.some((role) => role === roleFilter)) &&
+        (!statusFilter || user.active === (statusFilter === "active")) &&
+        [
+          user.fullName,
+          user.email,
+          ...user.roles,
+          ...user.roles.map((role) => APP_ROLE_LABELS[role]),
+        ]
+          .join(" ")
+          .toLocaleLowerCase("th")
+          .includes(normalized),
     );
-  }, [data.users, query]);
-  const selected = data.users.find((user) => user.id === selectedId) ?? data.users[0];
+  }, [data.users, query, roleFilter, statusFilter]);
+  const selected = data.users.find((user) => user.id === selectedId);
+  function clearFilters() {
+    setQuery("");
+    setRoleFilter("");
+    setStatusFilter("");
+  }
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-5">
-          <RegisterSection
-            title="ผู้ใช้งานและสิทธิ์"
-            aside={
-              <label className="flex h-9 items-center gap-2 border border-stone-300 px-3 focus-within:border-orange-500">
-                <Search size={15} />
-                <input
-                  className="w-44 text-xs outline-none"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="ค้นหาในหน้านี้"
-                />
-              </label>
-            }
+      <div className="admin-users-heading">
+        <div>
+          <h2 className="text-xl font-bold">ผู้ใช้งานและสิทธิ์</h2>
+          <p className="mt-1 text-sm text-stone-600">
+            ค้นหาบัญชี แล้วเลือกชื่อเพื่อแก้ไขบทบาท หน่วยงาน หรือสถานะการใช้งาน
+          </p>
+        </div>
+        <button
+          type="button"
+          className="admin-action-button"
+          aria-expanded={showInvite}
+          aria-controls="admin-user-editor"
+          onClick={() => {
+            setSelectedId("");
+            setShowInvite(true);
+            requestAnimationFrame(() => document.getElementById("admin-user-editor")?.focus());
+          }}
+        >
+          <MailPlus size={17} /> เชิญผู้ใช้ใหม่
+        </button>
+      </div>
+      <div className="admin-user-filters">
+        <label>
+          <span>ค้นหาผู้ใช้ในหน้านี้</span>
+          <div className="admin-user-search">
+            <Search size={17} aria-hidden="true" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="ชื่อ อีเมล หรือบทบาท"
+            />
+          </div>
+        </label>
+        <label>
+          <span>บทบาท</span>
+          <select
+            aria-label="กรองตามบทบาท"
+            value={roleFilter}
+            onChange={(event) => setRoleFilter(event.target.value)}
           >
+            <option value="">ทุกบทบาท</option>
+            {APP_ROLES.map((role) => (
+              <option key={role} value={role}>
+                {APP_ROLE_LABELS[role]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>สถานะบัญชี</span>
+          <select
+            aria-label="สถานะบัญชี"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="">ทุกสถานะ</option>
+            <option value="active">เปิดใช้งาน</option>
+            <option value="inactive">ระงับการใช้งาน</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          className="admin-secondary-button"
+          onClick={clearFilters}
+          disabled={!query && !roleFilter && !statusFilter}
+        >
+          ล้างตัวกรอง
+        </button>
+      </div>
+      <p className="text-xs text-stone-600" role="status">
+        แสดง {matchingUsers.length} จาก {data.users.length} บัญชีในหน้านี้ ·
+        ตัวกรองใช้กับรายชื่อในหน้าปัจจุบัน
+      </p>
+      <div
+        className={`grid items-start gap-5 ${selected || showInvite ? "2xl:grid-cols-[minmax(0,1fr)_360px]" : ""}`}
+      >
+        <div className="space-y-5">
+          <RegisterSection title="รายชื่อผู้ใช้งาน">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-xs">
+              <table className="admin-users-table w-full text-left text-sm">
+                <caption className="sr-only">รายชื่อผู้ใช้ เลือกชื่อเพื่อแก้ไขสิทธิ์</caption>
                 <thead className="bg-stone-50 text-stone-600">
                   <tr>
                     <th className="px-4 py-3">ผู้ใช้งาน</th>
@@ -215,15 +301,23 @@ export function AdminView({
                         <button
                           className="w-full px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500"
                           type="button"
-                          onClick={() => setSelectedId(user.id)}
+                          onClick={() => {
+                            setSelectedId(user.id);
+                            setShowInvite(false);
+                            requestAnimationFrame(() =>
+                              document.getElementById("admin-user-editor")?.focus(),
+                            );
+                          }}
+                          aria-controls="admin-user-editor"
                           aria-pressed={selected?.id === user.id}
                         >
                           <b className="block text-sm">{user.fullName}</b>
-                          <small className="text-stone-500">{user.email}</small>
+                          <small className="break-all text-stone-600">{user.email}</small>
                         </button>
                       </td>
                       <td className="px-3 py-3">
-                        {user.roles.map((role) => roleLabel[role] ?? role).join(", ") || "—"}
+                        {user.roles.map((role) => APP_ROLE_LABELS[role]).join(", ") ||
+                          "ยังไม่กำหนดบทบาท"}
                       </td>
                       <td className="px-3 py-3">{user.organizationIds.length} แห่ง</td>
                       <td className="px-3 py-3">
@@ -233,50 +327,105 @@ export function AdminView({
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            <PaginationNav basePath="/admin" pagination={data.pagination} />
-          </RegisterSection>
-          <RegisterSection
-            title="สิทธิ์มาตรฐานตามบทบาท"
-            aside={<StatusPill tone="green">RLS เปิดใช้งาน</StatusPill>}
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-xs">
-                <thead className="bg-stone-50 text-stone-600">
-                  <tr>
-                    <th className="px-4 py-3">โมดูล</th>
-                    <th className="px-3 py-3 text-center">Admin</th>
-                    <th className="px-3 py-3 text-center">User</th>
-                    <th className="px-3 py-3 text-center">Executive</th>
-                    <th className="px-3 py-3 text-center">Staff</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {permissionRows.map(([label, ...values]) => (
-                    <tr className="border-t border-stone-200" key={label}>
-                      <th className="px-4 py-3">{label}</th>
-                      {values.map((value, index) => (
-                        <td className="px-3 py-3 text-center" key={index}>
-                          <PermissionMark value={value} />
-                        </td>
-                      ))}
+                  {matchingUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-10 text-center">
+                        <p className="font-semibold">
+                          {data.users.length
+                            ? "ไม่พบผู้ใช้ที่ตรงกับตัวกรอง"
+                            : "ยังไม่มีรายชื่อผู้ใช้ในหน้านี้"}
+                        </p>
+                        <p className="mt-2 text-stone-600">
+                          {data.users.length
+                            ? "ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อแสดงรายชื่อทั้งหมดในหน้านี้"
+                            : "ใช้ปุ่มเชิญผู้ใช้ใหม่เพื่อเพิ่มบัญชี"}
+                        </p>
+                        {data.users.length > 0 ? (
+                          <button
+                            type="button"
+                            className="admin-secondary-button mt-4"
+                            onClick={clearFilters}
+                          >
+                            ล้างตัวกรอง
+                          </button>
+                        ) : null}
+                      </td>
                     </tr>
-                  ))}
+                  ) : null}
                 </tbody>
               </table>
             </div>
+            <PaginationNav
+              basePath="/admin"
+              pagination={data.pagination}
+              query={{ section: "users" }}
+            />
           </RegisterSection>
+          <details className="border border-stone-200">
+            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-stone-700">
+              ดูคำอธิบายสิทธิ์มาตรฐานตามบทบาท
+            </summary>
+            <RegisterSection
+              title="สิทธิ์มาตรฐานตามบทบาท"
+              aside={
+                <span className="text-xs text-stone-600">
+                  ขอบเขตข้อมูลขึ้นอยู่กับสิทธิ์ของแต่ละบัญชี
+                </span>
+              }
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-xs">
+                  <thead className="bg-stone-50 text-stone-600">
+                    <tr>
+                      <th className="px-4 py-3">โมดูล</th>
+                      <th className="px-3 py-3 text-center">Admin</th>
+                      <th className="px-3 py-3 text-center">User</th>
+                      <th className="px-3 py-3 text-center">Executive</th>
+                      <th className="px-3 py-3 text-center">Staff</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {permissionRows.map(([label, ...values]) => (
+                      <tr className="border-t border-stone-200" key={label}>
+                        <th className="px-4 py-3">{label}</th>
+                        {values.map((value, index) => (
+                          <td className="px-3 py-3 text-center" key={index}>
+                            <PermissionMark value={value} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </RegisterSection>
+          </details>
         </div>
-        <aside className="space-y-5">
-          {selected ? (
-            <section className="border border-stone-200 bg-white" key={selected.id}>
-              <AccessEditor user={selected} organizations={organizations} viewerId={viewerId} />
-            </section>
-          ) : null}
-          <InvitePanel />
-        </aside>
+        {selected || showInvite ? (
+          <aside
+            id="admin-user-editor"
+            tabIndex={-1}
+            aria-label={showInvite ? "เชิญผู้ใช้ใหม่" : "แก้ไขสิทธิ์ผู้ใช้"}
+            className="admin-user-editor space-y-3"
+          >
+            <button
+              type="button"
+              className="admin-secondary-button"
+              onClick={() => {
+                setSelectedId("");
+                setShowInvite(false);
+              }}
+            >
+              ปิดแผงและกลับไปรายชื่อ
+            </button>
+            {selected ? (
+              <section className="border border-stone-200 bg-white" key={selected.id}>
+                <AccessEditor user={selected} organizations={organizations} viewerId={viewerId} />
+              </section>
+            ) : null}
+            {showInvite ? <InvitePanel /> : null}
+          </aside>
+        ) : null}
       </div>
     </div>
   );

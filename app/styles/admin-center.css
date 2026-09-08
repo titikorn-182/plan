@@ -1,6 +1,6 @@
 .admin-center {
   --admin-ink: #1c1917;
-  --admin-muted: #78716c;
+  --admin-muted: #57534e;
   --admin-line: #dedbd7;
   --admin-soft: #fff7ed;
   --admin-accent: #d8470c;
@@ -136,6 +136,132 @@
 .admin-center__content {
   min-width: 0;
   padding: 18px;
+}
+
+.admin-center__intro {
+  display: block;
+  margin-top: 6px;
+  color: var(--admin-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.admin-nav-detail {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.admin-users-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-users-heading .admin-action-button {
+  align-self: center;
+  min-height: 44px;
+}
+
+.admin-user-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) repeat(2, minmax(130px, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 16px;
+  background: #fafaf9;
+  border: 1px solid var(--admin-line);
+}
+
+.admin-user-filters label > span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-user-filters select,
+.admin-user-search {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #a8a29e;
+  background: #fff;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.admin-user-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-user-search input {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-user-search input::placeholder {
+  color: #57534e;
+}
+
+.admin-secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-user-editor {
+  scroll-margin-top: 80px;
+  min-width: 0;
+}
+
+.admin-user-editor:focus-visible {
+  outline: 2px solid #9a3412;
+  outline-offset: 4px;
+}
+
+.admin-users-table td,
+.admin-users-table th {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .admin-user-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-user-filters {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .admin-users-table thead {
+    display: none;
+  }
+
+  .admin-users-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-users-table td:first-child,
+  .admin-users-table td[colspan] {
+    grid-column: 1 / -1;
+  }
+
+  .admin-users-table td:nth-child(2)::before {
+    content: "บทบาท: ";
+  }
+
+  .admin-users-table td:nth-child(3)::before {
+    content: "หน่วยงาน: ";
+  }
 }
 
 .admin-register {
@@ -606,8 +732,8 @@
   }
 
   .admin-center__rail nav {
-    display: flex;
-    min-width: max-content;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-center__rail nav a,
