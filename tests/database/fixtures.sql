@@ -39,7 +39,8 @@ from public.profiles where email like '%@example.test';
 update public.profiles set is_active = false where email = 'inactive@example.test';
 
 insert into public.fiscal_years (id, buddhist_year, label, starts_on, ends_on) values
-  ('30000000-0000-4000-8000-000000000001', 2570, 'ปีทดสอบ 2570', '2026-10-01', '2027-09-30');
+  ('30000000-0000-4000-8000-000000000001', 2570, 'ปีทดสอบ 2570', '2026-10-01', '2027-09-30')
+on conflict (id) do update set label = excluded.label;
 insert into public.budget_cycles (id, fiscal_year_id, name, opens_at, closes_at) values
   ('40000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001',
    'รอบทดสอบ', now() - interval '1 year', now() + interval '1 year');

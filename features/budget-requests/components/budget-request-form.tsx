@@ -27,7 +27,9 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   const initialFiscalYear =
     options.fiscalYears.find((item) => item.id === record?.fiscalYearId) ?? options.fiscalYears[0];
   const [fiscalYearId, setFiscalYearId] = useState(initialFiscalYear?.id ?? "");
-  const [budgetCycleId, setBudgetCycleId] = useState(initialFiscalYear?.budgetCycleId ?? "");
+  const [budgetCycleId, setBudgetCycleId] = useState(
+    record?.budgetCycleId ?? initialFiscalYear?.budgetCycleId ?? "",
+  );
   const [projectType, setProjectType] = useState(
     record?.projectType ?? "โครงการพัฒนาการเรียนการสอน",
   );

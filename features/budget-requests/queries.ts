@@ -16,6 +16,10 @@ import {
   BUDGET_REQUEST_ORGANIZATION_NAMES,
   getBudgetRequestOrganizationOrder,
 } from "@/features/budget-requests/organization-options";
+import {
+  BUDGET_REQUEST_CYCLE_NAMES,
+  BUDGET_REQUEST_FISCAL_YEARS,
+} from "@/features/budget-requests/fiscal-year-options";
 
 export async function getBudgetRequests(
   page = 1,
@@ -55,7 +59,6 @@ export async function getBudgetFormOptions(
   budgetRequestId?: string,
 ): Promise<DataResult<BudgetFormOptions | null>> {
   const supabase = await createClient();
-  const currentTimestamp = new Date().toISOString();
   const [
     { data: organizations, error: orgError },
     { data: cycles, error: cycleError },
@@ -68,16 +71,14 @@ export async function getBudgetFormOptions(
       .in("name_th", BUDGET_REQUEST_ORGANIZATION_NAMES),
     supabase
       .from("budget_cycles")
-      .select("id,fiscal_year_id,fiscal_years!inner(label,status,buddhist_year)")
+      .select("id,name,fiscal_year_id,fiscal_years!inner(label,status,buddhist_year)")
       .eq("status", "open")
-      .lte("opens_at", currentTimestamp)
-      .gte("closes_at", currentTimestamp)
-      .order("closes_at"),
+      .in("name", BUDGET_REQUEST_CYCLE_NAMES),
     budgetRequestId
       ? supabase
           .from("budget_requests")
           .select(
-            "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label),organizations!budget_requests_organization_id_fkey(name_th)",
+            "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label,buddhist_year),organizations!budget_requests_organization_id_fkey(name_th)",
           )
           .eq("id", budgetRequestId)
           .is("archived_at", null)
@@ -91,10 +92,6 @@ export async function getBudgetFormOptions(
     return expectedResultError(null, "ไม่พบคำของบประมาณหรือคุณไม่มีสิทธิ์เข้าถึง");
   }
   const recordRow = recordResult.data;
-  if (!recordRow && !cycles?.length) {
-    return expectedResultError(null, "ยังไม่มีรอบรับคำของบประมาณที่เปิดใช้งาน");
-  }
-
   const recordFiscal = recordRow
     ? Array.isArray(recordRow.fiscal_years)
       ? recordRow.fiscal_years[0]
@@ -126,30 +123,37 @@ export async function getBudgetFormOptions(
     });
   }
 
-  const fiscalYearOptions = new Map<
-    string,
-    { id: string; label: string; budgetCycleId: string; buddhistYear: number }
-  >();
+  const cyclesByYear = new Map<number, { fiscalYearId: string; budgetCycleId: string }>();
   for (const cycle of cycles ?? []) {
     const fiscalYear = Array.isArray(cycle.fiscal_years)
       ? cycle.fiscal_years[0]
       : cycle.fiscal_years;
-    if (fiscalYear && !fiscalYearOptions.has(cycle.fiscal_year_id)) {
-      fiscalYearOptions.set(cycle.fiscal_year_id, {
-        id: cycle.fiscal_year_id,
-        label: fiscalYear.label,
+    if (fiscalYear && !cyclesByYear.has(fiscalYear.buddhist_year)) {
+      cyclesByYear.set(fiscalYear.buddhist_year, {
+        fiscalYearId: cycle.fiscal_year_id,
         budgetCycleId: cycle.id,
-        buddhistYear: fiscalYear.buddhist_year,
       });
     }
   }
-  const fiscalYears = Array.from(fiscalYearOptions.values())
-    .toSorted((left, right) => right.buddhistYear - left.buddhistYear)
-    .map((option) => ({
-      id: option.id,
-      label: option.label,
-      budgetCycleId: option.budgetCycleId,
-    }));
+  const fiscalYears = BUDGET_REQUEST_FISCAL_YEARS.flatMap((configuredYear) => {
+    const cycle = cyclesByYear.get(configuredYear.buddhistYear);
+    return cycle
+      ? [
+          {
+            id: cycle.fiscalYearId,
+            label: configuredYear.label,
+            budgetCycleId: cycle.budgetCycleId,
+          },
+        ]
+      : [];
+  });
+
+  if (!recordRow && fiscalYears.length !== BUDGET_REQUEST_FISCAL_YEARS.length) {
+    return expectedResultError(
+      null,
+      "ข้อมูลปีงบประมาณ 2570–2572 ยังไม่ครบ กรุณาให้ผู้ดูแลระบบตั้งค่ารอบคำขอ",
+    );
+  }
 
   if (recordRow && !fiscalYears.some((item) => item.id === recordRow.fiscal_year_id)) {
     fiscalYears.push({

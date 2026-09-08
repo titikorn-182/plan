@@ -8,7 +8,8 @@ const options: BudgetFormOptions = {
   organizations: [{ id: "organization-1", name: "สำนักงานเลขานุการ-งานการเงิน" }],
   fiscalYears: [
     { id: "fiscal-2570", label: "ปีงบประมาณ 2570", budgetCycleId: "cycle-2570" },
-    { id: "fiscal-2569", label: "ปีงบประมาณ 2569", budgetCycleId: "cycle-2569" },
+    { id: "fiscal-2571", label: "ปีงบประมาณ 2571", budgetCycleId: "cycle-2571" },
+    { id: "fiscal-2572", label: "ปีงบประมาณ 2572", budgetCycleId: "cycle-2572" },
   ],
   record: null,
 };
@@ -39,6 +40,7 @@ describe("new budget request general fields", () => {
 
     expect(html).toMatch(/<input[^>]+placeholder="กรอกชื่อ-นามสกุล"[^>]+value=""/);
     expect(html).toContain('<option value="fiscal-2570" selected="">ปีงบประมาณ 2570</option>');
-    expect(html).toContain('<option value="fiscal-2569">ปีงบประมาณ 2569</option>');
+    expect(html).toContain('<option value="fiscal-2571">ปีงบประมาณ 2571</option>');
+    expect(html).toContain('<option value="fiscal-2572">ปีงบประมาณ 2572</option>');
   });
 });
