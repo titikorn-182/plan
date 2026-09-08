@@ -2,7 +2,7 @@ export const BUDGET_REQUEST_ORGANIZATIONS = [
   { code: "SEC-ADMIN", name: "สำนักงานเลขานุการ-งานสารบรรณและธุรการ" },
   { code: "SEC-VEHICLE", name: "สำนักงานเลขานุการ-งานยานพาหนะ" },
   { code: "SEC-FACILITY", name: "สำนักงานเลขานุการ-งานอาคารสถานที่" },
-  { code: "SEC-INTERNATIONAL", name: "สำนักงานเลขานุการ-งานวิเทศนานาชาติ" },
+  { code: "SEC-INTERNATIONAL", name: "สำนักงานเลขานุการ-งานกิจการนานาชาติ" },
   { code: "SEC-ACADEMIC", name: "สำนักงานเลขานุการ-งานวิชาการและหลักสูตร" },
   { code: "SEC-STUDENT", name: "สำนักงานเลขานุการ-งานพัฒนานักศึกษาและศิษย์เก่า" },
   { code: "SEC-FINANCE", name: "สำนักงานเลขานุการ-งานการเงิน" },

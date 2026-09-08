@@ -9,6 +9,7 @@ describe("budget request organization options", () => {
   it("contains the 15 organizations in the supplied order", () => {
     expect(BUDGET_REQUEST_ORGANIZATIONS).toHaveLength(15);
     expect(BUDGET_REQUEST_ORGANIZATIONS[0]?.name).toBe("สำนักงานเลขานุการ-งานสารบรรณและธุรการ");
+    expect(BUDGET_REQUEST_ORGANIZATIONS[3]?.name).toBe("สำนักงานเลขานุการ-งานกิจการนานาชาติ");
     expect(BUDGET_REQUEST_ORGANIZATIONS.at(-1)?.name).toBe("ภาควิชารัฐประศาสนศาสตร์");
   });
 
