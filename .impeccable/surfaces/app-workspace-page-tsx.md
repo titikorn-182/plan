@@ -1,7 +1,7 @@
 ---
 version: 1
-slug: "app-page-tsx"
-primary_target: "app/page.tsx"
+slug: "app-workspace-page-tsx"
+primary_target: "app/(workspace)/page.tsx"
 related_targets: ["components/dashboard/executive-dashboard.tsx", "components/layout/workspace-shell.tsx", "components/ui/operation-form.tsx", "components/modules", "app/operations/actions.ts", "app/globals.css", "lib/data/queries.ts", "lib/domain.ts"]
 ---
 

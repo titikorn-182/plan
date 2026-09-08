@@ -69,9 +69,18 @@ export default async function LoginPage({
           </footer>
         </div>
       </section>
-      <section className="relative hidden overflow-hidden bg-[#c9440b] p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute top-0 right-0 h-full w-[42%] border-l border-white/15 bg-[#b73a08]" />
-        <div className="relative max-w-2xl">
+      <section className="relative hidden overflow-hidden bg-[#a93407] p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="object-cover object-center opacity-[0.38] mix-blend-multiply saturate-75"
+          fill
+          loading="eager"
+          sizes="(min-width: 1024px) 58vw, 0px"
+          src="/branding/login-values-background.png"
+        />
+        <div className="absolute inset-0 bg-[#7d2505]/20" />
+        <div className="relative z-10 max-w-2xl">
           <h2 className="text-5xl font-bold leading-[1.14] tracking-[-0.04em]">
             จากคำของบ
             <br />
@@ -82,9 +91,9 @@ export default async function LoginPage({
             พร้อมหลักฐานและประวัติการตัดสินใจ
           </p>
         </div>
-        <div className="relative grid max-w-2xl gap-px border border-white/25 bg-white/25 sm:grid-cols-3">
+        <div className="relative z-10 grid max-w-2xl gap-px border border-white/30 bg-white/25 sm:grid-cols-3">
           {["งบประมาณเชื่อมโยง", "รายงานทันรอบ", "หลักฐานครบถ้วน"].map((item) => (
-            <div className="bg-[#c9440b] p-5" key={item}>
+            <div className="bg-[#a93407]/90 p-5" key={item}>
               <CheckCircle2 size={19} />
               <b className="mt-3 block text-sm">{item}</b>
             </div>
