@@ -1,0 +1,307 @@
+.portal {
+  color: #292524;
+}
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 0 28px;
+}
+.header h1 {
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.35;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.header p {
+  margin-top: 10px;
+  color: #57534e;
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 65ch;
+}
+.period {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e7e5e4;
+  background: white;
+  padding: 12px 18px;
+}
+.period svg {
+  color: #b53807;
+}
+.period strong {
+  font-size: 14px;
+}
+.period small {
+  display: block;
+  margin-top: 3px;
+  color: #57534e;
+  font-size: 12px;
+}
+.switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  border-bottom: 1px solid #d6d3d1;
+  margin-bottom: 28px;
+}
+.switcher button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 12px 2px;
+  border-bottom: 3px solid transparent;
+  color: #57534e;
+  font-size: 14px;
+  font-weight: 600;
+}
+.switcher button[aria-pressed="true"] {
+  color: #ac3509;
+  border-bottom-color: #cf430c;
+}
+.switcher button:hover {
+  color: #ac3509;
+}
+.switcher button span {
+  background: #fff0e6;
+  color: #9a3412;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 28px;
+  align-items: start;
+}
+.catalog {
+  background: white;
+  border: 1px solid #e7e5e4;
+}
+.catalogTitle {
+  padding: 22px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  border-bottom: 1px solid #e7e5e4;
+}
+.catalogTitle h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.catalogTitle > span {
+  font-size: 12px;
+  color: #57534e;
+}
+.report {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 18px;
+  padding: 27px 24px;
+  border-bottom: 1px solid #e7e5e4;
+  transition: background-color 0.15s ease;
+}
+.report:last-child {
+  border-bottom: 0;
+}
+.report:hover {
+  background: #fff8f3;
+}
+.category {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #9a3412;
+  padding-top: 3px;
+}
+.reportBody {
+  min-width: 0;
+}
+.reportBody strong {
+  display: block;
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+.reportBody > span {
+  display: block;
+  margin-top: 6px;
+  color: #57534e;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.reportBody small {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 3px 8px;
+  background: #f5f5f4;
+  color: #57534e;
+  font-size: 11px;
+}
+.open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ac3509;
+  font-size: 12px;
+  white-space: nowrap;
+  padding-top: 4px;
+}
+.aside {
+  display: grid;
+  gap: 22px;
+}
+.guide {
+  background: #fff0e6;
+  padding: 26px;
+  color: #81320f;
+}
+.guide h2 {
+  margin-top: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.guide > p {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.85;
+}
+.guideNote {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e9c5ac;
+}
+.guideNote svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.guideNote p {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.documents {
+  padding: 4px 8px;
+}
+.documents > svg {
+  color: #a64015;
+}
+.documents h2 {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.documents p {
+  margin-top: 8px;
+  color: #57534e;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.documents button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid #d6d3d1;
+  background: white;
+  min-height: 44px;
+  width: 100%;
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 600;
+}
+.documents button:hover {
+  background: #fff8f3;
+}
+.footer {
+  margin-top: 24px;
+  color: #57534e;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.documentHeading {
+  margin-bottom: 20px;
+}
+.documentHeading h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.documentHeading p {
+  margin-top: 6px;
+  color: #57534e;
+  font-size: 13px;
+}
+.portal button:focus-visible,
+.portal a:focus-visible {
+  outline: 2px solid #9a3412;
+  outline-offset: 4px;
+}
+@media (max-width: 1200px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .aside {
+    grid-template-columns: 1fr 1fr;
+  }
+  .documents {
+    padding: 24px;
+  }
+}
+@media (max-width: 640px) {
+  .header {
+    padding-top: 8px;
+    gap: 16px;
+  }
+  .period {
+    width: 100%;
+  }
+  .switcher {
+    gap: 4px 18px;
+  }
+  .switcher button {
+    font-size: 13px;
+  }
+  .report {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 22px 18px;
+    gap: 8px 12px;
+  }
+  .category {
+    grid-column: 1 / -1;
+  }
+  .open > span {
+    display: none;
+  }
+  .reportBody strong {
+    font-size: 16px;
+  }
+  .catalogTitle {
+    padding: 18px;
+  }
+  .aside {
+    grid-template-columns: 1fr;
+  }
+  .guide {
+    padding: 22px;
+  }
+  .guide h2 {
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .report {
+    transition: none;
+  }
+}
