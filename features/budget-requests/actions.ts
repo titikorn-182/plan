@@ -9,6 +9,7 @@ import {
   MAX_BUDGET_REQUEST_AMOUNT,
   parseBudgetExpenseBreakdown,
 } from "@/features/budget-requests/expense-categories";
+import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
@@ -61,6 +62,15 @@ export async function saveBudgetRequestAction(
       success: false,
       errors: expenseBreakdown.errors,
       message: "กรุณาตรวจสอบจำนวนเงินในหมวดค่าใช้จ่าย",
+    };
+  }
+  const proposalDetails = parseBudgetProposalDetails(formData.get("proposalDetails"));
+  if (!proposalDetails.success) {
+    return {
+      ...previous,
+      success: false,
+      errors: proposalDetails.errors,
+      message: "กรุณาตรวจสอบรายละเอียดคำของบประมาณ",
     };
   }
   if (
@@ -143,6 +153,7 @@ export async function saveBudgetRequestAction(
     rationale: parsed.data.rationale,
     requested_amount: parsed.data.amount,
     expense_breakdown: expenseBreakdown.data,
+    proposal_details: proposalDetails.data,
     status: "draft" as const,
     submitted_at: null,
     updated_by: userId,

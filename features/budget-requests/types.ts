@@ -1,5 +1,6 @@
 import type { Enums } from "@/types/database.generated";
 import type { BudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
+import type { BudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 
 export type DocumentStatus = Enums<"document_status">;
 export type BudgetStatus =
@@ -54,5 +55,6 @@ export type BudgetFormRecord = {
   rationale: string;
   amount: number;
   expenseBreakdown: BudgetExpenseBreakdown | null;
+  proposalDetails: BudgetProposalDetails;
   status: DocumentStatus;
 };

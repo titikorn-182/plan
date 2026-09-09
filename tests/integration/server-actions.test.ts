@@ -4,6 +4,7 @@ import { saveBudgetRequestAction } from "@/features/budget-requests/actions";
 import { actOnApprovalAction } from "@/features/approvals/actions";
 import { saveDisbursementAction } from "@/features/disbursements/actions";
 import { createEmptyBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
+import { createEmptyBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 
 // Only the network/cache boundary is mocked; validation, authentication checks,
 // action orchestration, and error translation execute the production code.
@@ -290,9 +291,21 @@ describe("budget expense action persistence", () => {
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
     response({ id: projectId, code: "TEST-BR1", version: 1 });
+    const proposalDetails = {
+      ...createEmptyBudgetProposalDetails(),
+      missionName: "พันธกิจด้านบริการวิชาการ",
+      startsOn: "2026-10-01",
+      endsOn: "2027-09-30",
+    };
     const result = await saveBudgetRequestAction(
       {},
-      form({ ...budgetInput, id: "", intent, expenseBreakdown: JSON.stringify(breakdown) }),
+      form({
+        ...budgetInput,
+        id: "",
+        intent,
+        expenseBreakdown: JSON.stringify(breakdown),
+        proposalDetails: JSON.stringify(proposalDetails),
+      }),
     );
     expect(result.success).toBe(true);
     expect(mock.chain.insert).toHaveBeenCalledWith(
@@ -303,6 +316,7 @@ describe("budget expense action persistence", () => {
           operating_services: 700.25,
           personnel_compensation: 299.75,
         },
+        proposal_details: proposalDetails,
       }),
     );
     expect(mock.chain.update).not.toHaveBeenCalled();

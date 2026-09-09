@@ -340,6 +340,7 @@ export type Database = {
           owner_name: string
           priority: Database["public"]["Enums"]["priority_level"]
           progress: number
+          proposal_details: Json
           project_type: string
           rationale: string
           requested_amount: number
@@ -369,6 +370,7 @@ export type Database = {
           owner_name: string
           priority?: Database["public"]["Enums"]["priority_level"]
           progress?: number
+          proposal_details?: Json
           project_type: string
           rationale?: string
           requested_amount?: number
@@ -398,6 +400,7 @@ export type Database = {
           owner_name?: string
           priority?: Database["public"]["Enums"]["priority_level"]
           progress?: number
+          proposal_details?: Json
           project_type?: string
           rationale?: string
           requested_amount?: number

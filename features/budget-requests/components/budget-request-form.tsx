@@ -11,6 +11,7 @@ import {
 import { BudgetRequestFormActions } from "@/features/budget-requests/components/budget-request-form-actions";
 import { BudgetRequestReadiness } from "@/features/budget-requests/components/budget-request-readiness";
 import { BudgetRequestStepContent } from "@/features/budget-requests/components/budget-request-step-content";
+import type { BudgetProposalDetailChange } from "@/features/budget-requests/components/budget-request-step-types";
 import {
   BUDGET_REQUEST_STEPS,
   BudgetRequestStepper,
@@ -22,6 +23,56 @@ import {
   getBudgetExpenseTotal,
   type BudgetExpenseBreakdown,
 } from "@/features/budget-requests/expense-categories";
+import {
+  createEmptyBudgetProposalDetails,
+  type BudgetProposalTextField,
+} from "@/features/budget-requests/proposal-details";
+
+const GENERAL_DETAIL_FIELDS: BudgetProposalTextField[] = [
+  "organizationCode",
+  "ownerPosition",
+  "startsOn",
+  "endsOn",
+];
+const STRATEGY_DETAIL_FIELDS: BudgetProposalTextField[] = [
+  "fundingSource",
+  "fundingSourceDetail",
+  "missionName",
+  "universityStrategy",
+  "goalName",
+  "strategyName",
+  "fundCode",
+  "fundName",
+  "operationalPlanCode",
+  "operationalPlanName",
+  "activityCode",
+  "msdsId",
+  "alignmentDescription",
+];
+const BUDGET_DETAIL_FIELDS: BudgetProposalTextField[] = [
+  "expenseSubcategory",
+  "expenseDescription",
+  "spendingPlanName",
+];
+
+function getErrorStep(errors: BudgetRequestState["errors"]): number | null {
+  const fields = Object.keys(errors ?? {});
+  if (fields.some((field) => field === "amount" || field.startsWith("expenseBreakdown"))) return 2;
+  for (const [step, detailFields] of [
+    [0, GENERAL_DETAIL_FIELDS],
+    [1, STRATEGY_DETAIL_FIELDS],
+    [2, BUDGET_DETAIL_FIELDS],
+  ] as const) {
+    if (
+      fields.some((field) => detailFields.some((detail) => field === `proposalDetails.${detail}`))
+    ) {
+      return step;
+    }
+  }
+  if (fields.some((field) => field.startsWith("proposalDetails."))) return 3;
+  if (fields.length > 0) return 0;
+  return null;
+}
 
 export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   const record = options.record;
@@ -41,6 +92,9 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   );
   const [ownerName, setOwnerName] = useState(record?.ownerName ?? "");
   const [rationale, setRationale] = useState(record?.rationale ?? "");
+  const [proposalDetails, setProposalDetails] = useState(
+    record?.proposalDetails ?? createEmptyBudgetProposalDetails(),
+  );
   const [expenseFields, setExpenseFields] = useState<BudgetExpenseFields>(
     () =>
       Object.fromEntries(
@@ -52,6 +106,9 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   const [hasLegacyAmount, setHasLegacyAmount] = useState(
     Boolean(record && !record.expenseBreakdown && record.amount > 0),
   );
+  const handleDetailChange: BudgetProposalDetailChange = (field, value) => {
+    setProposalDetails((current) => ({ ...current, [field]: value }));
+  };
   const expenseAmounts = Object.fromEntries(
     Object.entries(expenseFields).map(([category, value]) => [
       category,
@@ -64,13 +121,8 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   const [formState, action, pending] = useActionState(
     async (previous: BudgetRequestState, formData: FormData) => {
       const nextState = await saveBudgetRequestAction(previous, formData);
-      if (
-        Object.keys(nextState.errors ?? {}).some(
-          (field) => field === "amount" || field.startsWith("expenseBreakdown"),
-        )
-      ) {
-        setStep(2);
-      }
+      const errorStep = getErrorStep(nextState.errors);
+      if (errorStep !== null) setStep(errorStep);
       return nextState;
     },
     {
@@ -92,6 +144,7 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
       <input type="hidden" name="ownerName" value={ownerName} />
       <input type="hidden" name="rationale" value={rationale} />
       <input type="hidden" name="amount" value={amount} />
+      <input type="hidden" name="proposalDetails" value={JSON.stringify(proposalDetails)} />
       <input
         type="hidden"
         name="expenseBreakdown"
@@ -126,6 +179,7 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
           <div className="p-5 sm:p-6">
             <BudgetRequestStepContent
               amount={amount}
+              details={proposalDetails}
               errors={formState.errors}
               expenseFields={expenseFields}
               hasLegacyAmount={hasLegacyAmount}
@@ -134,6 +188,7 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
                 setHasLegacyAmount(false);
                 setExpenseFields((current) => ({ ...current, [category]: value }));
               }}
+              onDetailChange={handleDetailChange}
               onFiscalYearChange={(value) => {
                 const fiscalYear = options.fiscalYears.find((item) => item.id === value);
                 setFiscalYearId(value);
@@ -156,7 +211,17 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
           </div>
         </RegisterSection>
 
-        <BudgetRequestReadiness />
+        <BudgetRequestReadiness
+          amount={amount}
+          details={proposalDetails}
+          fiscalYearId={fiscalYearId}
+          onNavigate={setStep}
+          organizationId={organizationId}
+          ownerName={ownerName}
+          projectType={projectType}
+          rationale={rationale}
+          title={title}
+        />
       </div>
 
       <BudgetRequestFormActions
