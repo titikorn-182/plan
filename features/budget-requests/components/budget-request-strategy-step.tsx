@@ -183,28 +183,35 @@ export function BudgetRequestStrategyStep({
       <BudgetRequestFormSection title="ความเชื่อมโยง SDGs">
         <fieldset>
           <legend className="sr-only">เลือกเป้าหมายการพัฒนาที่ยั่งยืน</legend>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {BUDGET_SDG_OPTIONS.map((label) => (
-              <label
-                className="flex min-h-12 items-start gap-3 border border-stone-200 bg-stone-50 px-3 py-3 text-sm leading-5 transition-colors hover:border-orange-300 hover:bg-orange-50/60"
-                key={label}
-              >
-                <input
-                  className="mt-1 accent-[#cf430c]"
-                  type="checkbox"
-                  checked={details.sdgs.includes(label)}
-                  onChange={(event) =>
-                    onDetailChange(
-                      "sdgs",
-                      event.target.checked
-                        ? [...details.sdgs, label]
-                        : details.sdgs.filter((item) => item !== label),
-                    )
-                  }
-                />
-                <span>{label}</span>
-              </label>
-            ))}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-stone-500">
+            <span>เลือกได้มากกว่า 1 เป้าหมาย</span>
+            <span className="tabular-nums">เลือกแล้ว {details.sdgs.length} เป้าหมาย</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            {BUDGET_SDG_OPTIONS.map((label) => {
+              const selected = details.sdgs.includes(label);
+              return (
+                <label
+                  className={`flex min-h-12 items-start gap-3 border px-3 py-3 text-sm leading-5 transition-colors ${selected ? "border-orange-400 bg-orange-50 text-stone-900" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-orange-300 hover:bg-orange-50/60"}`}
+                  key={label}
+                >
+                  <input
+                    className="mt-1 accent-[#cf430c]"
+                    type="checkbox"
+                    checked={selected}
+                    onChange={(event) =>
+                      onDetailChange(
+                        "sdgs",
+                        event.target.checked
+                          ? [...details.sdgs, label]
+                          : details.sdgs.filter((item) => item !== label),
+                      )
+                    }
+                  />
+                  <span>{label}</span>
+                </label>
+              );
+            })}
           </div>
           <FieldError errors={getProposalFieldErrors(errors, "sdgs")} />
         </fieldset>

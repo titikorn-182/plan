@@ -74,7 +74,10 @@ describe("new budget request fields", () => {
     expect(html).toContain("ชื่อพันธกิจ");
     expect(html).toContain("ชื่อกลยุทธ์");
     expect(html).toContain("รหัสแผนปฏิบัติการ");
+    expect(html).toContain("SDG 1 ขจัดความยากจน");
     expect(html).toContain("SDG 4 การศึกษาที่มีคุณภาพ");
+    expect(html).toContain("SDG 13 การรับมือกับ Climate Change");
+    expect(html).toContain("SDG 17 หุ้นส่วนเพื่อการพัฒนา");
   });
 
   it("keeps every expense group and adds source expense metadata", () => {
