@@ -12,6 +12,23 @@ export const BUDGET_PROJECT_TYPE_SUGGESTIONS = [
 
 export const BUDGET_FUNDING_SOURCE_SUGGESTIONS = ["เงินรายได้", "เงินงบประมาณแผ่นดิน"] as const;
 
+export const BUDGET_ORGANIZATION_CODE_OPTIONS = [
+  { value: "2301", label: "สำนักงานเลขานุการคณะ" },
+  { value: "2302", label: "ภาควิชาการเมืองและความสัมพันธ์ระหว่างประเทศ" },
+  { value: "2303", label: "ภาควิชารัฐประศาสนศาสตร์" },
+] as const;
+
+export const BUDGET_FUND_OPTIONS = [
+  { code: "1", name: "กองทุนบริหาร" },
+  { code: "2", name: "กองทุนจัดการศึกษา" },
+  { code: "3", name: "กองทุนวิจัย" },
+  { code: "4", name: "กองทุนบริการวิชาการ" },
+  { code: "6", name: "กองทุนพัฒนาบุคลากร" },
+  { code: "7", name: "กองทุนสินทรัพย์ถาวร" },
+  { code: "8", name: "กองทุนกิจการนักศึกษา" },
+  { code: "15", name: "กองทุนบุคลากร" },
+] as const;
+
 export const BUDGET_SDG_OPTIONS = [
   "SDG 4 การศึกษาที่มีคุณภาพ",
   "SDG 8 งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ",
@@ -26,7 +43,6 @@ const textFields = {
   universityStrategy: { label: "ยุทธศาสตร์มหาวิทยาลัย", max: INPUT_LIMITS.title },
   goalName: { label: "เป้าประสงค์", max: INPUT_LIMITS.title },
   strategyName: { label: "ชื่อกลยุทธ์", max: INPUT_LIMITS.title },
-  fundCode: { label: "รหัสกองทุน", max: INPUT_LIMITS.shortText },
   fundName: { label: "กองทุน", max: INPUT_LIMITS.title },
   outputCode: { label: "รหัสผลผลิต/โครงการ", max: INPUT_LIMITS.shortText },
   outputName: { label: "ชื่อผลผลิต", max: INPUT_LIMITS.title },
@@ -34,7 +50,6 @@ const textFields = {
   operationalPlanName: { label: "ชื่อแผนปฏิบัติการ", max: INPUT_LIMITS.title },
   activityCode: { label: "รหัสโครงการ/กิจกรรม", max: INPUT_LIMITS.shortText },
   subActivityName: { label: "ชื่อกิจกรรมย่อย", max: INPUT_LIMITS.title },
-  msdsId: { label: "MSDS ID", max: INPUT_LIMITS.shortText },
   expenseSubcategory: { label: "หมวดรายจ่ายย่อย", max: INPUT_LIMITS.title },
   expenseDescription: { label: "รายละเอียดรายการค่าใช้จ่าย", max: INPUT_LIMITS.longText },
   spendingPlanName: { label: "ชื่อแผนค่าใช้จ่าย", max: INPUT_LIMITS.title },
@@ -66,7 +81,6 @@ export function createEmptyBudgetProposalDetails(): BudgetProposalDetails {
     universityStrategy: "",
     goalName: "",
     strategyName: "",
-    fundCode: "",
     fundName: "",
     outputCode: "",
     outputName: "",
@@ -74,7 +88,6 @@ export function createEmptyBudgetProposalDetails(): BudgetProposalDetails {
     operationalPlanName: "",
     activityCode: "",
     subActivityName: "",
-    msdsId: "",
     expenseSubcategory: "",
     expenseDescription: "",
     spendingPlanName: "",

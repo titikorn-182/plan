@@ -2,7 +2,10 @@ import { areaClass, FieldError, FieldLabel, fieldClass } from "@/components/ui/o
 import { BudgetRequestFormSection } from "@/features/budget-requests/components/budget-request-form-section";
 import { getProposalFieldErrors } from "@/features/budget-requests/components/budget-request-step-types";
 import type { BudgetProposalStepProps } from "@/features/budget-requests/components/budget-request-step-types";
-import { BUDGET_PROJECT_TYPE_SUGGESTIONS } from "@/features/budget-requests/proposal-details";
+import {
+  BUDGET_ORGANIZATION_CODE_OPTIONS,
+  BUDGET_PROJECT_TYPE_SUGGESTIONS,
+} from "@/features/budget-requests/proposal-details";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
 
@@ -89,15 +92,30 @@ export function BudgetRequestGeneralStep({
           </label>
           <label>
             <FieldLabel>รหัสหน่วยงานย่อย</FieldLabel>
-            <input
+            <select
               className={fieldClass}
               value={details.organizationCode}
               onChange={(event) => onDetailChange("organizationCode", event.target.value)}
-              placeholder="ระบุรหัสตามระบบต้นทาง"
-              maxLength={120}
+              aria-describedby="budget-request-organization-code-help budget-request-organization-code-error"
               aria-invalid={Boolean(getProposalFieldErrors(errors, "organizationCode")?.length)}
+            >
+              <option value="">กรุณาเลือกรหัสหน่วยงานย่อย</option>
+              {BUDGET_ORGANIZATION_CODE_OPTIONS.map((option) => (
+                <option value={option.value} key={option.value}>
+                  {option.value} — {option.label}
+                </option>
+              ))}
+            </select>
+            <span
+              id="budget-request-organization-code-help"
+              className="mt-1.5 block text-xs text-stone-500"
+            >
+              เลือกรหัสให้ตรงกับหน่วยงานเจ้าของคำขอ
+            </span>
+            <FieldError
+              errors={getProposalFieldErrors(errors, "organizationCode")}
+              id="budget-request-organization-code-error"
             />
-            <FieldError errors={getProposalFieldErrors(errors, "organizationCode")} />
           </label>
           <label>
             <FieldLabel required>ปีงบประมาณ</FieldLabel>

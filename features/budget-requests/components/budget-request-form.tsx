@@ -41,12 +41,10 @@ const STRATEGY_DETAIL_FIELDS: BudgetProposalTextField[] = [
   "universityStrategy",
   "goalName",
   "strategyName",
-  "fundCode",
   "fundName",
   "operationalPlanCode",
   "operationalPlanName",
   "activityCode",
-  "msdsId",
   "alignmentDescription",
 ];
 const BUDGET_DETAIL_FIELDS: BudgetProposalTextField[] = [

@@ -36,7 +36,7 @@ describe("budget proposal details", () => {
     ["malformed JSON", "{", "proposalDetails"],
     ["invalid dates", { startsOn: "2027-10-01", endsOn: "2027-09-30" }, "proposalDetails.endsOn"],
     ["unknown SDG", { sdgs: ["SDG 99"] }, "proposalDetails.sdgs"],
-    ["overlong text", { fundCode: "x".repeat(121) }, "proposalDetails.fundCode"],
+    ["overlong text", { fundingSource: "x".repeat(121) }, "proposalDetails.fundingSource"],
   ])("rejects %s", (_label, value, errorKey) => {
     const parsed = parseBudgetProposalDetails(value);
     expect(parsed.success).toBe(false);

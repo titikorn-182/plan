@@ -5,6 +5,7 @@ import {
   type BudgetProposalStepProps,
 } from "@/features/budget-requests/components/budget-request-step-types";
 import {
+  BUDGET_FUND_OPTIONS,
   BUDGET_FUNDING_SOURCE_SUGGESTIONS,
   BUDGET_SDG_OPTIONS,
 } from "@/features/budget-requests/proposal-details";
@@ -14,6 +15,10 @@ export function BudgetRequestStrategyStep({
   errors,
   onDetailChange,
 }: BudgetProposalStepProps) {
+  const hasUnlistedFund =
+    details.fundName.length > 0 &&
+    !BUDGET_FUND_OPTIONS.some((option) => option.name === details.fundName);
+
   return (
     <div className="space-y-6">
       <BudgetRequestFormSection
@@ -41,15 +46,30 @@ export function BudgetRequestStrategyStep({
           </label>
           <label>
             <FieldLabel>กองทุน</FieldLabel>
-            <input
+            <select
               className={fieldClass}
               value={details.fundName}
               onChange={(event) => onDetailChange("fundName", event.target.value)}
-              placeholder="เช่น กองทุนบริการวิชาการ"
-              maxLength={300}
+              aria-describedby="budget-request-fund-help budget-request-fund-error"
               aria-invalid={Boolean(getProposalFieldErrors(errors, "fundName")?.length)}
+            >
+              <option value="">กรุณาเลือกกองทุน</option>
+              {hasUnlistedFund ? (
+                <option value={details.fundName}>ข้อมูลเดิม — {details.fundName}</option>
+              ) : null}
+              {BUDGET_FUND_OPTIONS.map((option) => (
+                <option value={option.name} key={option.code}>
+                  กองทุน {option.code} — {option.name}
+                </option>
+              ))}
+            </select>
+            <span id="budget-request-fund-help" className="mt-1.5 block text-xs text-stone-500">
+              เลือกกองทุนให้ตรงกับแผนงบประมาณของโครงการ
+            </span>
+            <FieldError
+              errors={getProposalFieldErrors(errors, "fundName")}
+              id="budget-request-fund-error"
             />
-            <FieldError errors={getProposalFieldErrors(errors, "fundName")} />
           </label>
           <label className="md:col-span-2">
             <FieldLabel>แหล่งงบประมาณย่อย</FieldLabel>
@@ -62,30 +82,6 @@ export function BudgetRequestStrategyStep({
               aria-invalid={Boolean(getProposalFieldErrors(errors, "fundingSourceDetail")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "fundingSourceDetail")} />
-          </label>
-          <label>
-            <FieldLabel>รหัสกองทุน</FieldLabel>
-            <input
-              className={fieldClass}
-              value={details.fundCode}
-              onChange={(event) => onDetailChange("fundCode", event.target.value)}
-              inputMode="numeric"
-              maxLength={120}
-              aria-invalid={Boolean(getProposalFieldErrors(errors, "fundCode")?.length)}
-            />
-            <FieldError errors={getProposalFieldErrors(errors, "fundCode")} />
-          </label>
-          <label>
-            <FieldLabel>MSDS ID</FieldLabel>
-            <input
-              className={fieldClass}
-              value={details.msdsId}
-              onChange={(event) => onDetailChange("msdsId", event.target.value)}
-              inputMode="numeric"
-              maxLength={120}
-              aria-invalid={Boolean(getProposalFieldErrors(errors, "msdsId")?.length)}
-            />
-            <FieldError errors={getProposalFieldErrors(errors, "msdsId")} />
           </label>
         </div>
       </BudgetRequestFormSection>

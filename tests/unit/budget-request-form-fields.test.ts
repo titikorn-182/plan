@@ -51,6 +51,11 @@ describe("new budget request fields", () => {
     const html = renderStep(0);
     expect(html).toMatch(/<input[^>]+placeholder="กรอกชื่อ-นามสกุล"[^>]+value=""/);
     expect(html).toContain("รหัสหน่วยงานย่อย");
+    expect(html).toContain('<option value="2301">2301 — สำนักงานเลขานุการคณะ</option>');
+    expect(html).toContain(
+      '<option value="2302">2302 — ภาควิชาการเมืองและความสัมพันธ์ระหว่างประเทศ</option>',
+    );
+    expect(html).toContain('<option value="2303">2303 — ภาควิชารัฐประศาสนศาสตร์</option>');
     expect(html).toContain("ตำแหน่งผู้รับผิดชอบโครงการ");
     expect(html).toContain("วันที่เริ่ม");
     expect(html).toContain("วันที่สิ้นสุด");
@@ -61,6 +66,11 @@ describe("new budget request fields", () => {
   it("renders funding, strategy, plan, and existing SDG choices", () => {
     const html = renderStep(1);
     expect(html).toContain("แหล่งงบประมาณและกองทุน");
+    expect(html).toContain('<option value="กองทุนบริหาร">กองทุน 1 — กองทุนบริหาร</option>');
+    expect(html).toContain(
+      '<option value="กองทุนจัดการศึกษา">กองทุน 2 — กองทุนจัดการศึกษา</option>',
+    );
+    expect(html).toContain('<option value="กองทุนบุคลากร">กองทุน 15 — กองทุนบุคลากร</option>');
     expect(html).toContain("ชื่อพันธกิจ");
     expect(html).toContain("ชื่อกลยุทธ์");
     expect(html).toContain("รหัสแผนปฏิบัติการ");
