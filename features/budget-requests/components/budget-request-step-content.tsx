@@ -3,11 +3,18 @@ import Link from "next/link";
 import { areaClass, FieldError, FieldLabel, fieldClass } from "@/components/ui/operation-form";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import {
+  BudgetRequestExpenses,
+  type BudgetExpenseFields,
+} from "@/features/budget-requests/components/budget-request-expenses";
+import type { BudgetExpenseCategoryId } from "@/features/budget-requests/expense-categories";
 
 interface BudgetRequestStepContentProps {
   amount: string;
   errors: BudgetRequestState["errors"];
-  onAmountChange: (value: string) => void;
+  expenseFields: BudgetExpenseFields;
+  hasLegacyAmount: boolean;
+  onExpenseChange: (category: BudgetExpenseCategoryId, value: string) => void;
   onFiscalYearChange: (value: string) => void;
   onOrganizationChange: (value: string) => void;
   onOwnerChange: (value: string) => void;
@@ -40,7 +47,7 @@ function GeneralStep({
   projectType,
   rationale,
   title,
-}: Omit<BudgetRequestStepContentProps, "amount" | "onAmountChange" | "requestId" | "step">) {
+}: BudgetRequestStepContentProps) {
   return (
     <div className="grid gap-5 md:grid-cols-2">
       <label className="md:col-span-2">
@@ -183,33 +190,6 @@ function StrategyStep() {
   );
 }
 
-function AmountStep({
-  amount,
-  errors,
-  onAmountChange,
-}: Pick<BudgetRequestStepContentProps, "amount" | "errors" | "onAmountChange">) {
-  return (
-    <div className="space-y-5">
-      <label className="block max-w-md">
-        <FieldLabel required>วงเงินคำขอรวม (บาท)</FieldLabel>
-        <input
-          className={`${fieldClass} text-right tabular-nums`}
-          type="number"
-          min="0"
-          step="0.01"
-          value={amount}
-          onChange={(event) => onAmountChange(event.target.value)}
-          required
-        />
-        <FieldError errors={errors?.amount} />
-      </label>
-      <div className="border border-stone-200 bg-stone-50 p-4 text-xs leading-5 text-stone-600">
-        วงเงินรวมนี้ใช้เป็นยอดควบคุมของคำขอและจะแสดงในทะเบียนงบประมาณทันทีหลังบันทึก
-      </div>
-    </div>
-  );
-}
-
 function OutputsStep() {
   return (
     <div className="border border-stone-200 bg-stone-50 p-5">
@@ -248,7 +228,7 @@ function EvidenceStep({ requestId }: { requestId?: string }) {
 export function BudgetRequestStepContent(props: BudgetRequestStepContentProps) {
   if (props.step === 0) return <GeneralStep {...props} />;
   if (props.step === 1) return <StrategyStep />;
-  if (props.step === 2) return <AmountStep {...props} />;
+  if (props.step === 2) return <BudgetRequestExpenses {...props} />;
   if (props.step === 3) return <OutputsStep />;
   return <EvidenceStep requestId={props.requestId} />;
 }

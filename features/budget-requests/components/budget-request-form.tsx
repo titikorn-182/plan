@@ -16,6 +16,12 @@ import {
   BudgetRequestStepper,
 } from "@/features/budget-requests/components/budget-request-stepper";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import type { BudgetExpenseFields } from "@/features/budget-requests/components/budget-request-expenses";
+import {
+  createEmptyBudgetExpenseBreakdown,
+  getBudgetExpenseTotal,
+  type BudgetExpenseBreakdown,
+} from "@/features/budget-requests/expense-categories";
 
 export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   const record = options.record;
@@ -35,16 +41,48 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   );
   const [ownerName, setOwnerName] = useState(record?.ownerName ?? "");
   const [rationale, setRationale] = useState(record?.rationale ?? "");
-  const [amount, setAmount] = useState(String(record?.amount ?? 0));
-  const [formState, action, pending] = useActionState(saveBudgetRequestAction, {
-    id: record?.id,
-    code: record?.code,
-    version: record?.version,
-  } satisfies BudgetRequestState);
+  const [expenseFields, setExpenseFields] = useState<BudgetExpenseFields>(
+    () =>
+      Object.fromEntries(
+        Object.entries(record?.expenseBreakdown ?? createEmptyBudgetExpenseBreakdown()).map(
+          ([category, value]) => [category, value === 0 ? "" : String(value)],
+        ),
+      ) as BudgetExpenseFields,
+  );
+  const [hasLegacyAmount, setHasLegacyAmount] = useState(
+    Boolean(record && !record.expenseBreakdown && record.amount > 0),
+  );
+  const expenseAmounts = Object.fromEntries(
+    Object.entries(expenseFields).map(([category, value]) => [
+      category,
+      Number.isFinite(Number(value)) ? Number(value) : 0,
+    ]),
+  ) as BudgetExpenseBreakdown;
+  const amount = String(
+    hasLegacyAmount ? (record?.amount ?? 0) : getBudgetExpenseTotal(expenseAmounts),
+  );
+  const [formState, action, pending] = useActionState(
+    async (previous: BudgetRequestState, formData: FormData) => {
+      const nextState = await saveBudgetRequestAction(previous, formData);
+      if (
+        Object.keys(nextState.errors ?? {}).some(
+          (field) => field === "amount" || field.startsWith("expenseBreakdown"),
+        )
+      ) {
+        setStep(2);
+      }
+      return nextState;
+    },
+    {
+      id: record?.id,
+      code: record?.code,
+      version: record?.version,
+    } satisfies BudgetRequestState,
+  );
 
   return (
     <form className="budget-request-form pb-24" action={action}>
-      <input type="hidden" name="id" value={formState.id ?? ""} />
+      <input type="hidden" name="budgetRequestId" value={formState.id ?? ""} />
       <input type="hidden" name="version" value={formState.version ?? 1} />
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="organizationId" value={organizationId} />
@@ -54,6 +92,11 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
       <input type="hidden" name="ownerName" value={ownerName} />
       <input type="hidden" name="rationale" value={rationale} />
       <input type="hidden" name="amount" value={amount} />
+      <input
+        type="hidden"
+        name="expenseBreakdown"
+        value={JSON.stringify(hasLegacyAmount ? null : expenseFields)}
+      />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Link
@@ -84,8 +127,13 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
             <BudgetRequestStepContent
               amount={amount}
               errors={formState.errors}
+              expenseFields={expenseFields}
+              hasLegacyAmount={hasLegacyAmount}
               fiscalYearId={fiscalYearId}
-              onAmountChange={setAmount}
+              onExpenseChange={(category, value) => {
+                setHasLegacyAmount(false);
+                setExpenseFields((current) => ({ ...current, [category]: value }));
+              }}
               onFiscalYearChange={(value) => {
                 const fiscalYear = options.fiscalYears.find((item) => item.id === value);
                 setFiscalYearId(value);

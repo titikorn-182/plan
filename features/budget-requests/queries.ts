@@ -2,6 +2,7 @@ import "server-only";
 
 import { BUDGET_STATUS_LABELS } from "@/features/budget-requests/types";
 import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-requests/types";
+import { parseBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import type { DataResult } from "@/features/shared/types";
 import { expectedResultError, formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
@@ -78,7 +79,7 @@ export async function getBudgetFormOptions(
       ? supabase
           .from("budget_requests")
           .select(
-            "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label,buddhist_year),organizations!budget_requests_organization_id_fkey(name_th)",
+            "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,expense_breakdown,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label,buddhist_year),organizations!budget_requests_organization_id_fkey(name_th)",
           )
           .eq("id", budgetRequestId)
           .is("archived_at", null)
@@ -92,6 +93,13 @@ export async function getBudgetFormOptions(
     return expectedResultError(null, "ไม่พบคำของบประมาณหรือคุณไม่มีสิทธิ์เข้าถึง");
   }
   const recordRow = recordResult.data;
+  const expenseBreakdown = parseBudgetExpenseBreakdown(recordRow?.expense_breakdown);
+  if (!expenseBreakdown.success) {
+    return expectedResultError(
+      null,
+      "ข้อมูลหมวดค่าใช้จ่ายของคำขอไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ",
+    );
+  }
   const recordFiscal = recordRow
     ? Array.isArray(recordRow.fiscal_years)
       ? recordRow.fiscal_years[0]
@@ -179,6 +187,7 @@ export async function getBudgetFormOptions(
           ownerName: recordRow.owner_name,
           rationale: recordRow.rationale,
           amount: Number(recordRow.requested_amount),
+          expenseBreakdown: expenseBreakdown.data,
           status: recordRow.status,
         }
       : null,

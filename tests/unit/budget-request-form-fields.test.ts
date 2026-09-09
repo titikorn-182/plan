@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { BudgetRequestStepContent } from "@/features/budget-requests/components/budget-request-step-content";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import { createEmptyBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
+import type { BudgetExpenseFields } from "@/features/budget-requests/components/budget-request-expenses";
 
 const options: BudgetFormOptions = {
   organizations: [{ id: "organization-1", name: "สำนักงานเลขานุการ-งานการเงิน" }],
@@ -21,7 +23,11 @@ describe("new budget request general fields", () => {
         amount: "0",
         errors: undefined,
         fiscalYearId: "fiscal-2570",
-        onAmountChange: () => undefined,
+        expenseFields: Object.fromEntries(
+          Object.keys(createEmptyBudgetExpenseBreakdown()).map((category) => [category, ""]),
+        ) as BudgetExpenseFields,
+        hasLegacyAmount: false,
+        onExpenseChange: () => undefined,
         onFiscalYearChange: () => undefined,
         onOrganizationChange: () => undefined,
         onOwnerChange: () => undefined,

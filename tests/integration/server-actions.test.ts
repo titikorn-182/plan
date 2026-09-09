@@ -3,6 +3,7 @@ import { saveProjectAction } from "@/features/projects/actions";
 import { saveBudgetRequestAction } from "@/features/budget-requests/actions";
 import { actOnApprovalAction } from "@/features/approvals/actions";
 import { saveDisbursementAction } from "@/features/disbursements/actions";
+import { createEmptyBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 
 // Only the network/cache boundary is mocked; validation, authentication checks,
 // action orchestration, and error translation execute the production code.
@@ -169,6 +170,9 @@ describe("budget, approval, and spending actions", () => {
       }),
     );
     expect(result.success).toBe(true);
+    expect(mock.chain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ requested_amount: 1000, expense_breakdown: null }),
+    );
     expect(mock.client.rpc).toHaveBeenCalledWith(
       "submit_budget_request_for_approval",
       expect.objectContaining({ p_entity_id: projectId }),
@@ -252,5 +256,94 @@ describe("budget, approval, and spending actions", () => {
     );
     expect(result.success).toBe(amount === "300");
     expect(mock.chain.insert).toHaveBeenCalledTimes(amount === "300" ? 1 : 0);
+  });
+});
+
+describe("budget expense action persistence", () => {
+  const budgetInput = {
+    ...projectInput,
+    budgetCycleId: "40000000-0000-4000-8000-000000000001",
+    rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+    amount: "1000",
+  };
+
+  it("accepts the form identifier without a named id input", async () => {
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    response({ id: projectId, code: "TEST-BR1", version: 4 });
+    const data = form({ ...budgetInput, budgetRequestId: projectId });
+    data.delete("id");
+    const result = await saveBudgetRequestAction({}, data);
+    expect(result.success).toBe(true);
+    expect(mock.chain.update).toHaveBeenCalled();
+    expect(mock.chain.eq).toHaveBeenCalledWith("id", projectId);
+    expect(mock.chain.insert).not.toHaveBeenCalled();
+  });
+
+  it.each(["save", "submit"])("persists categories and total together on %s", async (intent) => {
+    const breakdown = {
+      ...createEmptyBudgetExpenseBreakdown(),
+      operating_services: "700.25",
+      personnel_compensation: "299.75",
+      personnel_salary: "",
+    };
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    response({ id: projectId, code: "TEST-BR1", version: 1 });
+    const result = await saveBudgetRequestAction(
+      {},
+      form({ ...budgetInput, id: "", intent, expenseBreakdown: JSON.stringify(breakdown) }),
+    );
+    expect(result.success).toBe(true);
+    expect(mock.chain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requested_amount: 1000,
+        expense_breakdown: {
+          ...createEmptyBudgetExpenseBreakdown(),
+          operating_services: 700.25,
+          personnel_compensation: 299.75,
+        },
+      }),
+    );
+    expect(mock.chain.update).not.toHaveBeenCalled();
+    expect(mock.client.rpc).toHaveBeenCalledTimes(intent === "submit" ? 1 : 0);
+  });
+
+  it("retains optimistic concurrency protection when updating category amounts", async () => {
+    const breakdown = { ...createEmptyBudgetExpenseBreakdown(), capital_construction: 1000 };
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    response({ id: projectId, code: "TEST-BR1", version: 4 });
+    const result = await saveBudgetRequestAction(
+      {},
+      form({ ...budgetInput, expenseBreakdown: JSON.stringify(breakdown) }),
+    );
+    expect(result.success).toBe(true);
+    expect(mock.chain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ requested_amount: 1000, expense_breakdown: breakdown }),
+    );
+    expect(mock.chain.eq).toHaveBeenCalledWith("version", 3);
+  });
+
+  it.each([
+    ["malformed JSON", "{", "expenseBreakdown"],
+    ["incomplete categories", "{}", "expenseBreakdown"],
+    [
+      "negative amount",
+      JSON.stringify({ ...createEmptyBudgetExpenseBreakdown(), operating_services: "-1" }),
+      "expenseBreakdown.operating_services",
+    ],
+    [
+      "excess precision",
+      JSON.stringify({ ...createEmptyBudgetExpenseBreakdown(), operating_services: "1.001" }),
+      "expenseBreakdown.operating_services",
+    ],
+    ["total mismatch", JSON.stringify(createEmptyBudgetExpenseBreakdown()), "expenseBreakdown"],
+  ])("rejects %s before authentication or mutation", async (_label, expenseBreakdown, errorKey) => {
+    const result = await saveBudgetRequestAction({}, form({ ...budgetInput, expenseBreakdown }));
+    expect(result.success).toBe(false);
+    expect(result.errors?.[errorKey]).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+    expect(mock.client.from).not.toHaveBeenCalled();
   });
 });

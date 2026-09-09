@@ -331,6 +331,7 @@ export type Database = {
           coordinator_name: string
           created_at: string
           created_by: string | null
+          expense_breakdown: Json | null
           fiscal_year_id: string
           id: string
           locked_at: string | null
@@ -359,6 +360,7 @@ export type Database = {
           coordinator_name: string
           created_at?: string
           created_by?: string | null
+          expense_breakdown?: Json | null
           fiscal_year_id: string
           id?: string
           locked_at?: string | null
@@ -387,6 +389,7 @@ export type Database = {
           coordinator_name?: string
           created_at?: string
           created_by?: string | null
+          expense_breakdown?: Json | null
           fiscal_year_id?: string
           id?: string
           locked_at?: string | null

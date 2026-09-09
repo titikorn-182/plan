@@ -4,6 +4,11 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { INPUT_LIMITS } from "@/lib/config/limits";
 import { friendlyError, revalidateOperationPaths } from "@/features/shared/server-actions";
+import {
+  getBudgetExpenseTotal,
+  MAX_BUDGET_REQUEST_AMOUNT,
+  parseBudgetExpenseBreakdown,
+} from "@/features/budget-requests/expense-categories";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
@@ -20,7 +25,7 @@ const schema = z.object({
   projectType: z.string().trim().min(2, "กรุณาเลือกประเภทคำขอ").max(INPUT_LIMITS.shortText),
   ownerName: z.string().trim().min(2, "กรุณาระบุผู้รับผิดชอบหลัก").max(INPUT_LIMITS.personName),
   rationale: z.string().trim().max(INPUT_LIMITS.longText),
-  amount: z.coerce.number().min(0).max(999_999_999_999),
+  amount: z.coerce.number().min(0).max(MAX_BUDGET_REQUEST_AMOUNT),
 });
 
 export interface BudgetRequestState {
@@ -36,13 +41,37 @@ export async function saveBudgetRequestAction(
   previous: BudgetRequestState,
   formData: FormData,
 ): Promise<BudgetRequestState> {
-  const parsed = schema.safeParse(Object.fromEntries(formData));
+  const parsed = schema.safeParse({
+    ...Object.fromEntries(formData),
+    // Avoid a named "id" input shadowing form.id and dropping React's submitter value.
+    id: formData.get("id") ?? formData.get("budgetRequestId") ?? "",
+  });
   if (!parsed.success) {
     return {
       ...previous,
       success: false,
       errors: parsed.error.flatten().fieldErrors,
       message: "กรุณาตรวจสอบข้อมูลที่ระบุ",
+    };
+  }
+  const expenseBreakdown = parseBudgetExpenseBreakdown(formData.get("expenseBreakdown"));
+  if (!expenseBreakdown.success) {
+    return {
+      ...previous,
+      success: false,
+      errors: expenseBreakdown.errors,
+      message: "กรุณาตรวจสอบจำนวนเงินในหมวดค่าใช้จ่าย",
+    };
+  }
+  if (
+    expenseBreakdown.data !== null &&
+    getBudgetExpenseTotal(expenseBreakdown.data) !== parsed.data.amount
+  ) {
+    return {
+      ...previous,
+      success: false,
+      errors: { expenseBreakdown: ["ผลรวมหมวดค่าใช้จ่ายต้องตรงกับวงเงินคำขอรวม"] },
+      message: "กรุณาตรวจสอบวงเงินคำขอรวม",
     };
   }
   if (parsed.data.intent === "submit" && parsed.data.rationale.length < 20) {
@@ -113,6 +142,7 @@ export async function saveBudgetRequestAction(
     project_type: parsed.data.projectType,
     rationale: parsed.data.rationale,
     requested_amount: parsed.data.amount,
+    expense_breakdown: expenseBreakdown.data,
     status: "draft" as const,
     submitted_at: null,
     updated_by: userId,
