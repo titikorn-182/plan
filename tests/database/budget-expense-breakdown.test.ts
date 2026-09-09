@@ -37,7 +37,7 @@ describe("budget expense storage constraints", () => {
     expect(rows).toEqual([{ expense_breakdown: null, requested_amount: "1000.00" }]);
   });
 
-  test("saves and reloads all seven categories and total atomically", async () => {
+  test("saves and reloads all eleven categories and total atomically", async () => {
     const breakdown = {
       operating_compensation: 0.1,
       operating_services: 0.2,
@@ -46,15 +46,19 @@ describe("budget expense storage constraints", () => {
       capital_construction: 25000,
       personnel_compensation: 150,
       personnel_salary: 300,
+      general_subsidy_grant: 500,
+      general_subsidy_compensation: 125,
+      general_subsidy_services: 75.5,
+      general_subsidy_materials: 49.5,
     };
-    await saveBreakdown(breakdown, 35650.3);
+    await saveBreakdown(breakdown, 36400.3);
     const { rows } = await asUser(db, ids.staff, () =>
       db.query(
         "select expense_breakdown, requested_amount from public.budget_requests where id = $1",
         [ids.budget],
       ),
     );
-    expect(rows).toEqual([{ expense_breakdown: breakdown, requested_amount: "35650.30" }]);
+    expect(rows).toEqual([{ expense_breakdown: breakdown, requested_amount: "36400.30" }]);
   });
 
   test.each([-1, 1.001, "1", null, true, 1_000_000_000_000])(

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BUDGET_EXPENSE_GROUPS,
   createEmptyBudgetExpenseBreakdown,
   getBudgetExpenseTotal,
   MAX_BUDGET_REQUEST_AMOUNT,
@@ -7,6 +8,33 @@ import {
 } from "@/features/budget-requests/expense-categories";
 
 describe("budget expense amounts", () => {
+  it("defines every requested expense group and all eleven categories", () => {
+    expect(
+      BUDGET_EXPENSE_GROUPS.map((group) => ({
+        label: group.label,
+        categories: group.categories.map((category) => category.label),
+      })),
+    ).toEqual([
+      {
+        label: "งบดำเนินงาน",
+        categories: ["หมวดค่าตอบแทน", "หมวดค่าใช้สอย", "หมวดค่าวัสดุ"],
+      },
+      {
+        label: "งบลงทุน",
+        categories: ["หมวดครุภัณฑ์", "หมวดค่าสิ่งก่อสร้าง"],
+      },
+      {
+        label: "งบบุคลากร",
+        categories: ["หมวดค่าตอบแทน", "เงินเดือน/ค่าจ้าง"],
+      },
+      {
+        label: "งบอุดหนุนทั่วไป",
+        categories: ["หมวดอุดหนุนทั่วไป", "หมวดค่าตอบแทน", "หมวดค่าใช้สอย", "หมวดค่าวัสดุ"],
+      },
+    ]);
+    expect(Object.keys(createEmptyBudgetExpenseBreakdown())).toHaveLength(11);
+  });
+
   it("keeps legacy totals unclassified when no breakdown is supplied", () => {
     for (const value of [null, undefined, "null"]) {
       expect(parseBudgetExpenseBreakdown(value)).toEqual({ success: true, data: null });

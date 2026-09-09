@@ -24,6 +24,16 @@ export const BUDGET_EXPENSE_GROUPS = [
       { id: "personnel_salary", label: "เงินเดือน/ค่าจ้าง" },
     ],
   },
+  {
+    id: "general_subsidy",
+    label: "งบอุดหนุนทั่วไป",
+    categories: [
+      { id: "general_subsidy_grant", label: "หมวดอุดหนุนทั่วไป" },
+      { id: "general_subsidy_compensation", label: "หมวดค่าตอบแทน" },
+      { id: "general_subsidy_services", label: "หมวดค่าใช้สอย" },
+      { id: "general_subsidy_materials", label: "หมวดค่าวัสดุ" },
+    ],
+  },
 ] as const;
 
 export type BudgetExpenseCategoryId =
@@ -71,7 +81,11 @@ export function parseBudgetExpenseBreakdown(input: unknown): BudgetExpenseParseR
   ) {
     return {
       success: false,
-      errors: { expenseBreakdown: ["กรุณาระบุข้อมูลให้ครบทั้ง 7 หมวดค่าใช้จ่ายที่กำหนด"] },
+      errors: {
+        expenseBreakdown: [
+          `กรุณาระบุข้อมูลให้ครบทั้ง ${categoryIds.length} หมวดค่าใช้จ่ายที่กำหนด`,
+        ],
+      },
     };
   }
 

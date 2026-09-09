@@ -56,6 +56,10 @@ export function BudgetRequestExpenses({
             const value = Number(expenseFields[category.id]);
             return sum + (Number.isFinite(value) ? Math.round(value * 100) : 0);
           }, 0) / 100;
+        const categoryGridClass =
+          group.categories.length === 4
+            ? "grid gap-4 md:grid-cols-2"
+            : "grid gap-4 md:grid-cols-2 2xl:grid-cols-3";
 
         return (
           <fieldset
@@ -69,7 +73,7 @@ export function BudgetRequestExpenses({
                 บาท
               </span>
             </legend>
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className={categoryGridClass}>
               {group.categories.map((category) => {
                 const fieldErrors = errors?.[`expenseBreakdown.${category.id}`];
                 const errorId = `budget-expense-${category.id}-error`;
