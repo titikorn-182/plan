@@ -96,4 +96,12 @@ describe("budget request source fields", () => {
     ).toBe(true);
     expect(isBudgetRequestOrganizationCompatible("2302", "ภาควิชารัฐประศาสนศาสตร์")).toBe(false);
   });
+
+  it("orders project context before its target group and schedule", () => {
+    expect(
+      BUDGET_REQUEST_SOURCE_SECTIONS.find((section) => section.id === "outcomes")?.fields.map(
+        (field) => field.key,
+      ),
+    ).toEqual(["rationale", "objectives", "expectedBenefits", "targetGroup", "startsOn", "endsOn"]);
+  });
 });

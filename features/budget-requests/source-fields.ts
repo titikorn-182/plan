@@ -152,22 +152,22 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
   {
     id: "outcomes",
     title: "เป้าหมาย เหตุผล และระยะเวลา",
-    description: "อธิบายเหตุผล กลุ่มเป้าหมาย ผลที่คาดว่าจะได้รับ และกรอบเวลาของโครงการ",
+    description: "เรียงจากที่มาของโครงการ เป้าหมาย ผลที่คาดหวัง กลุ่มเป้าหมาย และกรอบเวลา",
     fields: [
-      field("targetGroup", { control: "textarea", maxLength: 5_000, proposalField: "targetGroup" }),
       field("rationale", { control: "textarea", maxLength: 5_000 }),
-      field("startsOn", { control: "date", proposalField: "startsOn" }),
-      field("endsOn", { control: "date", proposalField: "endsOn" }),
-      field("expectedBenefits", {
-        control: "textarea",
-        maxLength: 5_000,
-        proposalField: "expectedBenefits",
-      }),
       field("objectives", {
         control: "textarea",
         maxLength: 5_000,
         proposalField: "objectives",
       }),
+      field("expectedBenefits", {
+        control: "textarea",
+        maxLength: 5_000,
+        proposalField: "expectedBenefits",
+      }),
+      field("targetGroup", { control: "textarea", maxLength: 5_000, proposalField: "targetGroup" }),
+      field("startsOn", { control: "date", proposalField: "startsOn" }),
+      field("endsOn", { control: "date", proposalField: "endsOn" }),
     ],
   },
   {
