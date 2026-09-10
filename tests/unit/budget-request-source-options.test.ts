@@ -18,10 +18,15 @@ describe("budget request source dropdown options", () => {
     ]);
     expect(BUDGET_REQUEST_FUNDING_SOURCE_DETAIL_OPTIONS).toHaveLength(5);
     expect(BUDGET_REQUEST_PROJECT_TYPE_OPTIONS).toEqual([
-      "2 โครงการประจำตามภารกิจ",
       "1 โครงการขับเคลื่อนกลยุทธ์",
+      "2 โครงการประจำตามภารกิจ",
     ]);
-    expect(BUDGET_REQUEST_MISSION_OPTIONS).toHaveLength(4);
+    expect(BUDGET_REQUEST_MISSION_OPTIONS).toEqual([
+      "พันธกิจที่ 1 ด้านการผลิตบัณฑิต",
+      "พันธกิจที่ 2 ด้านการวิจัยและนวัตกรรม",
+      "พันธกิจที่ 3 ด้านการบริการวิชาการ",
+      "พันธกิจที่ 5 การบริหารจัดการองค์กร",
+    ]);
     expect(BUDGET_REQUEST_STRATEGY_OPTIONS).toHaveLength(5);
     for (const options of Object.values(BUDGET_REQUEST_SOURCE_SELECT_OPTIONS)) {
       expect(new Set(options).size).toBe(options.length);

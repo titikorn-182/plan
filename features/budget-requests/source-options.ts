@@ -12,14 +12,14 @@ export const BUDGET_REQUEST_FUNDING_SOURCE_DETAIL_OPTIONS = [
 ] as const;
 
 export const BUDGET_REQUEST_PROJECT_TYPE_OPTIONS = [
-  "2 โครงการประจำตามภารกิจ",
   "1 โครงการขับเคลื่อนกลยุทธ์",
+  "2 โครงการประจำตามภารกิจ",
 ] as const;
 
 export const BUDGET_REQUEST_MISSION_OPTIONS = [
-  "พันธกิจที่ 3 ด้านการบริการวิชาการ",
-  "พันธกิจที่ 2 ด้านการวิจัยและนวัตกรรม",
   "พันธกิจที่ 1 ด้านการผลิตบัณฑิต",
+  "พันธกิจที่ 2 ด้านการวิจัยและนวัตกรรม",
+  "พันธกิจที่ 3 ด้านการบริการวิชาการ",
   "พันธกิจที่ 5 การบริหารจัดการองค์กร",
 ] as const;
 
