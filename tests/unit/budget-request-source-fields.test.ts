@@ -104,4 +104,15 @@ describe("budget request source fields", () => {
       ),
     ).toEqual(["rationale", "objectives", "expectedBenefits", "targetGroup", "startsOn", "endsOn"]);
   });
+
+  it("places sustainable development alignment before the approval section", () => {
+    expect(BUDGET_REQUEST_SOURCE_SECTIONS.map((section) => section.id)).toEqual([
+      "source",
+      "plan",
+      "budget",
+      "outcomes",
+      "sdgs",
+      "approval",
+    ]);
+  });
 });

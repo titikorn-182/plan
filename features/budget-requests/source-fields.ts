@@ -171,6 +171,12 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
     ],
   },
   {
+    id: "sdgs",
+    title: "ความเชื่อมโยงกับการพัฒนาที่ยั่งยืน (SDGs)",
+    description: "เลือกเป้าหมายที่โครงการสนับสนุนและอธิบายความเชื่อมโยงกับผลลัพธ์ที่คาดหวัง",
+    fields: [],
+  },
+  {
     id: "approval",
     title: "ผู้รับผิดชอบและสายการอนุมัติ",
     description: "ระบุชื่อและตำแหน่งของผู้รับผิดชอบ ผู้เห็นชอบ และผู้อนุมัติตามข้อมูลโครงการ",

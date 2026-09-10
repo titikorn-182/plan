@@ -26,6 +26,7 @@ import { BudgetRequestSourceSection } from "@/features/budget-requests/component
 import { BudgetRequestImportPanel } from "@/features/budget-requests/components/budget-request-import-panel";
 import { BudgetRequestSourceReadiness } from "@/features/budget-requests/components/budget-request-source-readiness";
 import { BudgetRequestExpenseItems } from "@/features/budget-requests/components/budget-request-expense-items";
+import { BudgetRequestSdgSection } from "@/features/budget-requests/components/budget-request-sdg-section";
 import {
   createBudgetRequestExpenseItemFromSource,
   createEmptyBudgetRequestExpenseItem,
@@ -54,10 +55,14 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   const [expenseItems, setExpenseItems] = useState<BudgetRequestExpenseItemDraft[]>(() => [
     createEmptyBudgetRequestExpenseItem(1),
   ]);
+  const [selectedSdgs, setSelectedSdgs] = useState<string[]>([]);
+  const [sdgAlignment, setSdgAlignment] = useState("");
 
   const proposalDetails = {
     ...toBudgetProposalDetails(values),
+    alignmentDescription: sdgAlignment,
     expenseItems: toBudgetRequestExpenseItems(expenseItems),
+    sdgs: selectedSdgs,
   };
   const expenseTotal = getBudgetRequestExpenseItemsTotal(expenseItems);
   const amount = String(expenseTotal);
@@ -74,6 +79,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         : "",
     };
     setValues(normalizedRecord);
+    setSelectedSdgs([]);
+    setSdgAlignment("");
     setExpenseItems([
       createBudgetRequestExpenseItemFromSource(
         {
@@ -281,6 +288,15 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
                   onRemove={(id) =>
                     setExpenseItems((current) => current.filter((item) => item.id !== id))
                   }
+                />
+              ) : null}
+              {section.id === "sdgs" ? (
+                <BudgetRequestSdgSection
+                  alignmentDescription={sdgAlignment}
+                  errors={formState.errors}
+                  onAlignmentChange={setSdgAlignment}
+                  onSelectionChange={setSelectedSdgs}
+                  selected={selectedSdgs}
                 />
               ) : null}
             </BudgetRequestSourceSection>
