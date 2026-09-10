@@ -11,6 +11,11 @@ export type BudgetRequestExpenseItem = {
   expenditureBudget: string;
   expenseCategory: string;
   expenseSubcategory: string;
+  subActivityName?: string;
+  fundingSource?: string;
+  fundingSourceDetail?: string;
+  fundCode?: string;
+  fundName?: string;
   description: string;
   amount: number;
 };
@@ -69,6 +74,7 @@ export function createEmptyBudgetRequestExpenseItem(id: number): BudgetRequestEx
     expenditureBudget: "",
     expenseCategory: "",
     expenseSubcategory: "",
+    subActivityName: "",
     description: "",
     amount: "",
   };
@@ -86,6 +92,7 @@ export function createBudgetRequestExpenseItemFromSource(
     expenditureBudget: source.expenditureBudget,
     expenseCategory: source.expenseCategory,
     expenseSubcategory: source.expenseSubcategory,
+    subActivityName: "",
     description: source.expenseDescription,
     amount: source.totalBudget,
   };
@@ -109,6 +116,7 @@ export function toBudgetRequestExpenseItems(
     expenditureBudget: item.expenditureBudget,
     expenseCategory: item.expenseCategory,
     expenseSubcategory: item.expenseSubcategory,
+    ...(item.subActivityName?.trim() ? { subActivityName: item.subActivityName.trim() } : {}),
     description: item.description,
     amount: Number(item.amount || 0),
   }));
@@ -139,11 +147,21 @@ export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsPars
     const expenditureBudget = source.expenditureBudget;
     const expenseCategory = source.expenseCategory;
     const expenseSubcategory = source.expenseSubcategory;
+    const subActivityName = source.subActivityName;
+    const fundingSource = source.fundingSource;
+    const fundingSourceDetail = source.fundingSourceDetail;
+    const fundCode = source.fundCode;
+    const fundName = source.fundName;
     const description = source.description;
     if (
       typeof expenditureBudget !== "string" ||
       typeof expenseCategory !== "string" ||
       typeof expenseSubcategory !== "string" ||
+      (subActivityName !== undefined && typeof subActivityName !== "string") ||
+      (fundingSource !== undefined && typeof fundingSource !== "string") ||
+      (fundingSourceDetail !== undefined && typeof fundingSourceDetail !== "string") ||
+      (fundCode !== undefined && typeof fundCode !== "string") ||
+      (fundName !== undefined && typeof fundName !== "string") ||
       typeof description !== "string"
     ) {
       errors[prefix] = ["ข้อมูลรายการค่าใช้จ่ายต้องเป็นข้อความ"];
@@ -162,14 +180,40 @@ export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsPars
       ];
       return;
     }
+    const normalizedSubActivityName =
+      typeof subActivityName === "string" ? subActivityName.trim() : "";
+    const normalizedFundingSource = typeof fundingSource === "string" ? fundingSource.trim() : "";
+    const normalizedFundingSourceDetail =
+      typeof fundingSourceDetail === "string" ? fundingSourceDetail.trim() : "";
+    const normalizedFundCode = typeof fundCode === "string" ? fundCode.trim() : "";
+    const normalizedFundName = typeof fundName === "string" ? fundName.trim() : "";
     const item: BudgetRequestExpenseItem = {
       expenditureBudget: expenditureBudget.trim(),
       expenseCategory: expenseCategory.trim(),
       expenseSubcategory: expenseSubcategory.trim(),
+      ...(normalizedSubActivityName ? { subActivityName: normalizedSubActivityName } : {}),
+      ...(normalizedFundingSource ? { fundingSource: normalizedFundingSource } : {}),
+      ...(normalizedFundingSourceDetail
+        ? { fundingSourceDetail: normalizedFundingSourceDetail }
+        : {}),
+      ...(normalizedFundCode ? { fundCode: normalizedFundCode } : {}),
+      ...(normalizedFundName ? { fundName: normalizedFundName } : {}),
       description: description.trim(),
       amount,
     };
-    if (item.description.length > INPUT_LIMITS.longText) {
+    if ((item.subActivityName?.length ?? 0) > INPUT_LIMITS.title) {
+      errors[`${prefix}.subActivityName`] = [
+        `ชื่อกิจกรรมย่อยต้องไม่เกิน ${INPUT_LIMITS.title.toLocaleString("th-TH")} ตัวอักษร`,
+      ];
+    } else if ((item.fundingSource?.length ?? 0) > INPUT_LIMITS.shortText) {
+      errors[`${prefix}.fundingSource`] = ["แหล่งงบประมาณยาวเกินกำหนด"];
+    } else if ((item.fundingSourceDetail?.length ?? 0) > INPUT_LIMITS.longText) {
+      errors[`${prefix}.fundingSourceDetail`] = ["แหล่งงบประมาณย่อยยาวเกินกำหนด"];
+    } else if ((item.fundCode?.length ?? 0) > INPUT_LIMITS.shortText) {
+      errors[`${prefix}.fundCode`] = ["รหัสกองทุนยาวเกินกำหนด"];
+    } else if ((item.fundName?.length ?? 0) > INPUT_LIMITS.title) {
+      errors[`${prefix}.fundName`] = ["ชื่อกองทุนยาวเกินกำหนด"];
+    } else if (item.description.length > INPUT_LIMITS.longText) {
       errors[`${prefix}.description`] = [
         `รายละเอียดค่าใช้จ่ายต้องไม่เกิน ${INPUT_LIMITS.longText.toLocaleString("th-TH")} ตัวอักษร`,
       ];

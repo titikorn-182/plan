@@ -232,6 +232,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         hasExistingValues={completion > 0}
         locked={Boolean(formState.id)}
         onApplyRecord={applyImportedRecord}
+        options={options}
       />
 
       <nav

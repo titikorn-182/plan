@@ -7,7 +7,6 @@ import {
   BUDGET_REQUEST_SOURCE_FIELD_MAP,
   createEmptyBudgetRequestSourceValues,
   type BudgetRequestSourceKey,
-  type BudgetRequestSourceValues,
 } from "@/features/budget-requests/source-fields";
 import {
   BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
@@ -17,23 +16,12 @@ import {
   type BudgetRequestSourceSelectKey,
 } from "@/features/budget-requests/source-options";
 import { isBudgetRequestExpenseCombination } from "@/features/budget-requests/expense-items";
+import type { BudgetRequestImportResult } from "@/features/budget-requests/import-types";
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 const MAX_IMPORT_ROWS = 500;
 
 type RawCell = string | number | boolean | Date | null;
-
-export type BudgetRequestImportResult = {
-  errors: string[];
-  records: BudgetRequestImportedRecord[];
-};
-
-export type BudgetRequestImportedRecord = {
-  errors: string[];
-  rowNumber: number;
-  values: BudgetRequestSourceValues;
-  warnings: string[];
-};
 
 function normalizeHeader(value: RawCell): string {
   return String(value ?? "")

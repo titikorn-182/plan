@@ -131,7 +131,19 @@ export function BudgetRequestExpenseItems({
                     ))}
                   </select>
                 </label>
-                <label className="lg:col-span-8">
+                <label className="lg:col-span-4">
+                  <FieldLabel>ชื่อกิจกรรมย่อย</FieldLabel>
+                  <input
+                    className={fieldClass}
+                    value={item.subActivityName ?? ""}
+                    onChange={(event) => onChange(item.id, { subActivityName: event.target.value })}
+                    maxLength={300}
+                    placeholder="ชื่อกิจกรรมย่อยของรายการนี้"
+                    aria-invalid={Boolean(errors?.[`${prefix}.subActivityName`]?.length)}
+                  />
+                  <FieldError errors={errors?.[`${prefix}.subActivityName`]} />
+                </label>
+                <label className="lg:col-span-4">
                   <FieldLabel>รายละเอียดรายการค่าใช้จ่าย</FieldLabel>
                   <input
                     className={fieldClass}

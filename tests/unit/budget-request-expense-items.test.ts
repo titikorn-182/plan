@@ -45,6 +45,32 @@ describe("budget request expense items", () => {
     });
   });
 
+  it("preserves optional source and sub-activity metadata from a grouped import", () => {
+    const parsed = parseBudgetRequestExpenseItems([
+      {
+        ...validItem,
+        subActivityName: "  กิจกรรมย่อย  ",
+        fundingSource: "  งบประมาณเงินรายได้  ",
+        fundingSourceDetail: "  เงินรายได้จากค่าธรรมเนียมการศึกษา  ",
+        fundCode: "  2  ",
+        fundName: "  กองทุนจัดการศึกษา  ",
+      },
+    ]);
+
+    expect(parsed).toMatchObject({
+      success: true,
+      data: [
+        {
+          subActivityName: "กิจกรรมย่อย",
+          fundingSource: "งบประมาณเงินรายได้",
+          fundingSourceDetail: "เงินรายได้จากค่าธรรมเนียมการศึกษา",
+          fundCode: "2",
+          fundName: "กองทุนจัดการศึกษา",
+        },
+      ],
+    });
+  });
+
   it("allows an incomplete draft but requires complete positive items before submission", () => {
     const draft = createEmptyBudgetRequestExpenseItem(1);
     expect(parseBudgetRequestExpenseItems([{ ...draft, id: undefined, amount: 0 }])).toMatchObject({

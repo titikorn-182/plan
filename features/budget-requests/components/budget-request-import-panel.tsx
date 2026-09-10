@@ -4,8 +4,11 @@ import { CircleAlert, FileSpreadsheet, LoaderCircle, Upload } from "lucide-react
 import { useState, type ChangeEvent } from "react";
 import { FieldLabel, fieldClass } from "@/components/ui/operation-form";
 import { parseBudgetRequestImportFile } from "@/features/budget-requests/import-file";
-import type { BudgetRequestImportedRecord } from "@/features/budget-requests/import-file";
+import type { BudgetRequestImportedRecord } from "@/features/budget-requests/import-types";
+import { groupBudgetRequestImportedRecords } from "@/features/budget-requests/batch-import";
+import { BudgetRequestBatchImportPreview } from "@/features/budget-requests/components/budget-request-batch-import-preview";
 import type { BudgetRequestSourceValues } from "@/features/budget-requests/source-fields";
+import type { BudgetFormOptions } from "@/features/budget-requests/types";
 
 function recordLabel(record: BudgetRequestImportedRecord): string {
   const values = record.values;
@@ -17,10 +20,12 @@ export function BudgetRequestImportPanel({
   hasExistingValues,
   locked,
   onApplyRecord,
+  options,
 }: {
   hasExistingValues: boolean;
   locked: boolean;
   onApplyRecord: (record: BudgetRequestSourceValues) => void;
+  options: BudgetFormOptions;
 }) {
   const [records, setRecords] = useState<BudgetRequestImportedRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState(0);
@@ -28,6 +33,7 @@ export function BudgetRequestImportPanel({
   const [errors, setErrors] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [confirmReplace, setConfirmReplace] = useState(false);
+  const [mode, setMode] = useState<"batch" | "single">("batch");
   const [message, setMessage] = useState(
     "เลือกไฟล์ต้นทางเพื่อเติมข้อมูลอัตโนมัติ หรือกรอกข้อมูลที่ใช้งานด้วยตนเอง",
   );
@@ -50,8 +56,9 @@ export function BudgetRequestImportPanel({
     setSelectedRecord(0);
     setFileName(file.name);
     setConfirmReplace(false);
+    setMode("batch");
     setMessage(
-      `อ่านได้ ${result.records.length.toLocaleString("th-TH")} รายการ เลือกแถวและตรวจสอบก่อนนำไปใช้`,
+      `อ่านได้ ${result.records.length.toLocaleString("th-TH")} แถว ตรวจสอบคำขอที่จัดกลุ่มก่อนบันทึก หรือสลับไปใช้ข้อมูลทีละแถว`,
     );
     event.target.value = "";
   };
@@ -113,7 +120,7 @@ export function BudgetRequestImportPanel({
               </a>
             </p>
           ) : null}
-          {records.length > 0 ? (
+          {records.length > 0 && mode === "single" ? (
             <label className="mt-3 block">
               <FieldLabel>เลือกรายการที่จะสร้างคำขอ</FieldLabel>
               <select
@@ -134,7 +141,7 @@ export function BudgetRequestImportPanel({
               </select>
             </label>
           ) : null}
-          {activeRecord && !locked ? (
+          {activeRecord && !locked && mode === "single" ? (
             <div className="mt-3 border-t border-orange-200 pt-3">
               {activeRecord.errors.length > 0 ? (
                 <ul className="mb-3 space-y-1 text-xs text-red-800">
@@ -191,6 +198,41 @@ export function BudgetRequestImportPanel({
           ) : null}
         </div>
       </div>
+      {records.length > 0 && !locked ? (
+        <div className="mt-5 border-t border-orange-200 pt-4">
+          <div
+            className="inline-flex border border-stone-300 bg-white p-px"
+            role="tablist"
+            aria-label="รูปแบบการนำเข้า"
+          >
+            <button
+              className={`px-4 py-2 text-xs font-bold ${mode === "batch" ? "bg-[#cf430c] text-white" : "text-stone-700 hover:bg-orange-50"}`}
+              type="button"
+              role="tab"
+              aria-selected={mode === "batch"}
+              onClick={() => setMode("batch")}
+            >
+              นำเข้าแบบกลุ่ม
+            </button>
+            <button
+              className={`px-4 py-2 text-xs font-bold ${mode === "single" ? "bg-[#cf430c] text-white" : "text-stone-700 hover:bg-orange-50"}`}
+              type="button"
+              role="tab"
+              aria-selected={mode === "single"}
+              onClick={() => setMode("single")}
+            >
+              ใช้ข้อมูลทีละแถว
+            </button>
+          </div>
+          {mode === "batch" ? (
+            <BudgetRequestBatchImportPreview
+              groups={groupBudgetRequestImportedRecords(records)}
+              key={fileName}
+              options={options}
+            />
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }
