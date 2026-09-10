@@ -221,6 +221,60 @@ describe("budget, approval, and spending actions", () => {
     expect(result.errors?.amount).toEqual(expect.any(Array));
     expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
   });
+  it("rejects a detailed expense total that does not match the requested amount", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "save",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบ",
+        amount: "1000",
+        expenseDetailMode: "items",
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          expenseItems: [
+            {
+              expenditureBudget: "งบดำเนินงาน",
+              expenseCategory: "ค่าใช้สอย",
+              expenseSubcategory: "ค่าจ้างเหมาบริการ",
+              description: "ค่าจ้างจัดทำเอกสาร",
+              amount: 900,
+            },
+          ],
+        }),
+      }),
+    );
+    expect(result.errors?.["proposalDetails.expenseItems"]).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+  });
+  it("requires complete detailed expense choices before submission", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "submit",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+        amount: "1000",
+        expenseDetailMode: "items",
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          expenseItems: [
+            {
+              expenditureBudget: "",
+              expenseCategory: "",
+              expenseSubcategory: "",
+              description: "",
+              amount: 1000,
+            },
+          ],
+        }),
+      }),
+    );
+    expect(result.errors?.["proposalDetails.expenseItems.0"]).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+  });
   it("rejects a project type outside the approved dropdown before authentication", async () => {
     const result = await saveBudgetRequestAction(
       {},
@@ -399,6 +453,48 @@ describe("budget expense action persistence", () => {
     );
     expect(mock.chain.update).not.toHaveBeenCalled();
     expect(mock.client.rpc).toHaveBeenCalledTimes(intent === "submit" ? 1 : 0);
+  });
+
+  it("persists detailed expense items with their calculated total", async () => {
+    const expenseItems = [
+      {
+        expenditureBudget: "งบดำเนินงาน",
+        expenseCategory: "ค่าใช้สอย",
+        expenseSubcategory: "ค่าจ้างเหมาบริการ",
+        description: "ค่าจ้างจัดทำเอกสาร",
+        amount: 700.25,
+      },
+      {
+        expenditureBudget: "งบลงทุน",
+        expenseCategory: "ครุภัณฑ์",
+        expenseSubcategory: "ครุภัณฑ์สำนักงาน",
+        description: "โต๊ะปฏิบัติงาน",
+        amount: 299.75,
+      },
+    ];
+    const proposalDetails = { ...sourceProposalDetails, expenseItems };
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    response({ id: projectId, code: "TEST-BR1", version: 4 });
+
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...budgetInput,
+        expenseDetailMode: "items",
+        expenseBreakdown: "null",
+        proposalDetails: JSON.stringify(proposalDetails),
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(mock.chain.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requested_amount: 1000,
+        expense_breakdown: null,
+        proposal_details: proposalDetails,
+      }),
+    );
   });
 
   it("retains optimistic concurrency protection when updating category amounts", async () => {

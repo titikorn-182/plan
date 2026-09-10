@@ -16,6 +16,7 @@ import {
   normalizeBudgetRequestSourceOption,
   type BudgetRequestSourceSelectKey,
 } from "@/features/budget-requests/source-options";
+import { isBudgetRequestExpenseCombination } from "@/features/budget-requests/expense-items";
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 const MAX_IMPORT_ROWS = 500;
@@ -164,18 +165,29 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
       }
     }
     for (const column of BUDGET_REQUEST_IMPORT_COLUMNS) {
-      const maxLength = BUDGET_REQUEST_SOURCE_FIELD_MAP.get(column.key)?.maxLength ?? 300;
+      const maxLength =
+        BUDGET_REQUEST_SOURCE_FIELD_MAP.get(column.key)?.maxLength ??
+        (column.key === "expenseDescription" ? 5_000 : 300);
       if (record[column.key].length > maxLength) {
         errors.push(
           `แถว ${rowNumber}: ${column.header}ยาวเกิน ${maxLength.toLocaleString("th-TH")} ตัวอักษร`,
         );
       }
     }
+    if (
+      record.expenditureBudget &&
+      record.expenseCategory &&
+      record.expenseSubcategory &&
+      !isBudgetRequestExpenseCombination(record)
+    ) {
+      errors.push(`แถว ${rowNumber}: งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยไม่สัมพันธ์กัน`);
+    }
     for (const key of Object.keys(
       BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
     ) as BudgetRequestSourceSelectKey[]) {
       if (record[key] && !isBudgetRequestSourceOption(key, record[key])) {
-        const label = BUDGET_REQUEST_SOURCE_FIELD_MAP.get(key)?.header ?? key;
+        const label =
+          BUDGET_REQUEST_IMPORT_COLUMNS.find((column) => column.key === key)?.header ?? key;
         errors.push(`แถว ${rowNumber}: ${label}ไม่อยู่ในรายการที่กำหนด`);
       }
     }

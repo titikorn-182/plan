@@ -10,6 +10,10 @@ import {
   parseBudgetExpenseBreakdown,
 } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
+import {
+  getBudgetRequestExpenseItemsTotal,
+  validateBudgetRequestExpenseItemsForSubmission,
+} from "@/features/budget-requests/expense-items";
 import { isBudgetRequestOrganizationCompatible } from "@/features/budget-requests/source-fields";
 import {
   isBudgetRequestSourceOption,
@@ -79,6 +83,20 @@ export async function saveBudgetRequestAction(
       message: "กรุณาตรวจสอบรายละเอียดคำของบประมาณ",
     };
   }
+  const usesDetailedExpenseItems = formData.get("expenseDetailMode") === "items";
+  if (
+    usesDetailedExpenseItems &&
+    getBudgetRequestExpenseItemsTotal(proposalDetails.data.expenseItems) !== parsed.data.amount
+  ) {
+    return {
+      ...previous,
+      success: false,
+      errors: {
+        "proposalDetails.expenseItems": ["ผลรวมรายการค่าใช้จ่ายต้องตรงกับงบประมาณรวมทั้งหมด"],
+      },
+      message: "กรุณาตรวจสอบยอดรวมรายการค่าใช้จ่าย",
+    };
+  }
   parsed.data.projectType = normalizeBudgetRequestSourceOption(
     "projectType",
     parsed.data.projectType,
@@ -104,6 +122,12 @@ export async function saveBudgetRequestAction(
   }
   if (parsed.data.intent === "submit") {
     const submitErrors: Record<string, string[]> = {};
+    if (usesDetailedExpenseItems) {
+      Object.assign(
+        submitErrors,
+        validateBudgetRequestExpenseItemsForSubmission(proposalDetails.data.expenseItems),
+      );
+    }
     if (!isBudgetRequestSourceOption("projectType", parsed.data.projectType)) {
       submitErrors.projectType = ["กรุณาเลือกประเภทโครงการจากรายการที่กำหนด"];
     }

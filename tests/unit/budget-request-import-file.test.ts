@@ -160,4 +160,23 @@ describe("budget request file import", () => {
 
     expect(result.records[0].errors).toContain("แถว 2: งบรายจ่ายไม่อยู่ในรายการที่กำหนด");
   });
+
+  it("flags expense choices that exist but do not belong to the same hierarchy", async () => {
+    const { parseBudgetRequestImportFile } = await import("@/features/budget-requests/import-file");
+    const cells = BUDGET_REQUEST_IMPORT_HEADERS.map(() => "");
+    cells[16] = "งบลงทุน";
+    cells[17] = "ค่าใช้สอย";
+    cells[18] = "ค่าจ้างเหมาบริการ";
+    const file = new File(
+      [`${BUDGET_REQUEST_IMPORT_HEADERS.join(",")}\n${cells.join(",")}`],
+      "invalid-expense-hierarchy.csv",
+      { type: "text/csv" },
+    );
+
+    const result = await parseBudgetRequestImportFile(file);
+
+    expect(result.records[0].errors).toContain(
+      "แถว 2: งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยไม่สัมพันธ์กัน",
+    );
+  });
 });

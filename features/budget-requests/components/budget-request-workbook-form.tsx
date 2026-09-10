@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { FieldError, FieldLabel, FormActions, fieldClass } from "@/components/ui/operation-form";
 import {
   saveBudgetRequestAction,
@@ -25,6 +25,14 @@ import {
 import { BudgetRequestSourceSection } from "@/features/budget-requests/components/budget-request-source-section";
 import { BudgetRequestImportPanel } from "@/features/budget-requests/components/budget-request-import-panel";
 import { BudgetRequestSourceReadiness } from "@/features/budget-requests/components/budget-request-source-readiness";
+import { BudgetRequestExpenseItems } from "@/features/budget-requests/components/budget-request-expense-items";
+import {
+  createBudgetRequestExpenseItemFromSource,
+  createEmptyBudgetRequestExpenseItem,
+  getBudgetRequestExpenseItemsTotal,
+  toBudgetRequestExpenseItems,
+  type BudgetRequestExpenseItemDraft,
+} from "@/features/budget-requests/expense-items";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
 
 function inferOrganizationId(
@@ -34,15 +42,25 @@ function inferOrganizationId(
   return options.find((option) => option.name.trim() === record.organizationName.trim())?.id;
 }
 
+const EXPENSE_DETAIL_COMPLETION_TOTAL = 4;
+
 export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOptions }) {
   const initialFiscalYear = options.fiscalYears[0];
   const [values, setValues] = useState(createEmptyBudgetRequestSourceValues);
   const [organizationId, setOrganizationId] = useState("");
   const [fiscalYearId, setFiscalYearId] = useState(initialFiscalYear?.id ?? "");
   const [budgetCycleId, setBudgetCycleId] = useState(initialFiscalYear?.budgetCycleId ?? "");
+  const nextExpenseItemId = useRef(2);
+  const [expenseItems, setExpenseItems] = useState<BudgetRequestExpenseItemDraft[]>(() => [
+    createEmptyBudgetRequestExpenseItem(1),
+  ]);
 
-  const proposalDetails = toBudgetProposalDetails(values);
-  const amount = values.totalBudget.trim() || "0";
+  const proposalDetails = {
+    ...toBudgetProposalDetails(values),
+    expenseItems: toBudgetRequestExpenseItems(expenseItems),
+  };
+  const expenseTotal = getBudgetRequestExpenseItemsTotal(expenseItems);
+  const amount = String(expenseTotal);
   const [formState, action, pending] = useActionState(
     saveBudgetRequestAction,
     {} satisfies BudgetRequestState,
@@ -56,8 +74,27 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         : "",
     };
     setValues(normalizedRecord);
+    setExpenseItems([
+      createBudgetRequestExpenseItemFromSource(
+        {
+          expenditureBudget: normalizedRecord.expenditureBudget,
+          expenseCategory: normalizedRecord.expenseCategory,
+          expenseSubcategory: normalizedRecord.expenseSubcategory,
+          expenseDescription: normalizedRecord.expenseDescription,
+          totalBudget: normalizedRecord.totalBudget,
+        },
+        nextExpenseItemId.current,
+      ),
+    ]);
+    nextExpenseItemId.current += 1;
     const inferredOrganizationId = inferOrganizationId(normalizedRecord, options.organizations);
     setOrganizationId(inferredOrganizationId ?? "");
+  };
+
+  const updateExpenseItem = (id: number, changes: Partial<BudgetRequestExpenseItemDraft>) => {
+    setExpenseItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, ...changes } : item)),
+    );
   };
 
   const handleValueChange = (key: BudgetRequestSourceKey, value: string) => {
@@ -92,8 +129,15 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
     });
   };
 
-  const completion = getBudgetRequestSourceCompletion(values);
-  const completionPercent = Math.round((completion / BUDGET_REQUEST_SOURCE_FIELD_COUNT) * 100);
+  const expenseCompletion = [
+    expenseItems.every((item) => Boolean(item.expenditureBudget)),
+    expenseItems.every((item) => Boolean(item.expenseCategory)),
+    expenseItems.every((item) => Boolean(item.expenseSubcategory)),
+    expenseItems.every((item) => Number(item.amount) > 0),
+  ].filter(Boolean).length;
+  const completion = getBudgetRequestSourceCompletion(values) + expenseCompletion;
+  const completionTotal = BUDGET_REQUEST_SOURCE_FIELD_COUNT + EXPENSE_DETAIL_COMPLETION_TOTAL;
+  const completionPercent = Math.round((completion / completionTotal) * 100);
 
   return (
     <form className="budget-request-form pb-24" action={action}>
@@ -109,6 +153,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
       <input type="hidden" name="amount" value={amount} />
       <input type="hidden" name="proposalDetails" value={JSON.stringify(proposalDetails)} />
       <input type="hidden" name="expenseBreakdown" value="null" />
+      <input type="hidden" name="expenseDetailMode" value="items" />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link
@@ -139,7 +184,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
           <div className="flex items-center gap-3 border-t border-stone-200 pt-4 lg:border-t-0 lg:pt-0">
             <span className="text-right">
               <b className="block text-lg tabular-nums text-stone-950">
-                {completion}/{BUDGET_REQUEST_SOURCE_FIELD_COUNT}
+                {completion}/{completionTotal}
               </b>
               <small className="text-xs text-stone-500">หัวข้อที่มีข้อมูล</small>
             </span>
@@ -221,11 +266,29 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
                   />
                 </label>
               ) : null}
+              {section.id === "budget" ? (
+                <BudgetRequestExpenseItems
+                  errors={formState.errors}
+                  items={expenseItems}
+                  onAdd={() => {
+                    setExpenseItems((current) => [
+                      ...current,
+                      createEmptyBudgetRequestExpenseItem(nextExpenseItemId.current),
+                    ]);
+                    nextExpenseItemId.current += 1;
+                  }}
+                  onChange={updateExpenseItem}
+                  onRemove={(id) =>
+                    setExpenseItems((current) => current.filter((item) => item.id !== id))
+                  }
+                />
+              ) : null}
             </BudgetRequestSourceSection>
           ))}
         </div>
 
         <BudgetRequestSourceReadiness
+          amount={expenseTotal}
           fiscalYearId={fiscalYearId}
           organizationId={organizationId}
           organizationName={

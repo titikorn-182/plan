@@ -19,7 +19,7 @@ describe("budget request source fields", () => {
       key: "approverPosition",
       header: "ตำแหน่งผู้อนุมัติโครงการ",
     });
-    expect(BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields)).toHaveLength(32);
+    expect(BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields)).toHaveLength(27);
     const importKeys = BUDGET_REQUEST_IMPORT_COLUMNS.map((column) => column.key);
     const renderedKeys = BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) =>
       section.fields.map((field) => field.key),
@@ -29,13 +29,18 @@ describe("budget request source fields", () => {
       "msdsId",
       "spendingPlanName",
       "spendingPlanTotal",
+      "expenditureBudget",
+      "expenseCategory",
+      "expenseSubcategory",
+      "expenseDescription",
+      "totalBudget",
     ]);
     expect(new Set(importKeys).size).toBe(36);
     expect(renderedKeys).toEqual(
       expect.arrayContaining(importKeys.filter((key) => !hiddenImportKeys.has(key))),
     );
     for (const key of hiddenImportKeys) expect(renderedKeys).not.toContain(key);
-    expect(new Set(renderedKeys).size).toBe(32);
+    expect(new Set(renderedKeys).size).toBe(27);
     expect(
       BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields).find(
         (field) => field.key === "organizationName",
@@ -53,9 +58,6 @@ describe("budget request source fields", () => {
       "operationalPlanName",
       "activityCode",
       "projectActivityName",
-      "expenditureBudget",
-      "expenseCategory",
-      "expenseSubcategory",
     ]) {
       expect(
         BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields).find(

@@ -145,28 +145,9 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
   },
   {
     id: "budget",
-    title: "งบประมาณและแผนค่าใช้จ่าย",
-    description: "เก็บประเภทงบ รายการค่าใช้จ่าย และยอดเงินตามคอลัมน์ต้นทางโดยไม่เปลี่ยนความหมาย",
-    fields: [
-      field("expenditureBudget", {
-        control: "source-select",
-        proposalField: "expenditureBudget",
-      }),
-      field("expenseCategory", { control: "source-select", proposalField: "expenseCategory" }),
-      field("expenseSubcategory", {
-        control: "source-select",
-        proposalField: "expenseSubcategory",
-      }),
-      field("expenseDescription", {
-        control: "textarea",
-        maxLength: 5_000,
-        proposalField: "expenseDescription",
-      }),
-      field("totalBudget", {
-        control: "currency",
-        help: "วงเงินนี้ใช้เป็นยอดคำของบประมาณที่ส่งเข้าสู่ระบบ",
-      }),
-    ],
+    title: "งบประมาณและรายละเอียดค่าใช้จ่าย",
+    description: "แจกแจงหมวดรายจ่าย หมวดรายจ่ายย่อย รายละเอียด และจำนวนเงินได้หลายรายการ",
+    fields: [],
   },
   {
     id: "outcomes",

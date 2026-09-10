@@ -6,17 +6,18 @@ import {
 } from "@/features/budget-requests/source-fields";
 
 export function BudgetRequestSourceReadiness({
+  amount,
   fiscalYearId,
   organizationId,
   organizationName,
   values,
 }: {
+  amount: number;
   fiscalYearId: string;
   organizationId: string;
   organizationName: string;
   values: BudgetRequestSourceValues;
 }) {
-  const amount = Number(values.totalBudget || 0);
   const readiness = [
     { label: "กำหนดหน่วยงานและปีงบประมาณ", complete: Boolean(organizationId && fiscalYearId) },
     {
