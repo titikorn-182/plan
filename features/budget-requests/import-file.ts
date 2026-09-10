@@ -9,6 +9,13 @@ import {
   type BudgetRequestSourceKey,
   type BudgetRequestSourceValues,
 } from "@/features/budget-requests/source-fields";
+import {
+  BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
+  isBudgetRequestSourceSelectKey,
+  isBudgetRequestSourceOption,
+  normalizeBudgetRequestSourceOption,
+  type BudgetRequestSourceSelectKey,
+} from "@/features/budget-requests/source-options";
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 const MAX_IMPORT_ROWS = 500;
@@ -132,7 +139,10 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
     const record = createEmptyBudgetRequestSourceValues();
     for (const column of BUDGET_REQUEST_IMPORT_COLUMNS) {
       const index = columnIndexes.get(normalizeHeader(column.header));
-      record[column.key] = cellText(index === undefined ? null : (row[index] ?? null), column.key);
+      const value = cellText(index === undefined ? null : (row[index] ?? null), column.key);
+      record[column.key] = isBudgetRequestSourceSelectKey(column.key)
+        ? normalizeBudgetRequestSourceOption(column.key, value)
+        : value;
     }
     const rowNumber = rowIndex + 2;
     const errors: string[] = [];
@@ -159,6 +169,14 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
         errors.push(
           `แถว ${rowNumber}: ${column.header}ยาวเกิน ${maxLength.toLocaleString("th-TH")} ตัวอักษร`,
         );
+      }
+    }
+    for (const key of Object.keys(
+      BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
+    ) as BudgetRequestSourceSelectKey[]) {
+      if (record[key] && !isBudgetRequestSourceOption(key, record[key])) {
+        const label = BUDGET_REQUEST_SOURCE_FIELD_MAP.get(key)?.header ?? key;
+        errors.push(`แถว ${rowNumber}: ${label}ไม่อยู่ในรายการที่กำหนด`);
       }
     }
     if (record.startsOn && record.endsOn && record.startsOn > record.endsOn) {

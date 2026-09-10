@@ -4,6 +4,7 @@ import {
   BUDGET_ORGANIZATION_CODE_OPTIONS,
 } from "@/features/budget-requests/proposal-details";
 import { BUDGET_REQUEST_ORGANIZATIONS } from "@/features/budget-requests/organization-options";
+import { getBudgetRequestSourceOptions } from "@/features/budget-requests/source-options";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type {
   BudgetRequestSourceField,
@@ -88,6 +89,15 @@ function SourceField({
         {BUDGET_REQUEST_ORGANIZATIONS.map((option) => (
           <option key={option.code} value={option.name}>
             {option.name}
+          </option>
+        ))}
+      </select>
+    ) : field.control === "source-select" ? (
+      <select className={fieldClass} required={field.required} {...common}>
+        <option value="">เลือก{field.header}</option>
+        {getBudgetRequestSourceOptions(field.key).map((option) => (
+          <option key={option} value={option}>
+            {option}
           </option>
         ))}
       </select>

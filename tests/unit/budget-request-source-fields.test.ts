@@ -32,6 +32,19 @@ describe("budget request source fields", () => {
         (field) => field.key === "organizationName",
       )?.control,
     ).toBe("organization-name");
+    for (const key of [
+      "fundingSource",
+      "fundingSourceDetail",
+      "projectType",
+      "missionName",
+      "strategyName",
+    ]) {
+      expect(
+        BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields).find(
+          (field) => field.key === key,
+        )?.control,
+      ).toBe("source-select");
+    }
   });
 
   it("maps source-only fields to the proposal detail payload without losing legacy keys", () => {

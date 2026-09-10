@@ -50,7 +50,14 @@ export type BudgetRequestSourceValues = Record<BudgetRequestSourceKey, string>;
 export type BudgetRequestSourceField = {
   key: BudgetRequestSourceKey;
   header: string;
-  control?: "currency" | "date" | "fund" | "organization" | "organization-name" | "textarea";
+  control?:
+    | "currency"
+    | "date"
+    | "fund"
+    | "organization"
+    | "organization-name"
+    | "source-select"
+    | "textarea";
   help?: string;
   maxLength?: number;
   proposalField?: BudgetProposalTextField;
@@ -105,11 +112,14 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
         proposalField: "organizationName",
         required: true,
       }),
-      field("fundingSource", { proposalField: "fundingSource" }),
-      field("fundingSourceDetail", { proposalField: "fundingSourceDetail" }),
-      field("projectType", { required: true }),
-      field("missionName", { proposalField: "missionName" }),
-      field("strategyName", { proposalField: "strategyName" }),
+      field("fundingSource", { control: "source-select", proposalField: "fundingSource" }),
+      field("fundingSourceDetail", {
+        control: "source-select",
+        proposalField: "fundingSourceDetail",
+      }),
+      field("projectType", { control: "source-select", required: true }),
+      field("missionName", { control: "source-select", proposalField: "missionName" }),
+      field("strategyName", { control: "source-select", proposalField: "strategyName" }),
       field("fundCode", { control: "fund", proposalField: "fundCode" }),
       field("fundName", { proposalField: "fundName" }),
     ],

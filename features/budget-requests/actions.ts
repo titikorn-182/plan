@@ -11,6 +11,11 @@ import {
 } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import { isBudgetRequestOrganizationCompatible } from "@/features/budget-requests/source-fields";
+import {
+  isBudgetRequestSourceOption,
+  normalizeBudgetRequestSourceOption,
+  type BudgetRequestSourceSelectKey,
+} from "@/features/budget-requests/source-options";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
@@ -74,6 +79,18 @@ export async function saveBudgetRequestAction(
       message: "กรุณาตรวจสอบรายละเอียดคำของบประมาณ",
     };
   }
+  parsed.data.projectType = normalizeBudgetRequestSourceOption(
+    "projectType",
+    parsed.data.projectType,
+  );
+  for (const key of [
+    "fundingSource",
+    "fundingSourceDetail",
+    "missionName",
+    "strategyName",
+  ] as const satisfies readonly BudgetRequestSourceSelectKey[]) {
+    proposalDetails.data[key] = normalizeBudgetRequestSourceOption(key, proposalDetails.data[key]);
+  }
   if (
     expenseBreakdown.data !== null &&
     getBudgetExpenseTotal(expenseBreakdown.data) !== parsed.data.amount
@@ -87,6 +104,31 @@ export async function saveBudgetRequestAction(
   }
   if (parsed.data.intent === "submit") {
     const submitErrors: Record<string, string[]> = {};
+    if (!isBudgetRequestSourceOption("projectType", parsed.data.projectType)) {
+      submitErrors.projectType = ["กรุณาเลือกประเภทโครงการจากรายการที่กำหนด"];
+    }
+    const sourceSelectionLabels: Record<
+      Exclude<BudgetRequestSourceSelectKey, "projectType">,
+      string
+    > = {
+      fundingSource: "แหล่งงบประมาณ",
+      fundingSourceDetail: "แหล่งงบประมาณย่อย",
+      missionName: "ชื่อพันธกิจ",
+      strategyName: "ชื่อกลยุทธ์",
+    };
+    for (const key of Object.keys(sourceSelectionLabels) as Exclude<
+      BudgetRequestSourceSelectKey,
+      "projectType"
+    >[]) {
+      if (
+        proposalDetails.data[key] &&
+        !isBudgetRequestSourceOption(key, proposalDetails.data[key])
+      ) {
+        submitErrors[`proposalDetails.${key}`] = [
+          `กรุณาเลือก${sourceSelectionLabels[key]}จากรายการที่กำหนด`,
+        ];
+      }
+    }
     if (parsed.data.rationale.length < 20) {
       submitErrors.rationale = ["ก่อนส่งคำขอ กรุณาอธิบายหลักการและเหตุผลอย่างน้อย 20 ตัวอักษร"];
     }

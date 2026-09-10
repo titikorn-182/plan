@@ -8,6 +8,10 @@ describe("budget request file import", () => {
     const { parseBudgetRequestImportFile } = await import("@/features/budget-requests/import-file");
     const cells = BUDGET_REQUEST_IMPORT_HEADERS.map(() => "");
     cells[0] = "2301";
+    cells[2] = "เงินรายได้";
+    cells[3] = "เงินรายได้จากค่าธรรมเนียมการศึกษา";
+    cells[4] = "2 โครงการประจำตามภารกิจ";
+    cells[5] = "พันธกิจที่ 1 ด้านการผลิตบัณฑิต";
     cells[14] = '"โครงการทดสอบ, ประจำปี"';
     cells[20] = "929300";
     cells[21] = "ผู้รับผิดชอบโครงการ";
@@ -24,6 +28,10 @@ describe("budget request file import", () => {
     expect(result.records).toHaveLength(1);
     expect(result.records[0].values).toMatchObject({
       organizationCode: "2301",
+      fundingSource: "งบประมาณเงินรายได้",
+      fundingSourceDetail: "เงินรายได้จากค่าธรรมเนียมการศึกษา",
+      projectType: "2 โครงการประจำตามภารกิจ",
+      missionName: "พันธกิจที่ 1 ด้านการผลิตบัณฑิต",
       projectActivityName: "โครงการทดสอบ, ประจำปี",
       totalBudget: "929300",
       ownerName: "ผู้รับผิดชอบโครงการ",
@@ -91,5 +99,20 @@ describe("budget request file import", () => {
         expect.stringContaining("วันที่เริ่มต้องเป็นวันที่ที่ถูกต้อง"),
       ]),
     );
+  });
+
+  it("flags imported dropdown values that are outside the approved source lists", async () => {
+    const { parseBudgetRequestImportFile } = await import("@/features/budget-requests/import-file");
+    const cells = BUDGET_REQUEST_IMPORT_HEADERS.map(() => "");
+    cells[4] = "ประเภทโครงการนอกระบบ";
+    const file = new File(
+      [`${BUDGET_REQUEST_IMPORT_HEADERS.join(",")}\n${cells.join(",")}`],
+      "invalid-option.csv",
+      { type: "text/csv" },
+    );
+
+    const result = await parseBudgetRequestImportFile(file);
+
+    expect(result.records[0].errors).toContain("แถว 2: ประเภทโครงการไม่อยู่ในรายการที่กำหนด");
   });
 });

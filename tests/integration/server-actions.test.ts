@@ -54,7 +54,7 @@ const projectInput = {
   fiscalYearId: yearId,
   budgetRequestId: "",
   title: "โครงการทดสอบ",
-  projectType: "พัฒนาระบบ",
+  projectType: "2 โครงการประจำตามภารกิจ",
   ownerName: "Test staff",
   coordinatorName: "Test staff",
   approvedBudget: "1000",
@@ -221,6 +221,22 @@ describe("budget, approval, and spending actions", () => {
     expect(result.errors?.amount).toEqual(expect.any(Array));
     expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
   });
+  it("rejects a project type outside the approved dropdown before authentication", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        projectType: "ประเภทโครงการนอกระบบ",
+        intent: "submit",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+        amount: "1000",
+        proposalDetails: JSON.stringify(sourceProposalDetails),
+      }),
+    );
+    expect(result.errors?.projectType).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+  });
   it("rejects a source organization name outside the approved dropdown list", async () => {
     const result = await saveBudgetRequestAction(
       {},
@@ -351,7 +367,7 @@ describe("budget expense action persistence", () => {
     response({ fiscal_year_id: yearId });
     const proposalDetails = {
       ...sourceProposalDetails,
-      missionName: "พันธกิจด้านบริการวิชาการ",
+      missionName: "พันธกิจที่ 3 ด้านการบริการวิชาการ",
       startsOn: "2026-10-01",
       endsOn: "2027-09-30",
     };

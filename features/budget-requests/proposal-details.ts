@@ -1,16 +1,12 @@
 import { INPUT_LIMITS } from "@/lib/config/limits";
+import {
+  BUDGET_REQUEST_FUNDING_SOURCE_OPTIONS,
+  BUDGET_REQUEST_PROJECT_TYPE_OPTIONS,
+} from "@/features/budget-requests/source-options";
 
-export const BUDGET_PROJECT_TYPE_SUGGESTIONS = [
-  "1 โครงการขับเคลื่อนกลยุทธ์",
-  "2 โครงการประจำตามภารกิจ",
-  "โครงการพัฒนาการเรียนการสอน",
-  "วิจัยและนวัตกรรม",
-  "บริการวิชาการ",
-  "ครุภัณฑ์",
-  "สิ่งก่อสร้าง",
-] as const;
+export const BUDGET_PROJECT_TYPE_SUGGESTIONS = BUDGET_REQUEST_PROJECT_TYPE_OPTIONS;
 
-export const BUDGET_FUNDING_SOURCE_SUGGESTIONS = ["เงินรายได้", "เงินงบประมาณแผ่นดิน"] as const;
+export const BUDGET_FUNDING_SOURCE_SUGGESTIONS = BUDGET_REQUEST_FUNDING_SOURCE_OPTIONS;
 
 export const BUDGET_ORGANIZATION_CODE_OPTIONS = [
   { value: "2301", label: "สำนักงานเลขานุการคณะ" },
