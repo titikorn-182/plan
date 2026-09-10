@@ -50,6 +50,7 @@ export type BudgetRequestSourceValues = Record<BudgetRequestSourceKey, string>;
 export type BudgetRequestSourceField = {
   key: BudgetRequestSourceKey;
   header: string;
+  label?: string;
   control?:
     | "currency"
     | "date"
@@ -178,15 +179,14 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
   },
   {
     id: "approval",
-    title: "ผู้รับผิดชอบและสายการอนุมัติ",
-    description: "ระบุชื่อและตำแหน่งของผู้รับผิดชอบ ผู้เห็นชอบ และผู้อนุมัติตามข้อมูลโครงการ",
+    title: "หัวหน้าโครงการและผู้รับผิดชอบโครงการ",
+    description: "ระบุหัวหน้าโครงการ และเพิ่มรายชื่อผู้ร่วมรับผิดชอบพร้อมตำแหน่งได้ตามจริง",
     fields: [
-      field("ownerName", { required: true }),
-      field("ownerPosition", { proposalField: "ownerPosition" }),
-      field("reviewerName", { proposalField: "reviewerName" }),
-      field("reviewerPosition", { proposalField: "reviewerPosition" }),
-      field("approverName", { proposalField: "approverName" }),
-      field("approverPosition", { proposalField: "approverPosition" }),
+      field("ownerName", { label: "หัวหน้าโครงการ", required: true }),
+      field("ownerPosition", {
+        label: "ตำแหน่งหัวหน้าโครงการ",
+        proposalField: "ownerPosition",
+      }),
     ],
   },
 ];

@@ -48,6 +48,7 @@ function SourceField({
   onChange: (key: BudgetRequestSourceField["key"], value: string) => void;
   values: BudgetRequestSourceValues;
 }) {
+  const label = field.label ?? field.header;
   const fieldErrors = getFieldErrors(field, errors);
   const id = `budget-source-${field.key}`;
   const describedBy = field.help || fieldErrors?.length ? `${id}-description` : undefined;
@@ -133,7 +134,7 @@ function SourceField({
 
   return (
     <label className={field.control === "textarea" ? "md:col-span-2" : undefined}>
-      <FieldLabel required={field.required}>{field.header}</FieldLabel>
+      <FieldLabel required={field.required}>{label}</FieldLabel>
       {input}
       {field.help || fieldErrors?.length ? (
         <span id={`${id}-description`}>
@@ -149,12 +150,14 @@ function SourceField({
 
 export function BudgetRequestSourceSection({
   children,
+  footer,
   section,
   errors,
   onChange,
   values,
 }: {
   children?: ReactNode;
+  footer?: ReactNode;
   section: SourceSection;
   errors: BudgetRequestState["errors"];
   onChange: (key: BudgetRequestSourceField["key"], value: string) => void;
@@ -177,6 +180,7 @@ export function BudgetRequestSourceSection({
             values={values}
           />
         ))}
+        {footer}
       </div>
     </section>
   );

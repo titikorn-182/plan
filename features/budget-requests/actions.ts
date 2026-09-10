@@ -14,6 +14,7 @@ import {
   getBudgetRequestExpenseItemsTotal,
   validateBudgetRequestExpenseItemsForSubmission,
 } from "@/features/budget-requests/expense-items";
+import { validateBudgetRequestProjectMembersForSubmission } from "@/features/budget-requests/project-members";
 import { isBudgetRequestOrganizationCompatible } from "@/features/budget-requests/source-fields";
 import {
   isBudgetRequestSourceOption,
@@ -34,7 +35,7 @@ const schema = z.object({
   fiscalYearId: z.string().uuid(),
   budgetCycleId: z.string().uuid(),
   projectType: z.string().trim().min(2, "กรุณาเลือกประเภทคำขอ").max(INPUT_LIMITS.shortText),
-  ownerName: z.string().trim().min(2, "กรุณาระบุผู้รับผิดชอบหลัก").max(INPUT_LIMITS.personName),
+  ownerName: z.string().trim().min(2, "กรุณาระบุหัวหน้าโครงการ").max(INPUT_LIMITS.personName),
   rationale: z.string().trim().max(INPUT_LIMITS.longText),
   amount: z.coerce.number().min(0).max(MAX_BUDGET_REQUEST_AMOUNT),
 });
@@ -122,6 +123,10 @@ export async function saveBudgetRequestAction(
   }
   if (parsed.data.intent === "submit") {
     const submitErrors: Record<string, string[]> = {};
+    Object.assign(
+      submitErrors,
+      validateBudgetRequestProjectMembersForSubmission(proposalDetails.data.projectMembers),
+    );
     if (usesDetailedExpenseItems) {
       Object.assign(
         submitErrors,

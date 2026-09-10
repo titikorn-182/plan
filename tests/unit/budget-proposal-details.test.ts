@@ -39,6 +39,24 @@ describe("budget proposal details", () => {
     });
   });
 
+  it("trims and preserves multiple project members", () => {
+    const parsed = parseBudgetProposalDetails({
+      projectMembers: [
+        { name: "  สมชาย ใจดี  ", position: "  ผู้ประสานงาน  " },
+        { name: "สมหญิง ทำงาน", position: "เลขานุการโครงการ" },
+      ],
+    });
+    expect(parsed).toMatchObject({
+      success: true,
+      data: {
+        projectMembers: [
+          { name: "สมชาย ใจดี", position: "ผู้ประสานงาน" },
+          { name: "สมหญิง ทำงาน", position: "เลขานุการโครงการ" },
+        ],
+      },
+    });
+  });
+
   it("normalizes previously saved SDG labels", () => {
     const parsed = parseBudgetProposalDetails({
       sdgs: [

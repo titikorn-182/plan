@@ -7,6 +7,10 @@ import {
   parseBudgetRequestExpenseItems,
   type BudgetRequestExpenseItem,
 } from "@/features/budget-requests/expense-items";
+import {
+  parseBudgetRequestProjectMembers,
+  type BudgetRequestProjectMember,
+} from "@/features/budget-requests/project-members";
 
 export const BUDGET_PROJECT_TYPE_SUGGESTIONS = BUDGET_REQUEST_PROJECT_TYPE_OPTIONS;
 
@@ -95,6 +99,7 @@ const textFields = {
 export type BudgetProposalTextField = keyof typeof textFields;
 export type BudgetProposalDetails = Record<BudgetProposalTextField, string> & {
   expenseItems: BudgetRequestExpenseItem[];
+  projectMembers: BudgetRequestProjectMember[];
   sdgs: string[];
 };
 
@@ -136,6 +141,7 @@ export function createEmptyBudgetProposalDetails(): BudgetProposalDetails {
     alignmentDescription: "",
     successIndicators: "",
     expenseItems: [],
+    projectMembers: [],
     sdgs: [],
   };
 }
@@ -219,6 +225,13 @@ export function parseBudgetProposalDetails(input: unknown): BudgetProposalDetail
     Object.assign(errors, expenseItems.errors);
   } else {
     details.expenseItems = expenseItems.data;
+  }
+
+  const projectMembers = parseBudgetRequestProjectMembers(source.projectMembers);
+  if (!projectMembers.success) {
+    Object.assign(errors, projectMembers.errors);
+  } else {
+    details.projectMembers = projectMembers.data;
   }
 
   for (const field of ["startsOn", "endsOn"] as const) {

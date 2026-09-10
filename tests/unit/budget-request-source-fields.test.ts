@@ -19,7 +19,7 @@ describe("budget request source fields", () => {
       key: "approverPosition",
       header: "ตำแหน่งผู้อนุมัติโครงการ",
     });
-    expect(BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields)).toHaveLength(27);
+    expect(BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields)).toHaveLength(23);
     const importKeys = BUDGET_REQUEST_IMPORT_COLUMNS.map((column) => column.key);
     const renderedKeys = BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) =>
       section.fields.map((field) => field.key),
@@ -34,13 +34,17 @@ describe("budget request source fields", () => {
       "expenseSubcategory",
       "expenseDescription",
       "totalBudget",
+      "reviewerName",
+      "reviewerPosition",
+      "approverName",
+      "approverPosition",
     ]);
     expect(new Set(importKeys).size).toBe(36);
     expect(renderedKeys).toEqual(
       expect.arrayContaining(importKeys.filter((key) => !hiddenImportKeys.has(key))),
     );
     for (const key of hiddenImportKeys) expect(renderedKeys).not.toContain(key);
-    expect(new Set(renderedKeys).size).toBe(27);
+    expect(new Set(renderedKeys).size).toBe(23);
     expect(
       BUDGET_REQUEST_SOURCE_SECTIONS.flatMap((section) => section.fields).find(
         (field) => field.key === "organizationName",
@@ -114,5 +118,16 @@ describe("budget request source fields", () => {
       "sdgs",
       "approval",
     ]);
+  });
+
+  it("presents the final section as project leadership and keeps approval imports hidden", () => {
+    const section = BUDGET_REQUEST_SOURCE_SECTIONS.find((item) => item.id === "approval");
+    expect(section).toMatchObject({
+      title: "หัวหน้าโครงการและผู้รับผิดชอบโครงการ",
+      fields: [
+        { key: "ownerName", label: "หัวหน้าโครงการ", required: true },
+        { key: "ownerPosition", label: "ตำแหน่งหัวหน้าโครงการ" },
+      ],
+    });
   });
 });

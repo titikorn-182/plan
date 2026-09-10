@@ -275,6 +275,24 @@ describe("budget, approval, and spending actions", () => {
     expect(result.errors?.["proposalDetails.expenseItems.0"]).toEqual(expect.any(Array));
     expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
   });
+  it("requires a name for every added project member before submission", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "submit",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+        amount: "1000",
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          projectMembers: [{ name: "", position: "ผู้ประสานงาน" }],
+        }),
+      }),
+    );
+    expect(result.errors?.["proposalDetails.projectMembers.0.name"]).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+  });
   it("rejects a project type outside the approved dropdown before authentication", async () => {
     const result = await saveBudgetRequestAction(
       {},

@@ -48,4 +48,25 @@ describe("budget request source section", () => {
     expect(html).toContain('id="budget-source-organizationName"');
     expect(html).toContain('aria-invalid="true"');
   });
+
+  it("renders custom field labels and footer content after the section fields", () => {
+    const section = BUDGET_REQUEST_SOURCE_SECTIONS.find((item) => item.id === "approval");
+    expect(section).toBeDefined();
+
+    const html = renderToStaticMarkup(
+      createElement(BudgetRequestSourceSection, {
+        section: section!,
+        errors: undefined,
+        footer: createElement("div", { id: "project-members" }, "รายชื่อผู้รับผิดชอบ"),
+        onChange: () => undefined,
+        values: createEmptyBudgetRequestSourceValues(),
+      }),
+    );
+
+    expect(html).toContain("หัวหน้าโครงการ");
+    expect(html).toContain("ตำแหน่งหัวหน้าโครงการ");
+    expect(html.indexOf('id="budget-source-ownerPosition"')).toBeLessThan(
+      html.indexOf('id="project-members"'),
+    );
+  });
 });

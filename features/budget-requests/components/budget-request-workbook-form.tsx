@@ -26,6 +26,7 @@ import { BudgetRequestSourceSection } from "@/features/budget-requests/component
 import { BudgetRequestImportPanel } from "@/features/budget-requests/components/budget-request-import-panel";
 import { BudgetRequestSourceReadiness } from "@/features/budget-requests/components/budget-request-source-readiness";
 import { BudgetRequestExpenseItems } from "@/features/budget-requests/components/budget-request-expense-items";
+import { BudgetRequestProjectMembers } from "@/features/budget-requests/components/budget-request-project-members";
 import { BudgetRequestSdgSection } from "@/features/budget-requests/components/budget-request-sdg-section";
 import {
   createBudgetRequestExpenseItemFromSource,
@@ -34,6 +35,11 @@ import {
   toBudgetRequestExpenseItems,
   type BudgetRequestExpenseItemDraft,
 } from "@/features/budget-requests/expense-items";
+import {
+  createEmptyBudgetRequestProjectMember,
+  toBudgetRequestProjectMembers,
+  type BudgetRequestProjectMemberDraft,
+} from "@/features/budget-requests/project-members";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
 
 function inferOrganizationId(
@@ -55,6 +61,10 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   const [expenseItems, setExpenseItems] = useState<BudgetRequestExpenseItemDraft[]>(() => [
     createEmptyBudgetRequestExpenseItem(1),
   ]);
+  const nextProjectMemberId = useRef(2);
+  const [projectMembers, setProjectMembers] = useState<BudgetRequestProjectMemberDraft[]>(() => [
+    createEmptyBudgetRequestProjectMember(1),
+  ]);
   const [selectedSdgs, setSelectedSdgs] = useState<string[]>([]);
   const [sdgAlignment, setSdgAlignment] = useState("");
 
@@ -62,6 +72,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
     ...toBudgetProposalDetails(values),
     alignmentDescription: sdgAlignment,
     expenseItems: toBudgetRequestExpenseItems(expenseItems),
+    projectMembers: toBudgetRequestProjectMembers(projectMembers),
     sdgs: selectedSdgs,
   };
   const expenseTotal = getBudgetRequestExpenseItemsTotal(expenseItems);
@@ -81,6 +92,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
     setValues(normalizedRecord);
     setSelectedSdgs([]);
     setSdgAlignment("");
+    setProjectMembers([createEmptyBudgetRequestProjectMember(nextProjectMemberId.current)]);
+    nextProjectMemberId.current += 1;
     setExpenseItems([
       createBudgetRequestExpenseItemFromSource(
         {
@@ -101,6 +114,12 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   const updateExpenseItem = (id: number, changes: Partial<BudgetRequestExpenseItemDraft>) => {
     setExpenseItems((current) =>
       current.map((item) => (item.id === id ? { ...item, ...changes } : item)),
+    );
+  };
+
+  const updateProjectMember = (id: number, changes: Partial<BudgetRequestProjectMemberDraft>) => {
+    setProjectMembers((current) =>
+      current.map((member) => (member.id === id ? { ...member, ...changes } : member)),
     );
   };
 
@@ -239,6 +258,25 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
               errors={formState.errors}
               onChange={handleValueChange}
               values={values}
+              footer={
+                section.id === "approval" ? (
+                  <BudgetRequestProjectMembers
+                    errors={formState.errors}
+                    members={projectMembers}
+                    onAdd={() => {
+                      setProjectMembers((current) => [
+                        ...current,
+                        createEmptyBudgetRequestProjectMember(nextProjectMemberId.current),
+                      ]);
+                      nextProjectMemberId.current += 1;
+                    }}
+                    onChange={updateProjectMember}
+                    onRemove={(id) =>
+                      setProjectMembers((current) => current.filter((member) => member.id !== id))
+                    }
+                  />
+                ) : null
+              }
             >
               {section.id === "source" ? (
                 <label>

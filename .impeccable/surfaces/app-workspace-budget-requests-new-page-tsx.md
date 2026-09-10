@@ -2,7 +2,7 @@
 version: 1
 slug: "app-workspace-budget-requests-new-page-tsx"
 primary_target: "app/(workspace)/budget-requests/new/page.tsx"
-related_targets: ["features/budget-requests/components/budget-request-workbook-form.tsx", "features/budget-requests/components/budget-request-import-panel.tsx", "features/budget-requests/components/budget-request-source-section.tsx", "features/budget-requests/components/budget-request-source-readiness.tsx", "features/budget-requests/source-fields.ts", "features/budget-requests/import-file.ts"]
+related_targets: ["features/budget-requests/components/budget-request-workbook-form.tsx", "features/budget-requests/components/budget-request-import-panel.tsx", "features/budget-requests/components/budget-request-source-section.tsx", "features/budget-requests/components/budget-request-project-members.tsx", "features/budget-requests/components/budget-request-source-readiness.tsx", "features/budget-requests/source-fields.ts", "features/budget-requests/import-file.ts"]
 ---
 
 MODE: Operate
@@ -13,9 +13,11 @@ OWN-WORLD: สืบทอด Executive Evidence Ledger จาก DESIGN.md โ�
 
 ENTRY: route โหลดหน่วยงาน ปีงบประมาณ และ budget cycle จากข้อมูลจริงก่อนแสดงฟอร์ม; หากข้อมูลตั้งต้นหายหรือ query ล้มเหลว ให้แสดง DataError และห้ามสร้างตัวเลือกสมมติ
 
-STORY: เริ่มจากตรวจบริบทและตัวนับความครบถ้วน 0/36 → เลือกนำเข้า XLSX/CSV หรือกรอกเอง → ถ้านำเข้าให้เลือกแถวจาก preview ตรวจ error/warning แล้วกดใช้ข้อมูลอย่างชัดเจน → เลือกปีงบประมาณและชื่อหน่วยงานย่อยในหมวดหน่วยงานและแหล่งงบประมาณ โดยระบบเชื่อม organization scope ให้อัตโนมัติ → ทบทวนหมวดที่เหลือและ readiness → บันทึกฉบับร่างหรือส่งคำขอจาก action bar เดิม
+STORY: เริ่มจากตรวจบริบทและตัวนับความครบถ้วน 0/27 → เลือกนำเข้า XLSX/CSV หรือกรอกเอง → ถ้านำเข้าให้เลือกแถวจาก preview ตรวจ error/warning แล้วกดใช้ข้อมูลอย่างชัดเจน → เลือกปีงบประมาณและชื่อหน่วยงานย่อยในหมวดหน่วยงานและแหล่งงบประมาณ โดยระบบเชื่อม organization scope ให้อัตโนมัติ → ทบทวนหมวดที่เหลือ ระบุหัวหน้าโครงการ เพิ่มผู้ร่วมรับผิดชอบตามต้องการ และตรวจ readiness → บันทึกฉบับร่างหรือส่งคำขอจาก action bar เดิม
 
-FORM: ฟอร์มต่อเนื่องหนึ่งชุดแสดง 27 หัวข้อจากข้อมูลต้นทาง ส่วนแจกแจงค่าใช้จ่ายแบบเพิ่มแถวได้ และส่วน SDGs แบ่งเพื่อการสแกนเป็น 6 section ได้แก่ หน่วยงานและแหล่งงบประมาณ, โครงสร้างแผนและกิจกรรม, งบประมาณและรายละเอียดค่าใช้จ่าย, เป้าหมายเหตุผลและระยะเวลา, ความเชื่อมโยงกับการพัฒนาที่ยั่งยืน, และผู้รับผิดชอบกับสายการอนุมัติ; ไม่แสดง fundName ซึ่งอนุมานจากรหัสกองทุน และไม่แสดง msds_id, ชื่อแผนค่าใช้จ่าย หรือยอดรวมแผนค่าใช้จ่ายซึ่งเลิกใช้งานแล้ว; fiscal year เป็นช่องแรกใน section “หน่วยงานและแหล่งงบประมาณ” ส่วน organization scope อนุมานจากชื่อหน่วยงานย่อยและยังส่ง budget cycle ที่สัมพันธ์กันโดยไม่เพิ่มขั้นตอน wizard
+FORM: ฟอร์มต่อเนื่องหนึ่งชุดแสดง 23 หัวข้อจากข้อมูลต้นทาง ส่วนแจกแจงค่าใช้จ่ายแบบเพิ่มแถวได้ และส่วน SDGs แบ่งเพื่อการสแกนเป็น 6 section ได้แก่ หน่วยงานและแหล่งงบประมาณ, โครงสร้างแผนและกิจกรรม, งบประมาณและรายละเอียดค่าใช้จ่าย, เป้าหมายเหตุผลและระยะเวลา, ความเชื่อมโยงกับการพัฒนาที่ยั่งยืน, และหัวหน้าโครงการกับผู้รับผิดชอบโครงการ; ไม่แสดง fundName ซึ่งอนุมานจากรหัสกองทุน และไม่แสดง msds_id, ชื่อแผนค่าใช้จ่าย หรือยอดรวมแผนค่าใช้จ่ายซึ่งเลิกใช้งานแล้ว; fiscal year เป็นช่องแรกใน section “หน่วยงานและแหล่งงบประมาณ” ส่วน organization scope อนุมานจากชื่อหน่วยงานย่อยและยังส่ง budget cycle ที่สัมพันธ์กันโดยไม่เพิ่มขั้นตอน wizard
+
+PROJECT TEAM: ใช้หัวหน้าโครงการหนึ่งคนเป็นข้อมูลบังคับพร้อมตำแหน่ง และมีรายการผู้ร่วมรับผิดชอบแบบเพิ่มหรือลบได้สูงสุด 50 คน โดยแต่ละรายการมีชื่อ-นามสกุลและตำแหน่ง; ช่องว่างเริ่มต้นไม่ถูกบันทึก ส่วนรายการที่เริ่มกรอกแล้วต้องมีชื่อก่อนส่ง; ข้อมูลเก็บใน proposalDetails.projectMembers ขณะที่คอลัมน์ผู้เห็นชอบและผู้อนุมัติเดิมยังอ่านจากไฟล์นำเข้าเพื่อความเข้ากันได้แต่ไม่แสดงในฟอร์มใหม่
 
 OUTCOMES ORDER: ส่วนเป้าหมาย เหตุผล และระยะเวลาเรียงเป็น หลักการและเหตุผล → วัตถุประสงค์ → ประโยชน์ที่คาดว่าจะได้รับ → กลุ่มเป้าหมาย → วันที่เริ่มและวันที่สิ้นสุด เพื่อให้ผู้กรอกเล่าที่มา เป้าหมาย ผลลัพธ์ ผู้รับประโยชน์ และเวลาอย่างต่อเนื่อง
 
@@ -41,7 +43,7 @@ IMPORT LOCK: หลังการบันทึกครั้งแรกเ�
 
 AUTOFILL: เมื่อใช้แถวที่เลือก ให้เติมทั้ง 36 ค่าในครั้งเดียว; ชื่อหน่วยงานย่อยเป็น select จากรายการอนุมัติ 15 หน่วยงานและจับคู่รหัส 2301/2302/2303 กับ organization scope ที่ผู้ใช้มีสิทธิ์โดยอัตโนมัติ; ชื่อจากไฟล์ที่ไม่อยู่ในรายการต้องปล่อยช่องชื่อและ scope ว่างเพื่อบังคับให้เลือกใหม่; fund code ที่รู้จักเติมชื่อกองทุน
 
-READINESS: rail ด้านขวาแสดง 6 checks พร้อมจำนวนที่พร้อม ได้แก่ organization+fiscal year, ความสอดคล้องของ organization scope กับรหัสหน่วยงานย่อย, ชื่อ+ประเภทโครงการ, ผู้รับผิดชอบ, วงเงิน, และหลักการเหตุผล; readiness เป็นคำแนะนำก่อนส่ง ไม่ใช่การแทน server validation
+READINESS: rail ด้านขวาแสดง 6 checks พร้อมจำนวนที่พร้อม ได้แก่ organization+fiscal year, ความสอดคล้องของ organization scope กับรหัสหน่วยงานย่อย, ชื่อ+ประเภทโครงการ, หัวหน้าโครงการ, วงเงิน, และหลักการเหตุผล; readiness เป็นคำแนะนำก่อนส่ง ไม่ใช่การแทน server validation
 
 RESPONSIVE: ที่ `xl` ขึ้นไปใช้ register กว้างคู่กับ sticky readiness rail 300px ซึ่งรวม section navigation แนวตั้ง; ต่ำกว่า `xl` ให้ซ่อน rail navigation และแสดง section navigation แนวนอนแบบ overflow ก่อนเนื้อหา เพื่อให้ tablet/mobile กระโดดข้ามฟอร์มยาวได้โดยไม่ย่อหัวข้อจนอ่านไม่ได้; ฟิลด์เปลี่ยนจากสองคอลัมน์เป็นหนึ่งคอลัมน์บนจอแคบ และ textarea กินเต็มแถวเมื่อมีพื้นที่
 
@@ -49,8 +51,8 @@ FEEDBACK: สถานะอ่านไฟล์ ผลการนำแถว
 
 ACTION BAR: ใช้ FormActions และกฎ offset 206/72/0 จาก DESIGN.md; คงลำดับกลับทะเบียน/ยกเลิก → บันทึกฉบับร่าง → ส่งคำขอ, แสดง pending state และกันพื้นที่ท้ายฟอร์มไม่ให้แถบบังข้อมูล
 
-DATA: title, owner, rationale, amount, project type และ proposal details สร้างจาก source values และ expense items ก่อนส่ง action; importer ยังอ่านโครงสร้างไฟล์เดิมครบ 36 คอลัมน์เพื่อความเข้ากันได้และแปลง Q–S รายละเอียดกับยอดรวมเป็นรายการค่าใช้จ่ายแถวแรก; fundName, msds_id, ชื่อแผนค่าใช้จ่าย และยอดรวมแผนค่าใช้จ่ายไม่นับเป็นความครบถ้วนของฟอร์ม; server ตรวจโครงสร้าง ความสัมพันธ์ จำนวนเงิน ยอดรวม และความพร้อมก่อนส่งอีกครั้ง
+DATA: title, owner, rationale, amount, project type และ proposal details สร้างจาก source values, expense items และ project members ก่อนส่ง action; importer ยังอ่านโครงสร้างไฟล์เดิมครบ 36 คอลัมน์เพื่อความเข้ากันได้และแปลง Q–S รายละเอียดกับยอดรวมเป็นรายการค่าใช้จ่ายแถวแรก; fundName, msds_id, ชื่อแผนค่าใช้จ่าย, ยอดรวมแผนค่าใช้จ่าย, ผู้เห็นชอบ และผู้อนุมัติไม่นับเป็นความครบถ้วนของฟอร์ม; server ตรวจโครงสร้าง ความสัมพันธ์ จำนวนเงิน ยอดรวม และความพร้อมก่อนส่งอีกครั้ง
 
 VERIFICATION: เอกสารนี้ถอดจาก route, workbook form, import panel, source sections, readiness rail, field schema และ parser ในโค้ดปัจจุบัน; ไม่มีการอ้าง screenshot หรือ visual review ใหม่
 
-FINISH: surface brief สะท้อน 27 ช่องข้อมูลต้นทาง ส่วนแจกแจงค่าใช้จ่ายหลายแถว การ preview/apply/replace/lock ของ import โครงสร้างเดิม 36 คอลัมน์ การตรวจแถว และ responsive section navigation ตาม implementation; DESIGN.md ไม่ต้องเปลี่ยนเพราะไม่มี durable system ruleใหม่
+FINISH: surface brief สะท้อน 23 ช่องข้อมูลต้นทาง ส่วนแจกแจงค่าใช้จ่ายหลายแถว รายชื่อผู้รับผิดชอบหลายคน การ preview/apply/replace/lock ของ import โครงสร้างเดิม 36 คอลัมน์ การตรวจแถว และ responsive section navigation ตาม implementation; DESIGN.md ไม่ต้องเปลี่ยนเพราะไม่มี durable system ruleใหม่

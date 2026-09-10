@@ -28,7 +28,7 @@ export function BudgetRequestSourceReadiness({
       label: "ระบุโครงการและประเภทโครงการ",
       complete: Boolean(values.projectActivityName.trim().length >= 5 && values.projectType.trim()),
     },
-    { label: "ระบุผู้รับผิดชอบ", complete: values.ownerName.trim().length >= 2 },
+    { label: "ระบุหัวหน้าโครงการ", complete: values.ownerName.trim().length >= 2 },
     { label: "ระบุวงเงินคำขอ", complete: amount > 0 },
     { label: "อธิบายหลักการและเหตุผล", complete: values.rationale.trim().length >= 20 },
   ];
