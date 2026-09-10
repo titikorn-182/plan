@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { FieldError, FieldLabel, areaClass, fieldClass } from "@/components/ui/operation-form";
 import {
   BUDGET_FUND_OPTIONS,
@@ -23,7 +24,17 @@ function getFieldErrors(field: BudgetRequestSourceField, errors: BudgetRequestSt
   const errorKey = field.proposalField
     ? `proposalDetails.${field.proposalField}`
     : actionFields[field.key];
-  return errorKey ? errors?.[errorKey] : undefined;
+  const fieldErrors = errorKey ? errors?.[errorKey] : undefined;
+
+  if (field.key !== "organizationName") {
+    return fieldErrors;
+  }
+
+  const organizationErrors = errors?.organizationId;
+  if (!fieldErrors?.length) return organizationErrors;
+  if (!organizationErrors?.length) return fieldErrors;
+
+  return [...new Set([...fieldErrors, ...organizationErrors])];
 }
 
 function SourceField({
@@ -137,11 +148,13 @@ function SourceField({
 }
 
 export function BudgetRequestSourceSection({
+  children,
   section,
   errors,
   onChange,
   values,
 }: {
+  children?: ReactNode;
   section: SourceSection;
   errors: BudgetRequestState["errors"];
   onChange: (key: BudgetRequestSourceField["key"], value: string) => void;
@@ -154,6 +167,7 @@ export function BudgetRequestSourceSection({
         <p className="mt-1 max-w-3xl text-xs leading-5 text-stone-600">{section.description}</p>
       </header>
       <div className="grid gap-x-5 gap-y-4 p-5 md:grid-cols-2 sm:p-6">
+        {children}
         {section.fields.map((field) => (
           <SourceField
             key={field.key}

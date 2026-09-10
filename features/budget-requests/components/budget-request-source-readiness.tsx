@@ -67,12 +67,6 @@ export function BudgetRequestSourceReadiness({
         ) : null}
       </div>
       <nav className="border-t border-stone-200 p-2" aria-label="ไปยังส่วนของแบบฟอร์ม">
-        <a
-          className="block px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-[#fff3ea] hover:text-[#c9440b]"
-          href="#section-workflow"
-        >
-          ข้อมูลสำหรับบันทึกในระบบ
-        </a>
         {BUDGET_REQUEST_SOURCE_SECTIONS.map((section) => (
           <a
             className="block px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-[#fff3ea] hover:text-[#c9440b]"

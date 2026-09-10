@@ -99,7 +99,7 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
   {
     id: "source",
     title: "หน่วยงานและแหล่งงบประมาณ",
-    description: "ระบุหน่วยงาน แหล่งเงิน พันธกิจ และกองทุนให้ตรงกับระบบข้อมูลต้นทาง",
+    description: "ระบุปีงบประมาณ หน่วยงาน แหล่งเงิน พันธกิจ และกองทุนให้ตรงกับข้อมูลต้นทาง",
     fields: [
       field("organizationCode", {
         control: "organization",

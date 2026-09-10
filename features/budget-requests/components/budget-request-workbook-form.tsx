@@ -168,12 +168,6 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         className="mt-5 flex gap-px overflow-x-auto border border-stone-200 bg-stone-200 p-px xl:hidden"
         aria-label="ไปยังส่วนของแบบฟอร์ม"
       >
-        <a
-          className="shrink-0 bg-white px-4 py-3 text-xs font-semibold text-stone-700 hover:bg-[#fff3ea]"
-          href="#section-workflow"
-        >
-          ข้อมูลระบบ
-        </a>
         {BUDGET_REQUEST_SOURCE_SECTIONS.map((section) => (
           <a
             className="shrink-0 bg-white px-4 py-3 text-xs font-semibold text-stone-700 hover:bg-[#fff3ea]"
@@ -187,69 +181,6 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-5">
-          <section className="scroll-mt-24 border border-stone-200 bg-white" id="section-workflow">
-            <header className="border-b border-stone-200 bg-stone-50 px-5 py-4 sm:px-6">
-              <h2 className="text-base font-bold text-stone-950">ข้อมูลสำหรับบันทึกในระบบ</h2>
-              <p className="mt-1 text-xs leading-5 text-stone-600">
-                เลือกหน่วยงานที่มีสิทธิ์ดูแลคำขอและปีงบประมาณก่อนบันทึก
-              </p>
-            </header>
-            <div className="grid gap-5 p-5 md:grid-cols-2 sm:p-6">
-              <label>
-                <FieldLabel required>หน่วยงานเจ้าของคำขอในระบบ</FieldLabel>
-                <select
-                  className={fieldClass}
-                  value={organizationId}
-                  onChange={(event) => setOrganizationId(event.target.value)}
-                  required
-                  aria-invalid={Boolean(formState.errors?.organizationId?.length)}
-                  aria-describedby={
-                    formState.errors?.organizationId?.length
-                      ? "budget-organization-error"
-                      : undefined
-                  }
-                >
-                  <option value="">เลือกหน่วยงานเจ้าของคำขอ</option>
-                  {options.organizations.map((organization) => (
-                    <option key={organization.id} value={organization.id}>
-                      {organization.name}
-                    </option>
-                  ))}
-                </select>
-                <FieldError
-                  errors={formState.errors?.organizationId}
-                  id="budget-organization-error"
-                />
-              </label>
-              <label>
-                <FieldLabel required>ปีงบประมาณ</FieldLabel>
-                <select
-                  className={fieldClass}
-                  value={fiscalYearId}
-                  onChange={(event) => {
-                    const fiscalYear = options.fiscalYears.find(
-                      (item) => item.id === event.target.value,
-                    );
-                    setFiscalYearId(event.target.value);
-                    setBudgetCycleId(fiscalYear?.budgetCycleId ?? "");
-                  }}
-                  required
-                  aria-invalid={Boolean(formState.errors?.fiscalYearId?.length)}
-                  aria-describedby={
-                    formState.errors?.fiscalYearId?.length ? "budget-fiscal-year-error" : undefined
-                  }
-                >
-                  {options.fiscalYears.map((fiscalYear) => (
-                    <option key={fiscalYear.id} value={fiscalYear.id}>
-                      {fiscalYear.label}
-                    </option>
-                  ))}
-                </select>
-                <FieldError errors={formState.errors?.fiscalYearId} id="budget-fiscal-year-error" />
-              </label>
-            </div>
-          </section>
-
           {BUDGET_REQUEST_SOURCE_SECTIONS.map((section) => (
             <BudgetRequestSourceSection
               key={section.id}
@@ -257,7 +188,41 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
               errors={formState.errors}
               onChange={handleValueChange}
               values={values}
-            />
+            >
+              {section.id === "source" ? (
+                <label>
+                  <FieldLabel required>ปีงบประมาณ</FieldLabel>
+                  <select
+                    className={fieldClass}
+                    value={fiscalYearId}
+                    onChange={(event) => {
+                      const fiscalYear = options.fiscalYears.find(
+                        (item) => item.id === event.target.value,
+                      );
+                      setFiscalYearId(event.target.value);
+                      setBudgetCycleId(fiscalYear?.budgetCycleId ?? "");
+                    }}
+                    required
+                    aria-invalid={Boolean(formState.errors?.fiscalYearId?.length)}
+                    aria-describedby={
+                      formState.errors?.fiscalYearId?.length
+                        ? "budget-fiscal-year-error"
+                        : undefined
+                    }
+                  >
+                    {options.fiscalYears.map((fiscalYear) => (
+                      <option key={fiscalYear.id} value={fiscalYear.id}>
+                        {fiscalYear.label}
+                      </option>
+                    ))}
+                  </select>
+                  <FieldError
+                    errors={formState.errors?.fiscalYearId}
+                    id="budget-fiscal-year-error"
+                  />
+                </label>
+              ) : null}
+            </BudgetRequestSourceSection>
           ))}
         </div>
 
