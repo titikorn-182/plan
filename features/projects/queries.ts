@@ -10,6 +10,7 @@ import {
   type PaginatedData,
 } from "@/features/shared/pagination";
 import { getOrganizationsAndYears, getReportingPeriod } from "@/features/shared/queries";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
@@ -29,6 +30,7 @@ export async function getProjects(
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   let query = supabase.from("project_register").select("*", { count: "exact" });
+  query = query.not("id", "in", RETIRED_DEMO_FILTERS.projects);
   if (period.fiscalYearId) query = query.eq("fiscal_year_id", period.fiscalYearId);
   if (filters?.organizationId) query = query.eq("organization_id", filters.organizationId);
   if (filters?.health) query = query.eq("health", filters.health);
@@ -103,6 +105,7 @@ export async function getAccessibleProjects(): Promise<{
     .select("id,code,title_th,organization_id,fiscal_year_id,approved_budget,disbursed_amount")
     .in("status", ["proposed", "active", "on_hold", "completed"])
     .is("archived_at", null)
+    .not("id", "in", RETIRED_DEMO_FILTERS.projects)
     .order("code")
     .limit(QUERY_LIMITS.selectOptions);
   return {
@@ -132,6 +135,7 @@ export async function getProjectFormOptions(
       .select("id,code,title_th")
       .eq("status", "approved")
       .is("archived_at", null)
+      .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
       .order("code")
       .limit(QUERY_LIMITS.selectOptions),
     projectId

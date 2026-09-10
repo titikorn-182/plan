@@ -22,17 +22,7 @@ import {
   BUDGET_REQUEST_CYCLE_NAMES,
   BUDGET_REQUEST_FISCAL_YEARS,
 } from "@/features/budget-requests/fiscal-year-options";
-
-export const RETIRED_DEMO_BUDGET_REQUEST_IDS = [
-  "40000000-0000-0000-0000-000000000001",
-  "40000000-0000-0000-0000-000000000002",
-  "40000000-0000-0000-0000-000000000003",
-  "40000000-0000-0000-0000-000000000004",
-  "40000000-0000-0000-0000-000000000005",
-  "40000000-0000-0000-0000-000000000006",
-] as const;
-
-const RETIRED_DEMO_BUDGET_REQUEST_FILTER = `(${RETIRED_DEMO_BUDGET_REQUEST_IDS.join(",")})`;
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 
 export async function getBudgetRequests(
   page = 1,
@@ -44,7 +34,7 @@ export async function getBudgetRequests(
     .from("budget_request_register")
     .select("*", { count: "exact" })
     .eq("buddhist_year", period.buddhistYear)
-    .not("id", "in", RETIRED_DEMO_BUDGET_REQUEST_FILTER)
+    .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
     .order("updated_at", { ascending: false })
     .range(from, to);
   return result(

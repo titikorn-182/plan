@@ -12,6 +12,7 @@ import type {
   ReportingContext,
   ReportingPeriod,
 } from "@/features/shared/types";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { createClient } from "@/lib/supabase/server";
 import { reportServerError } from "@/lib/observability/server-logger";
 
@@ -116,7 +117,12 @@ export async function getOrganizationsAndYears(): Promise<{
 }> {
   const supabase = await createClient();
   const [organizations, fiscalYears] = await Promise.all([
-    supabase.from("organizations").select("id,code,name_th").eq("is_active", true).order("name_th"),
+    supabase
+      .from("organizations")
+      .select("id,code,name_th")
+      .eq("is_active", true)
+      .not("id", "in", RETIRED_DEMO_FILTERS.organizations)
+      .order("name_th"),
     supabase
       .from("fiscal_years")
       .select("id,buddhist_year,label")

@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getBudgetRequests,
-  RETIRED_DEMO_BUDGET_REQUEST_IDS,
-} from "@/features/budget-requests/queries";
+import { getBudgetRequests } from "@/features/budget-requests/queries";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 
 const mock = vi.hoisted(() => {
   const chain = {
@@ -28,11 +26,7 @@ describe("budget request queries", () => {
   it("excludes every retired demonstration request before counting and pagination", async () => {
     const result = await getBudgetRequests();
 
-    expect(mock.chain.not).toHaveBeenCalledWith(
-      "id",
-      "in",
-      `(${RETIRED_DEMO_BUDGET_REQUEST_IDS.join(",")})`,
-    );
+    expect(mock.chain.not).toHaveBeenCalledWith("id", "in", RETIRED_DEMO_FILTERS.budgetRequests);
     expect(result).toMatchObject({
       data: { items: [], pagination: { total: 0 } },
       error: null,

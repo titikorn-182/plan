@@ -11,6 +11,7 @@ import {
 } from "@/features/shared/pagination";
 import { getOrganizationsAndYears, getReportingPeriod } from "@/features/shared/queries";
 import type { DataResult } from "@/features/shared/types";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,6 +25,7 @@ export async function getDisbursements(
     .from("disbursement_register")
     .select("*", { count: "exact" })
     .eq("fiscal_year_id", period.fiscalYearId ?? "00000000-0000-0000-0000-000000000000")
+    .not("project_id", "in", RETIRED_DEMO_FILTERS.projects)
     .order("id", { ascending: true })
     .range(from, to);
   return result(

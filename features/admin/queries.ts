@@ -13,6 +13,7 @@ import { isAppRole } from "@/features/auth/types";
 import { createPagination, getPaginationRange } from "@/features/shared/pagination";
 import { formatDate, isRecord, result } from "@/features/shared/query-utils";
 import type { DataResult, OrganizationOption } from "@/features/shared/types";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
@@ -44,10 +45,12 @@ export async function getAdminSummary(): Promise<DataResult<AdminSummary>> {
     supabase
       .from("organizations")
       .select("id", { count: "exact", head: true })
-      .eq("is_active", true),
+      .eq("is_active", true)
+      .not("id", "in", RETIRED_DEMO_FILTERS.organizations),
     supabase
       .from("audit_events")
       .select("id", { count: "exact", head: true })
+      .or(`entity_id.is.null,entity_id.not.in.${RETIRED_DEMO_FILTERS.entities}`)
       .gte("occurred_at", startOfToday.toISOString()),
   ]);
   const error = users.error ?? inactiveUsers.error ?? organizations.error ?? audits.error;
@@ -99,6 +102,7 @@ export async function getAdminOrganizations(): Promise<DataResult<OrganizationOp
     .from("organizations")
     .select("id,code,name_th")
     .eq("is_active", true)
+    .not("id", "in", RETIRED_DEMO_FILTERS.organizations)
     .order("name_th");
   return result(
     (data ?? []).map((row) => ({ id: row.id, code: row.code, label: row.name_th })),
@@ -113,6 +117,7 @@ export async function getAdminReferenceData(): Promise<DataResult<AdminReference
     supabase
       .from("organizations")
       .select("id,code,name_th,name_en,organization_type,parent_id,is_active")
+      .not("id", "in", RETIRED_DEMO_FILTERS.organizations)
       .order("code"),
     supabase
       .from("fiscal_years")
@@ -123,6 +128,7 @@ export async function getAdminReferenceData(): Promise<DataResult<AdminReference
       .select(
         "id,fiscal_year_id,name,status,opens_at,closes_at,allow_staff_submit,fiscal_years(label)",
       )
+      .not("id", "in", RETIRED_DEMO_FILTERS.budgetCycles)
       .order("opens_at", { ascending: false }),
   ]);
   const error = organizations.error ?? fiscalYears.error ?? budgetCycles.error;
@@ -291,6 +297,7 @@ export async function getAdminAudit(
       "id,action,entity_type,occurred_at,reason,old_data,new_data,profiles!audit_events_actor_id_fkey(email),organizations(name_th)",
       { count: "exact" },
     )
+    .or(`entity_id.is.null,entity_id.not.in.${RETIRED_DEMO_FILTERS.entities}`)
     .order("occurred_at", { ascending: false })
     .range(from, to);
   return result(

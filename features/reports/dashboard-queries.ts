@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { result } from "@/features/shared/query-utils";
 import type { ReportingPeriod, DataResult } from "@/features/shared/types";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import type { ReportKind } from "./types";
 import type { DashboardRecord } from "./dashboard";
 
@@ -51,6 +52,7 @@ export async function getDashboardRecords(
           .from("budget_request_register")
           .select("id,code,title,unit,amount,status")
           .eq("buddhist_year", period.buddhistYear)
+          .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
           .order("id")
           .range(from, to),
       );
@@ -73,6 +75,7 @@ export async function getDashboardRecords(
           .from("project_register")
           .select("id,code,title,unit,budget,progress,status")
           .eq("fiscal_year_id", period.fiscalYearId!)
+          .not("id", "in", RETIRED_DEMO_FILTERS.projects)
           .order("id")
           .range(from, to),
       );
@@ -98,6 +101,7 @@ export async function getDashboardRecords(
             "id,reference_no,quarter,amount,status,projects!inner(code,title_th),organizations!inner(name_th)",
           )
           .eq("fiscal_year_id", period.fiscalYearId!)
+          .not("id", "in", RETIRED_DEMO_FILTERS.disbursements)
           .order("id")
           .range(from, to),
       );
@@ -122,6 +126,7 @@ export async function getDashboardRecords(
         .eq("fiscal_year_id", period.fiscalYearId!)
         .in("framework", ["EdPEx", "AUN-QA"])
         .or(`quarter.is.null,quarter.eq.${period.quarter}`)
+        .not("id", "in", RETIRED_DEMO_FILTERS.kpiResults)
         .order("id")
         .range(from, to),
     );

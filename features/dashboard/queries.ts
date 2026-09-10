@@ -20,6 +20,7 @@ import {
 } from "@/lib/operations/rules";
 import { createClient } from "@/lib/supabase/server";
 import { QUERY_LIMITS } from "@/lib/config/limits";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 
 interface DashboardKpi {
   id: string;
@@ -49,31 +50,36 @@ export async function getDashboardData(): Promise<
         .from("decision_queue")
         .select("*")
         .eq("buddhist_year", reportingPeriod.buddhistYear)
+        .not("entity_id", "in", RETIRED_DEMO_FILTERS.entities)
         .order("sort_key", { ascending: false })
         .limit(QUERY_LIMITS.dashboardDecisionQueue),
       supabase
         .from("organizations")
         .select("id,code,name_th")
         .eq("is_active", true)
+        .not("id", "in", RETIRED_DEMO_FILTERS.organizations)
         .order("name_th"),
       supabase
         .from("budget_request_register")
         .select("organization_id,unit,amount")
-        .eq("buddhist_year", reportingPeriod.buddhistYear),
+        .eq("buddhist_year", reportingPeriod.buddhistYear)
+        .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests),
       supabase
         .from("project_register")
         .select("organization_id,unit,budget,progress")
         .eq(
           "fiscal_year_id",
           reportingPeriod.fiscalYearId ?? "00000000-0000-0000-0000-000000000000",
-        ),
+        )
+        .not("id", "in", RETIRED_DEMO_FILTERS.projects),
       supabase
         .from("disbursement_register")
         .select("organization_id,unit,approved,q1,q2,q3,q4,target")
         .eq(
           "fiscal_year_id",
           reportingPeriod.fiscalYearId ?? "00000000-0000-0000-0000-000000000000",
-        ),
+        )
+        .not("project_id", "in", RETIRED_DEMO_FILTERS.projects),
       supabase
         .from("kpi_results")
         .select(
@@ -83,8 +89,13 @@ export async function getDashboardData(): Promise<
           "fiscal_year_id",
           reportingPeriod.fiscalYearId ?? "00000000-0000-0000-0000-000000000000",
         )
+        .not("id", "in", RETIRED_DEMO_FILTERS.kpiResults)
         .or(`quarter.is.null,quarter.eq.${reportingPeriod.quarter}`),
-      supabase.from("attachments").select("organization_id,is_verified").is("archived_at", null),
+      supabase
+        .from("attachments")
+        .select("organization_id,is_verified")
+        .is("archived_at", null)
+        .not("id", "in", RETIRED_DEMO_FILTERS.attachments),
     ]);
   const dashboardError =
     queue.error ??

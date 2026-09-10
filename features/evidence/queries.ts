@@ -9,6 +9,7 @@ import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import { createPagination, getPaginationRange } from "@/features/shared/pagination";
 import type { DataResult } from "@/features/shared/types";
 import type { PaginationMeta } from "@/features/shared/pagination";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,28 +27,33 @@ export async function getEvidenceWorkspace(page = 1): Promise<
     supabase
       .from("evidence_register")
       .select("*", { count: "exact" })
+      .not("id", "in", RETIRED_DEMO_FILTERS.attachments)
       .order("uploaded_at", { ascending: false })
       .range(from, to),
     supabase
       .from("budget_requests")
       .select("id,code,title_th,organization_id")
       .is("archived_at", null)
+      .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
       .order("code")
       .limit(QUERY_LIMITS.selectOptions),
     supabase
       .from("projects")
       .select("id,code,title_th,organization_id")
       .is("archived_at", null)
+      .not("id", "in", RETIRED_DEMO_FILTERS.projects)
       .order("code")
       .limit(QUERY_LIMITS.selectOptions),
     supabase
       .from("quarterly_reports")
       .select("id,quarter,organization_id,projects!inner(code,title_th)")
+      .not("id", "in", RETIRED_DEMO_FILTERS.quarterlyReports)
       .order("due_at", { ascending: false })
       .limit(QUERY_LIMITS.selectOptions),
     supabase
       .from("kpi_results")
       .select("id,organization_id,kpi_definitions!inner(code,name)")
+      .not("id", "in", RETIRED_DEMO_FILTERS.kpiResults)
       .order("updated_at", { ascending: false })
       .limit(QUERY_LIMITS.selectOptions),
   ]);
