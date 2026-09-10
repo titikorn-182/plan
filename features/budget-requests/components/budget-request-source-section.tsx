@@ -3,6 +3,7 @@ import {
   BUDGET_FUND_OPTIONS,
   BUDGET_ORGANIZATION_CODE_OPTIONS,
 } from "@/features/budget-requests/proposal-details";
+import { BUDGET_REQUEST_ORGANIZATIONS } from "@/features/budget-requests/organization-options";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type {
   BudgetRequestSourceField,
@@ -78,6 +79,15 @@ function SourceField({
         {BUDGET_ORGANIZATION_CODE_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
             {option.value} — {option.label}
+          </option>
+        ))}
+      </select>
+    ) : field.control === "organization-name" ? (
+      <select className={fieldClass} required={field.required} {...common}>
+        <option value="">เลือกชื่อหน่วยงานย่อย</option>
+        {BUDGET_REQUEST_ORGANIZATIONS.map((option) => (
+          <option key={option.code} value={option.name}>
+            {option.name}
           </option>
         ))}
       </select>

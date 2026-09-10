@@ -3,6 +3,7 @@ import {
   type BudgetProposalDetails,
   type BudgetProposalTextField,
 } from "@/features/budget-requests/proposal-details";
+import { getBudgetRequestOrganizationSourceCode } from "@/features/budget-requests/organization-options";
 
 export const BUDGET_REQUEST_IMPORT_COLUMNS = [
   { key: "organizationCode", header: "รหัสหน่วยงานย่อย" },
@@ -49,7 +50,7 @@ export type BudgetRequestSourceValues = Record<BudgetRequestSourceKey, string>;
 export type BudgetRequestSourceField = {
   key: BudgetRequestSourceKey;
   header: string;
-  control?: "currency" | "date" | "fund" | "organization" | "textarea";
+  control?: "currency" | "date" | "fund" | "organization" | "organization-name" | "textarea";
   help?: string;
   maxLength?: number;
   proposalField?: BudgetProposalTextField;
@@ -98,7 +99,12 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
         proposalField: "organizationCode",
         required: true,
       }),
-      field("organizationName", { proposalField: "organizationName", required: true }),
+      field("organizationName", {
+        control: "organization-name",
+        help: "เลือกหน่วยงานย่อยจากรายการที่กำหนด ระบบจะจับคู่รหัสหน่วยงานให้อัตโนมัติ",
+        proposalField: "organizationName",
+        required: true,
+      }),
       field("fundingSource", { proposalField: "fundingSource" }),
       field("fundingSourceDetail", { proposalField: "fundingSourceDetail" }),
       field("projectType", { required: true }),
@@ -205,11 +211,7 @@ export function getBudgetRequestSourceCompletion(values: BudgetRequestSourceValu
 }
 
 export function isBudgetRequestOrganizationCompatible(code: string, organizationName: string) {
-  const normalized = organizationName.trim();
-  if (code === "2301") return normalized.startsWith("สำนักงานเลขานุการ");
-  if (code === "2302") return normalized.includes("ภาควิชาการเมืองและความสัมพันธ์ระหว่างประเทศ");
-  if (code === "2303") return normalized.includes("ภาควิชารัฐประศาสนศาสตร์");
-  return false;
+  return getBudgetRequestOrganizationSourceCode(organizationName) === code;
 }
 
 export function toBudgetProposalDetails(values: BudgetRequestSourceValues): BudgetProposalDetails {

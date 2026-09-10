@@ -65,7 +65,7 @@ const projectInput = {
 const sourceProposalDetails = {
   ...createEmptyBudgetProposalDetails(),
   organizationCode: "2301",
-  organizationName: "สำนักงานเลขานุการคณะ",
+  organizationName: "สำนักงานเลขานุการ-งานแผนและงบประมาณ",
 };
 function form(values: Record<string, string>) {
   const data = new FormData();
@@ -219,6 +219,24 @@ describe("budget, approval, and spending actions", () => {
       }),
     );
     expect(result.errors?.amount).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+  });
+  it("rejects a source organization name outside the approved dropdown list", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "submit",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+        amount: "1000",
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          organizationName: "สำนักงานเลขานุการคณะ",
+        }),
+      }),
+    );
+    expect(result.errors?.["proposalDetails.organizationName"]).toEqual(expect.any(Array));
     expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
   });
   it("rejects a source organization that does not match the selected system organization", async () => {

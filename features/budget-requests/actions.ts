@@ -98,6 +98,15 @@ export async function saveBudgetRequestAction(
     }
     if (!proposalDetails.data.organizationName) {
       submitErrors["proposalDetails.organizationName"] = ["กรุณาระบุชื่อหน่วยงานย่อย"];
+    } else if (
+      !isBudgetRequestOrganizationCompatible(
+        proposalDetails.data.organizationCode,
+        proposalDetails.data.organizationName,
+      )
+    ) {
+      submitErrors["proposalDetails.organizationName"] = [
+        "ชื่อหน่วยงานย่อยไม่อยู่ในรายการหรือไม่ตรงกับรหัสหน่วยงาน กรุณาเลือกใหม่",
+      ];
     }
     if (
       proposalDetails.data.spendingPlanTotal &&

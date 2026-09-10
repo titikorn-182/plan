@@ -8,10 +8,11 @@ import {
   saveBudgetRequestAction,
   type BudgetRequestState,
 } from "@/features/budget-requests/actions";
+import { BUDGET_FUND_OPTIONS } from "@/features/budget-requests/proposal-details";
 import {
-  BUDGET_FUND_OPTIONS,
-  BUDGET_ORGANIZATION_CODE_OPTIONS,
-} from "@/features/budget-requests/proposal-details";
+  getBudgetRequestOrganizationSourceCode,
+  isBudgetRequestOrganizationName,
+} from "@/features/budget-requests/organization-options";
 import {
   BUDGET_REQUEST_IMPORT_COLUMNS,
   BUDGET_REQUEST_SOURCE_SECTIONS,
@@ -30,15 +31,7 @@ function inferOrganizationId(
   record: BudgetRequestSourceValues,
   options: BudgetFormOptions["organizations"],
 ): string | undefined {
-  const direct = options.find((option) => option.name.trim() === record.organizationName.trim());
-  if (direct) return direct.id;
-  const keyword =
-    record.organizationCode === "2302"
-      ? "ภาควิชาการเมืองและความสัมพันธ์ระหว่างประเทศ"
-      : record.organizationCode === "2303"
-        ? "ภาควิชารัฐประศาสนศาสตร์"
-        : "";
-  return keyword ? options.find((option) => option.name.includes(keyword))?.id : undefined;
+  return options.find((option) => option.name.trim() === record.organizationName.trim())?.id;
 }
 
 export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOptions }) {
@@ -56,19 +49,41 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   );
 
   const applyImportedRecord = (record: BudgetRequestSourceValues) => {
-    setValues(record);
-    const inferredOrganizationId = inferOrganizationId(record, options.organizations);
+    const normalizedRecord = {
+      ...record,
+      organizationName: isBudgetRequestOrganizationName(record.organizationName)
+        ? record.organizationName.trim()
+        : "",
+    };
+    setValues(normalizedRecord);
+    const inferredOrganizationId = inferOrganizationId(normalizedRecord, options.organizations);
     setOrganizationId(inferredOrganizationId ?? "");
   };
 
   const handleValueChange = (key: BudgetRequestSourceKey, value: string) => {
+    if (key === "organizationName") {
+      const sourceCode = getBudgetRequestOrganizationSourceCode(value);
+      setValues((current) => ({
+        ...current,
+        organizationName: value,
+        organizationCode: sourceCode,
+      }));
+      setOrganizationId(
+        options.organizations.find((option) => option.name.trim() === value.trim())?.id ?? "",
+      );
+      return;
+    }
+    if (key === "organizationCode") {
+      const currentSourceCode = getBudgetRequestOrganizationSourceCode(values.organizationName);
+      const organizationName = currentSourceCode === value ? values.organizationName : "";
+      setValues((current) => ({ ...current, organizationCode: value, organizationName }));
+      setOrganizationId(
+        options.organizations.find((option) => option.name.trim() === organizationName)?.id ?? "",
+      );
+      return;
+    }
     setValues((current) => {
       const next = { ...current, [key]: value };
-      if (key === "organizationCode") {
-        next.organizationName =
-          BUDGET_ORGANIZATION_CODE_OPTIONS.find((option) => option.value === value)?.label ??
-          current.organizationName;
-      }
       if (key === "fundCode") {
         next.fundName =
           BUDGET_FUND_OPTIONS.find((option) => option.code === value)?.name ?? current.fundName;

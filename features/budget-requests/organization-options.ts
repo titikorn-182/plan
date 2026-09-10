@@ -20,6 +20,20 @@ export const BUDGET_REQUEST_ORGANIZATION_NAMES = BUDGET_REQUEST_ORGANIZATIONS.ma
   ({ name }) => name,
 );
 
+const organizationNames = new Set<string>(BUDGET_REQUEST_ORGANIZATION_NAMES);
+
+export function isBudgetRequestOrganizationName(name: string): boolean {
+  return organizationNames.has(name.trim());
+}
+
+export function getBudgetRequestOrganizationSourceCode(name: string): string {
+  const normalized = name.trim();
+  if (!isBudgetRequestOrganizationName(normalized)) return "";
+  if (normalized === "ภาควิชาการเมืองและความสัมพันธ์ระหว่างประเทศ") return "2302";
+  if (normalized === "ภาควิชารัฐประศาสนศาสตร์") return "2303";
+  return "2301";
+}
+
 const organizationOrder = new Map<string, number>(
   BUDGET_REQUEST_ORGANIZATIONS.map(({ name }, index) => [name, index]),
 );
