@@ -10,6 +10,7 @@ import {
   parseBudgetExpenseBreakdown,
 } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
+import { isBudgetRequestOrganizationCompatible } from "@/features/budget-requests/source-fields";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
@@ -84,13 +85,36 @@ export async function saveBudgetRequestAction(
       message: "กรุณาตรวจสอบวงเงินคำขอรวม",
     };
   }
-  if (parsed.data.intent === "submit" && parsed.data.rationale.length < 20) {
-    return {
-      ...previous,
-      success: false,
-      errors: { rationale: ["ก่อนส่งคำขอ กรุณาอธิบายหลักการและเหตุผลอย่างน้อย 20 ตัวอักษร"] },
-      message: "ข้อมูลยังไม่พร้อมส่ง",
-    };
+  if (parsed.data.intent === "submit") {
+    const submitErrors: Record<string, string[]> = {};
+    if (parsed.data.rationale.length < 20) {
+      submitErrors.rationale = ["ก่อนส่งคำขอ กรุณาอธิบายหลักการและเหตุผลอย่างน้อย 20 ตัวอักษร"];
+    }
+    if (parsed.data.amount <= 0) {
+      submitErrors.amount = ["ก่อนส่งคำขอ กรุณาระบุงบประมาณรวมทั้งหมดให้มากกว่า 0 บาท"];
+    }
+    if (!proposalDetails.data.organizationCode) {
+      submitErrors["proposalDetails.organizationCode"] = ["กรุณาระบุรหัสหน่วยงานย่อย"];
+    }
+    if (!proposalDetails.data.organizationName) {
+      submitErrors["proposalDetails.organizationName"] = ["กรุณาระบุชื่อหน่วยงานย่อย"];
+    }
+    if (
+      proposalDetails.data.spendingPlanTotal &&
+      Number(proposalDetails.data.spendingPlanTotal) !== parsed.data.amount
+    ) {
+      submitErrors["proposalDetails.spendingPlanTotal"] = [
+        "ยอดรวมแผนค่าใช้จ่ายต้องตรงกับงบประมาณรวมทั้งหมด",
+      ];
+    }
+    if (Object.keys(submitErrors).length > 0) {
+      return {
+        ...previous,
+        success: false,
+        errors: submitErrors,
+        message: "ข้อมูลยังไม่พร้อมส่ง",
+      };
+    }
   }
 
   const supabase = await createClient();
@@ -135,6 +159,35 @@ export async function saveBudgetRequestAction(
       errors: { fiscalYearId: ["ปีงบประมาณไม่ตรงกับรอบรับคำขอ กรุณาเลือกใหม่"] },
       message: "ปีงบประมาณที่เลือกไม่ถูกต้อง",
     };
+  }
+  if (parsed.data.intent === "submit") {
+    const { data: organization, error: organizationError } = await supabase
+      .from("organizations")
+      .select("name_th")
+      .eq("id", parsed.data.organizationId)
+      .single();
+    if (organizationError || !organization) {
+      return {
+        ...previous,
+        success: false,
+        message: friendlyError(organizationError, "budget_requests.organization"),
+      };
+    }
+    if (
+      !isBudgetRequestOrganizationCompatible(
+        proposalDetails.data.organizationCode,
+        organization.name_th,
+      )
+    ) {
+      return {
+        ...previous,
+        success: false,
+        errors: {
+          organizationId: ["หน่วยงานเจ้าของคำขอไม่ตรงกับรหัสหน่วยงานย่อย กรุณาเลือกใหม่"],
+        },
+        message: "ข้อมูลหน่วยงานไม่ตรงกัน",
+      };
+    }
   }
 
   const values = {

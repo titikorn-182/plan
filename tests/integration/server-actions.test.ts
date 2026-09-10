@@ -62,6 +62,11 @@ const projectInput = {
   startsOn: "2026-10-01",
   endsOn: "2027-09-30",
 };
+const sourceProposalDetails = {
+  ...createEmptyBudgetProposalDetails(),
+  organizationCode: "2301",
+  organizationName: "สำนักงานเลขานุการคณะ",
+};
 function form(values: Record<string, string>) {
   const data = new FormData();
   Object.entries(values).forEach(([key, value]) => data.set(key, value));
@@ -159,6 +164,7 @@ describe("budget, approval, and spending actions", () => {
   it("uses the atomic budget submission RPC", async () => {
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
+    response({ name_th: "สำนักงานเลขานุการ-งานแผนและงบประมาณ" });
     response({ id: projectId, code: "TEST-P1", version: 4 });
     const result = await saveBudgetRequestAction(
       {},
@@ -168,6 +174,7 @@ describe("budget, approval, and spending actions", () => {
         budgetCycleId: "40000000-0000-4000-8000-000000000001",
         rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
         amount: "1000",
+        proposalDetails: JSON.stringify(sourceProposalDetails),
       }),
     );
     expect(result.success).toBe(true);
@@ -196,6 +203,40 @@ describe("budget, approval, and spending actions", () => {
       success: false,
       message: "ปีงบประมาณที่เลือกไม่ถูกต้อง",
     });
+    expect(mock.chain.insert).not.toHaveBeenCalled();
+    expect(mock.chain.update).not.toHaveBeenCalled();
+  });
+  it("rejects a zero-value budget submission before authentication", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "submit",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+        amount: "0",
+        proposalDetails: JSON.stringify(sourceProposalDetails),
+      }),
+    );
+    expect(result.errors?.amount).toEqual(expect.any(Array));
+    expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+  });
+  it("rejects a source organization that does not match the selected system organization", async () => {
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    response({ name_th: "ภาควิชารัฐประศาสนศาสตร์" });
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "submit",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+        amount: "1000",
+        proposalDetails: JSON.stringify(sourceProposalDetails),
+      }),
+    );
+    expect(result.errors?.organizationId).toEqual(expect.any(Array));
     expect(mock.chain.insert).not.toHaveBeenCalled();
     expect(mock.chain.update).not.toHaveBeenCalled();
   });
@@ -290,13 +331,16 @@ describe("budget expense action persistence", () => {
     };
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
-    response({ id: projectId, code: "TEST-BR1", version: 1 });
     const proposalDetails = {
-      ...createEmptyBudgetProposalDetails(),
+      ...sourceProposalDetails,
       missionName: "พันธกิจด้านบริการวิชาการ",
       startsOn: "2026-10-01",
       endsOn: "2027-09-30",
     };
+    if (intent === "submit") {
+      response({ name_th: "สำนักงานเลขานุการ-งานแผนและงบประมาณ" });
+    }
+    response({ id: projectId, code: "TEST-BR1", version: 1 });
     const result = await saveBudgetRequestAction(
       {},
       form({
