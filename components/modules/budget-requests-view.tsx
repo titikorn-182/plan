@@ -216,8 +216,44 @@ export function BudgetRequestsView({
             </tbody>
           </table>
           {rows.length === 0 ? (
-            <div className="grid min-h-48 place-items-center p-6 text-center text-sm text-stone-500">
-              ไม่พบคำขอที่ตรงกับเงื่อนไข ลองเปลี่ยนคำค้นหรือสถานะ
+            <div className="grid min-h-56 place-items-center p-6 text-center">
+              {requests.length === 0 ? (
+                <div className="max-w-md">
+                  <span className="mx-auto grid size-12 place-items-center bg-orange-100 text-[#c9440b]">
+                    <FilePlus2 size={22} aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-4 text-base font-bold text-stone-950">
+                    ยังไม่มีคำของบประมาณในปีงบประมาณนี้
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-stone-600">
+                    เริ่มบันทึกข้อมูลจริงเพื่อจัดทำทะเบียน ติดตามสถานะ และส่งเข้าสู่กระบวนการอนุมัติ
+                  </p>
+                  <Link
+                    className="mt-5 inline-flex h-10 items-center justify-center gap-2 bg-[#cf430c] px-5 text-sm font-semibold text-white hover:bg-[#ad3507]"
+                    href="/budget-requests/new"
+                  >
+                    <FilePlus2 size={16} aria-hidden="true" /> สร้างคำขอแรก
+                  </Link>
+                </div>
+              ) : (
+                <div className="max-w-md">
+                  <Search className="mx-auto text-stone-400" size={28} aria-hidden="true" />
+                  <h3 className="mt-3 text-sm font-bold text-stone-900">
+                    ไม่พบคำขอที่ตรงกับเงื่อนไข
+                  </h3>
+                  <p className="mt-1 text-sm text-stone-500">ลองเปลี่ยนคำค้นหรือสถานะที่เลือก</p>
+                  <button
+                    className="mt-4 border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 hover:border-[#dc4f12] hover:text-[#c9440b]"
+                    type="button"
+                    onClick={() => {
+                      setQuery("");
+                      setStatus("ทั้งหมด");
+                    }}
+                  >
+                    ล้างคำค้นและตัวกรอง
+                  </button>
+                </div>
+              )}
             </div>
           ) : null}
         </div>

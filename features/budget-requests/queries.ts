@@ -23,6 +23,17 @@ import {
   BUDGET_REQUEST_FISCAL_YEARS,
 } from "@/features/budget-requests/fiscal-year-options";
 
+export const RETIRED_DEMO_BUDGET_REQUEST_IDS = [
+  "40000000-0000-0000-0000-000000000001",
+  "40000000-0000-0000-0000-000000000002",
+  "40000000-0000-0000-0000-000000000003",
+  "40000000-0000-0000-0000-000000000004",
+  "40000000-0000-0000-0000-000000000005",
+  "40000000-0000-0000-0000-000000000006",
+] as const;
+
+const RETIRED_DEMO_BUDGET_REQUEST_FILTER = `(${RETIRED_DEMO_BUDGET_REQUEST_IDS.join(",")})`;
+
 export async function getBudgetRequests(
   page = 1,
 ): Promise<DataResult<PaginatedData<BudgetRequest>>> {
@@ -33,6 +44,7 @@ export async function getBudgetRequests(
     .from("budget_request_register")
     .select("*", { count: "exact" })
     .eq("buddhist_year", period.buddhistYear)
+    .not("id", "in", RETIRED_DEMO_BUDGET_REQUEST_FILTER)
     .order("updated_at", { ascending: false })
     .range(from, to);
   return result(
