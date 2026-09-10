@@ -107,19 +107,17 @@ export async function saveBudgetRequestAction(
     if (!isBudgetRequestSourceOption("projectType", parsed.data.projectType)) {
       submitErrors.projectType = ["กรุณาเลือกประเภทโครงการจากรายการที่กำหนด"];
     }
-    const sourceSelectionLabels: Record<
-      Exclude<BudgetRequestSourceSelectKey, "projectType">,
-      string
-    > = {
+    const sourceSelectionLabels = {
       fundingSource: "แหล่งงบประมาณ",
       fundingSourceDetail: "แหล่งงบประมาณย่อย",
       missionName: "ชื่อพันธกิจ",
       strategyName: "ชื่อกลยุทธ์",
-    };
-    for (const key of Object.keys(sourceSelectionLabels) as Exclude<
-      BudgetRequestSourceSelectKey,
-      "projectType"
-    >[]) {
+    } as const satisfies Partial<
+      Record<Exclude<BudgetRequestSourceSelectKey, "projectType">, string>
+    >;
+    for (const key of Object.keys(
+      sourceSelectionLabels,
+    ) as (keyof typeof sourceSelectionLabels)[]) {
       if (
         proposalDetails.data[key] &&
         !isBudgetRequestSourceOption(key, proposalDetails.data[key])

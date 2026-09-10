@@ -12,10 +12,18 @@ describe("budget request file import", () => {
     cells[3] = "เงินรายได้จากค่าธรรมเนียมการศึกษา";
     cells[4] = "2 โครงการประจำตามภารกิจ";
     cells[5] = "พันธกิจที่ 1 ด้านการผลิตบัณฑิต";
-    cells[14] = '"โครงการทดสอบ, ประจำปี"';
+    cells[9] = "3101";
+    cells[10] = "ผลงานการให้บริการวิชาการ";
+    cells[11] = "31013200";
+    cells[12] = "แผนการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ";
+    cells[13] = "310132000001";
+    cells[14] = "โครงการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ";
+    cells[16] = "งบดำเนินงาน";
+    cells[17] = "ค่าใช้สอย";
+    cells[18] = "ค่าใช้สอยอื่น ๆ";
     cells[20] = "929300";
     cells[21] = "ผู้รับผิดชอบโครงการ";
-    cells[26] = "หลักการและเหตุผลที่ครบถ้วน";
+    cells[26] = '"หลักการและเหตุผล, ที่ครบถ้วน"';
     const file = new File(
       [`${BUDGET_REQUEST_IMPORT_HEADERS.join(",")}\n${cells.join(",")}`],
       "budget.csv",
@@ -32,10 +40,18 @@ describe("budget request file import", () => {
       fundingSourceDetail: "เงินรายได้จากค่าธรรมเนียมการศึกษา",
       projectType: "2 โครงการประจำตามภารกิจ",
       missionName: "พันธกิจที่ 1 ด้านการผลิตบัณฑิต",
-      projectActivityName: "โครงการทดสอบ, ประจำปี",
+      outputCode: "3101",
+      outputName: "ผลงานการให้บริการวิชาการ",
+      operationalPlanCode: "31013200",
+      operationalPlanName: "แผนการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ",
+      activityCode: "310132000001",
+      projectActivityName: "โครงการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ",
+      expenditureBudget: "งบดำเนินงาน",
+      expenseCategory: "ค่าใช้สอย",
+      expenseSubcategory: "ค่าใช้สอยอื่น ๆ",
       totalBudget: "929300",
       ownerName: "ผู้รับผิดชอบโครงการ",
-      rationale: "หลักการและเหตุผลที่ครบถ้วน",
+      rationale: "หลักการและเหตุผล, ที่ครบถ้วน",
     });
   });
 
@@ -58,7 +74,15 @@ describe("budget request file import", () => {
     worksheet.addRow(BUDGET_REQUEST_IMPORT_HEADERS);
     const row: (string | number | Date)[] = BUDGET_REQUEST_IMPORT_HEADERS.map(() => "");
     row[0] = "2303";
-    row[14] = "โครงการจาก Excel";
+    row[9] = "3101";
+    row[10] = "ผลงานการให้บริการวิชาการ";
+    row[11] = "31013200";
+    row[12] = "แผนการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ";
+    row[13] = "310132000001";
+    row[14] = "โครงการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ";
+    row[16] = "งบลงทุน";
+    row[17] = "ครุภัณฑ์";
+    row[18] = "ครุภัณฑ์สำนักงาน";
     row[20] = 250000;
     row[27] = new Date("2026-10-01T00:00:00Z");
     worksheet.addRow(row);
@@ -73,7 +97,13 @@ describe("budget request file import", () => {
     expect(result.errors).toEqual([]);
     expect(result.records[0].values).toMatchObject({
       organizationCode: "2303",
-      projectActivityName: "โครงการจาก Excel",
+      outputCode: "3101",
+      operationalPlanCode: "31013200",
+      activityCode: "310132000001",
+      projectActivityName: "โครงการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ",
+      expenditureBudget: "งบลงทุน",
+      expenseCategory: "ครุภัณฑ์",
+      expenseSubcategory: "ครุภัณฑ์สำนักงาน",
       totalBudget: "250000",
       startsOn: "2026-10-01",
     });
@@ -114,5 +144,20 @@ describe("budget request file import", () => {
     const result = await parseBudgetRequestImportFile(file);
 
     expect(result.records[0].errors).toContain("แถว 2: ประเภทโครงการไม่อยู่ในรายการที่กำหนด");
+  });
+
+  it("flags an expense value that is outside the approved workbook list", async () => {
+    const { parseBudgetRequestImportFile } = await import("@/features/budget-requests/import-file");
+    const cells = BUDGET_REQUEST_IMPORT_HEADERS.map(() => "");
+    cells[16] = "งบรายจ่ายนอกระบบ";
+    const file = new File(
+      [`${BUDGET_REQUEST_IMPORT_HEADERS.join(",")}\n${cells.join(",")}`],
+      "invalid-expense.csv",
+      { type: "text/csv" },
+    );
+
+    const result = await parseBudgetRequestImportFile(file);
+
+    expect(result.records[0].errors).toContain("แถว 2: งบรายจ่ายไม่อยู่ในรายการที่กำหนด");
   });
 });

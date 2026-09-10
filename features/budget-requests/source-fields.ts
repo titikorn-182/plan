@@ -121,7 +121,6 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
       field("missionName", { control: "source-select", proposalField: "missionName" }),
       field("strategyName", { control: "source-select", proposalField: "strategyName" }),
       field("fundCode", { control: "fund", proposalField: "fundCode" }),
-      field("fundName", { proposalField: "fundName" }),
     ],
   },
   {
@@ -129,12 +128,18 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
     title: "โครงสร้างแผนและกิจกรรม",
     description: "เชื่อมรหัสและชื่อจากระดับผลผลิตลงมาถึงกิจกรรมย่อยเพื่อให้รายงานย้อนกลับได้",
     fields: [
-      field("outputCode", { proposalField: "outputCode" }),
-      field("outputName", { proposalField: "outputName" }),
-      field("operationalPlanCode", { proposalField: "operationalPlanCode" }),
-      field("operationalPlanName", { proposalField: "operationalPlanName" }),
-      field("activityCode", { proposalField: "activityCode" }),
-      field("projectActivityName", { required: true }),
+      field("outputCode", { control: "source-select", proposalField: "outputCode" }),
+      field("outputName", { control: "source-select", proposalField: "outputName" }),
+      field("operationalPlanCode", {
+        control: "source-select",
+        proposalField: "operationalPlanCode",
+      }),
+      field("operationalPlanName", {
+        control: "source-select",
+        proposalField: "operationalPlanName",
+      }),
+      field("activityCode", { control: "source-select", proposalField: "activityCode" }),
+      field("projectActivityName", { control: "source-select", required: true }),
       field("subActivityName", { proposalField: "subActivityName" }),
     ],
   },
@@ -143,9 +148,15 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
     title: "งบประมาณและแผนค่าใช้จ่าย",
     description: "เก็บประเภทงบ รายการค่าใช้จ่าย และยอดเงินตามคอลัมน์ต้นทางโดยไม่เปลี่ยนความหมาย",
     fields: [
-      field("expenditureBudget", { proposalField: "expenditureBudget" }),
-      field("expenseCategory", { proposalField: "expenseCategory" }),
-      field("expenseSubcategory", { proposalField: "expenseSubcategory" }),
+      field("expenditureBudget", {
+        control: "source-select",
+        proposalField: "expenditureBudget",
+      }),
+      field("expenseCategory", { control: "source-select", proposalField: "expenseCategory" }),
+      field("expenseSubcategory", {
+        control: "source-select",
+        proposalField: "expenseSubcategory",
+      }),
       field("expenseDescription", {
         control: "textarea",
         maxLength: 5_000,
