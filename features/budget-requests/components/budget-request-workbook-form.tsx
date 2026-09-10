@@ -14,7 +14,7 @@ import {
   isBudgetRequestOrganizationName,
 } from "@/features/budget-requests/organization-options";
 import {
-  BUDGET_REQUEST_IMPORT_COLUMNS,
+  BUDGET_REQUEST_SOURCE_FIELD_COUNT,
   BUDGET_REQUEST_SOURCE_SECTIONS,
   createEmptyBudgetRequestSourceValues,
   getBudgetRequestSourceCompletion,
@@ -93,7 +93,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   };
 
   const completion = getBudgetRequestSourceCompletion(values);
-  const completionPercent = Math.round((completion / BUDGET_REQUEST_IMPORT_COLUMNS.length) * 100);
+  const completionPercent = Math.round((completion / BUDGET_REQUEST_SOURCE_FIELD_COUNT) * 100);
 
   return (
     <form className="budget-request-form pb-24" action={action}>
@@ -133,14 +133,13 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
               สร้างคำของบประมาณจากข้อมูลโครงการ
             </h1>
             <p className="mt-2 text-sm leading-6 text-stone-600">
-              แบบฟอร์มนี้ใช้หัวตารางครบทั้ง 36 คอลัมน์จากชุดข้อมูล Executive DataProject
-              และรองรับการเติมข้อมูลจาก XLSX หรือ CSV
+              รองรับไฟล์ Executive DataProject แบบ XLSX หรือ CSV และแสดงเฉพาะข้อมูลที่ยังใช้งาน
             </p>
           </div>
           <div className="flex items-center gap-3 border-t border-stone-200 pt-4 lg:border-t-0 lg:pt-0">
             <span className="text-right">
               <b className="block text-lg tabular-nums text-stone-950">
-                {completion}/{BUDGET_REQUEST_IMPORT_COLUMNS.length}
+                {completion}/{BUDGET_REQUEST_SOURCE_FIELD_COUNT}
               </b>
               <small className="text-xs text-stone-500">หัวข้อที่มีข้อมูล</small>
             </span>

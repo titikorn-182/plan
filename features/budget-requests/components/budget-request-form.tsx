@@ -50,7 +50,6 @@ const STRATEGY_DETAIL_FIELDS: BudgetProposalTextField[] = [
 const BUDGET_DETAIL_FIELDS: BudgetProposalTextField[] = [
   "expenseSubcategory",
   "expenseDescription",
-  "spendingPlanName",
 ];
 
 function getErrorStep(errors: BudgetRequestState["errors"]): number | null {

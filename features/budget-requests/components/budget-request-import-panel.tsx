@@ -29,7 +29,7 @@ export function BudgetRequestImportPanel({
   const [importing, setImporting] = useState(false);
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [message, setMessage] = useState(
-    "เลือกไฟล์ต้นทางเพื่อเติมข้อมูลอัตโนมัติ หรือกรอกข้อมูลทั้ง 36 หัวข้อด้วยตนเอง",
+    "เลือกไฟล์ต้นทางเพื่อเติมข้อมูลอัตโนมัติ หรือกรอกข้อมูลที่ใช้งานด้วยตนเอง",
   );
 
   const handleImport = async (event: ChangeEvent<HTMLInputElement>) => {

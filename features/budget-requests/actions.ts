@@ -148,14 +148,6 @@ export async function saveBudgetRequestAction(
         "ชื่อหน่วยงานย่อยไม่อยู่ในรายการหรือไม่ตรงกับรหัสหน่วยงาน กรุณาเลือกใหม่",
       ];
     }
-    if (
-      proposalDetails.data.spendingPlanTotal &&
-      Number(proposalDetails.data.spendingPlanTotal) !== parsed.data.amount
-    ) {
-      submitErrors["proposalDetails.spendingPlanTotal"] = [
-        "ยอดรวมแผนค่าใช้จ่ายต้องตรงกับงบประมาณรวมทั้งหมด",
-      ];
-    }
     if (Object.keys(submitErrors).length > 0) {
       return {
         ...previous,

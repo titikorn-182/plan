@@ -7,7 +7,7 @@ related_targets: ["features/budget-requests/components/budget-request-workbook-f
 
 MODE: Operate
 
-THESIS: การสร้างคำของบเป็นสมุดงานต้นทางหน้าเดียว ไม่ใช่ wizard; ผู้ประสานงานต้องเห็นความครบถ้วน นำเข้าข้อมูล ตรวจแถว แก้รายละเอียดทั้ง 36 หัวข้อ และบันทึกหรือส่งได้ในกระแสต่อเนื่องเดียว
+THESIS: การสร้างคำของบเป็นสมุดงานต้นทางหน้าเดียว ไม่ใช่ wizard; ผู้ประสานงานต้องเห็นความครบถ้วน นำเข้าข้อมูล ตรวจแถว แก้เฉพาะ 32 หัวข้อที่ยังใช้งาน และบันทึกหรือส่งได้ในกระแสต่อเนื่องเดียว
 
 OWN-WORLD: สืบทอด Executive Evidence Ledger จาก DESIGN.md โดยตรง: พื้นขาวบน canvas อ่อน เส้นทะเบียน 1px รูปทรงเหลี่ยม Sarabun สีส้มสำหรับตำแหน่งและการกระทำหลัก และสถานะที่มีข้อความกำกับ; พื้นผิวนำเข้าใช้ orange wash เพื่อแยกงานจากไฟล์โดยไม่กลายเป็นการ์ดลอย
 
@@ -15,7 +15,7 @@ ENTRY: route โหลดหน่วยงาน ปีงบประมาณ
 
 STORY: เริ่มจากตรวจบริบทและตัวนับความครบถ้วน 0/36 → เลือกนำเข้า XLSX/CSV หรือกรอกเอง → ถ้านำเข้าให้เลือกแถวจาก preview ตรวจ error/warning แล้วกดใช้ข้อมูลอย่างชัดเจน → เลือกปีงบประมาณและชื่อหน่วยงานย่อยในหมวดหน่วยงานและแหล่งงบประมาณ โดยระบบเชื่อม organization scope ให้อัตโนมัติ → ทบทวนหมวดที่เหลือและ readiness → บันทึกฉบับร่างหรือส่งคำขอจาก action bar เดิม
 
-FORM: ฟอร์มต่อเนื่องหนึ่งชุดเก็บหัวตาราง Executive DataProject ครบ 36 คอลัมน์ แบ่งเพื่อการสแกนเป็น 5 section ได้แก่ หน่วยงานและแหล่งงบประมาณ, โครงสร้างแผนและกิจกรรม, งบประมาณและแผนค่าใช้จ่าย, เป้าหมายเหตุผลและระยะเวลา, และผู้รับผิดชอบกับสายการอนุมัติ; ไม่มี section “ข้อมูลสำหรับบันทึกในระบบ” ที่ซ้ำกับข้อมูลต้นทาง โดย fiscal year เป็นช่องแรกใน section “หน่วยงานและแหล่งงบประมาณ” ส่วน organization scope อนุมานจากชื่อหน่วยงานย่อยและยังส่ง budget cycle ที่สัมพันธ์กันโดยไม่เพิ่มขั้นตอน wizard
+FORM: ฟอร์มต่อเนื่องหนึ่งชุดแสดง 32 หัวข้อที่ยังใช้งาน แบ่งเพื่อการสแกนเป็น 5 section ได้แก่ หน่วยงานและแหล่งงบประมาณ, โครงสร้างแผนและกิจกรรม, งบประมาณและรายละเอียดค่าใช้จ่าย, เป้าหมายเหตุผลและระยะเวลา, และผู้รับผิดชอบกับสายการอนุมัติ; ไม่แสดง fundName ซึ่งอนุมานจากรหัสกองทุน และไม่แสดง msds_id, ชื่อแผนค่าใช้จ่าย หรือยอดรวมแผนค่าใช้จ่ายซึ่งเลิกใช้งานแล้ว; fiscal year เป็นช่องแรกใน section “หน่วยงานและแหล่งงบประมาณ” ส่วน organization scope อนุมานจากชื่อหน่วยงานย่อยและยังส่ง budget cycle ที่สัมพันธ์กันโดยไม่เพิ่มขั้นตอน wizard
 
 SOURCE SELECTS: แหล่งงบประมาณใช้ 2 ค่าที่ผู้ใช้กำหนด; แหล่งงบประมาณย่อย ประเภทโครงการ ชื่อพันธกิจ และชื่อกลยุทธ์ใช้รายการไม่ซ้ำตามลำดับแรกจากคอลัมน์ D–G ของไฟล์ Executive DataProject; การนำเข้าแปลงค่าเดิม “เงินรายได้” เป็น “งบประมาณเงินรายได้” และค่าที่ไม่อยู่ในรายการต้องแก้ก่อนนำแถวนั้นไปใช้
 
@@ -35,7 +35,7 @@ IMPORT LOCK: หลังการบันทึกครั้งแรกเ�
 
 AUTOFILL: เมื่อใช้แถวที่เลือก ให้เติมทั้ง 36 ค่าในครั้งเดียว; ชื่อหน่วยงานย่อยเป็น select จากรายการอนุมัติ 15 หน่วยงานและจับคู่รหัส 2301/2302/2303 กับ organization scope ที่ผู้ใช้มีสิทธิ์โดยอัตโนมัติ; ชื่อจากไฟล์ที่ไม่อยู่ในรายการต้องปล่อยช่องชื่อและ scope ว่างเพื่อบังคับให้เลือกใหม่; fund code ที่รู้จักเติมชื่อกองทุน
 
-READINESS: rail ด้านขวาแสดง 6 checks พร้อมจำนวนที่พร้อม ได้แก่ organization+fiscal year, ความสอดคล้องของ organization scope กับรหัสหน่วยงานย่อย, ชื่อ+ประเภทโครงการ, ผู้รับผิดชอบ, วงเงิน, และหลักการเหตุผล; ถ้างบรวมต่างจากยอดรวมแผนค่าใช้จ่าย ให้แสดงคำเตือนแบบข้อความ; readiness เป็นคำแนะนำก่อนส่ง ไม่ใช่การแทน server validation
+READINESS: rail ด้านขวาแสดง 6 checks พร้อมจำนวนที่พร้อม ได้แก่ organization+fiscal year, ความสอดคล้องของ organization scope กับรหัสหน่วยงานย่อย, ชื่อ+ประเภทโครงการ, ผู้รับผิดชอบ, วงเงิน, และหลักการเหตุผล; readiness เป็นคำแนะนำก่อนส่ง ไม่ใช่การแทน server validation
 
 RESPONSIVE: ที่ `xl` ขึ้นไปใช้ register กว้างคู่กับ sticky readiness rail 300px ซึ่งรวม section navigation แนวตั้ง; ต่ำกว่า `xl` ให้ซ่อน rail navigation และแสดง section navigation แนวนอนแบบ overflow ก่อนเนื้อหา เพื่อให้ tablet/mobile กระโดดข้ามฟอร์มยาวได้โดยไม่ย่อหัวข้อจนอ่านไม่ได้; ฟิลด์เปลี่ยนจากสองคอลัมน์เป็นหนึ่งคอลัมน์บนจอแคบ และ textarea กินเต็มแถวเมื่อมีพื้นที่
 
@@ -43,8 +43,8 @@ FEEDBACK: สถานะอ่านไฟล์ ผลการนำแถว
 
 ACTION BAR: ใช้ FormActions และกฎ offset 206/72/0 จาก DESIGN.md; คงลำดับกลับทะเบียน/ยกเลิก → บันทึกฉบับร่าง → ส่งคำขอ, แสดง pending state และกันพื้นที่ท้ายฟอร์มไม่ให้แถบบังข้อมูล
 
-DATA: title, owner, rationale, amount, project type และ proposal details สร้างจาก source values ชุดเดียวก่อนส่ง action; persistence, validation, optimistic version และ workflow behavior ยังเป็นอำนาจของ server action ไม่ใช่ parser ฝั่ง client
+DATA: title, owner, rationale, amount, project type และ proposal details สร้างจาก source values ชุดเดียวก่อนส่ง action; importer ยังอ่านโครงสร้างไฟล์เดิมครบ 36 คอลัมน์เพื่อความเข้ากันได้ แต่ fundName, msds_id, ชื่อแผนค่าใช้จ่าย และยอดรวมแผนค่าใช้จ่ายไม่นับเป็นความครบถ้วนของฟอร์ม; persistence, validation, optimistic version และ workflow behavior ยังเป็นอำนาจของ server action ไม่ใช่ parser ฝั่ง client
 
 VERIFICATION: เอกสารนี้ถอดจาก route, workbook form, import panel, source sections, readiness rail, field schema และ parser ในโค้ดปัจจุบัน; ไม่มีการอ้าง screenshot หรือ visual review ใหม่
 
-FINISH: surface brief สะท้อนฟอร์ม 36 ช่องแบบต่อเนื่อง การ preview/apply/replace/lock ของ import การตรวจแถว และ responsive section navigation ตาม implementation; DESIGN.md ไม่ต้องเปลี่ยนเพราะไม่มี durable system rule ใหม่
+FINISH: surface brief สะท้อนฟอร์ม 32 ช่องที่ใช้งานจริง การ preview/apply/replace/lock ของ import โครงสร้างเดิม 36 คอลัมน์ การตรวจแถว และ responsive section navigation ตาม implementation; DESIGN.md ไม่ต้องเปลี่ยนเพราะไม่มี durable system ruleใหม่

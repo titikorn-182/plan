@@ -32,10 +32,6 @@ export function BudgetRequestSourceReadiness({
     { label: "อธิบายหลักการและเหตุผล", complete: values.rationale.trim().length >= 20 },
   ];
   const readyCount = readiness.filter((item) => item.complete).length;
-  const totalsDiffer =
-    amount > 0 &&
-    Number(values.spendingPlanTotal) > 0 &&
-    amount !== Number(values.spendingPlanTotal);
 
   return (
     <aside className="h-fit border border-stone-200 bg-white xl:sticky xl:top-[78px]">
@@ -60,11 +56,6 @@ export function BudgetRequestSourceReadiness({
             </li>
           ))}
         </ul>
-        {totalsDiffer ? (
-          <p className="mt-4 border border-orange-200 bg-orange-50 p-3 text-xs leading-5 text-orange-900">
-            งบประมาณรวมทั้งหมดไม่ตรงกับยอดรวมแผนค่าใช้จ่าย กรุณาตรวจสอบก่อนส่ง
-          </p>
-        ) : null}
       </div>
       <nav className="border-t border-stone-200 p-2" aria-label="ไปยังส่วนของแบบฟอร์ม">
         {BUDGET_REQUEST_SOURCE_SECTIONS.map((section) => (

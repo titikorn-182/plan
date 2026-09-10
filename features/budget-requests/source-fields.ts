@@ -166,12 +166,6 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
         control: "currency",
         help: "วงเงินนี้ใช้เป็นยอดคำของบประมาณที่ส่งเข้าสู่ระบบ",
       }),
-      field("msdsId", { proposalField: "msdsId" }),
-      field("spendingPlanName", { proposalField: "spendingPlanName" }),
-      field("spendingPlanTotal", {
-        control: "currency",
-        proposalField: "spendingPlanTotal",
-      }),
     ],
   },
   {
@@ -221,6 +215,8 @@ export const BUDGET_REQUEST_SOURCE_FIELD_MAP = new Map(
   ]),
 );
 
+export const BUDGET_REQUEST_SOURCE_FIELD_COUNT = BUDGET_REQUEST_SOURCE_FIELD_MAP.size;
+
 export function createEmptyBudgetRequestSourceValues(): BudgetRequestSourceValues {
   return Object.fromEntries(
     BUDGET_REQUEST_IMPORT_COLUMNS.map((column) => [column.key, ""]),
@@ -228,7 +224,7 @@ export function createEmptyBudgetRequestSourceValues(): BudgetRequestSourceValue
 }
 
 export function getBudgetRequestSourceCompletion(values: BudgetRequestSourceValues): number {
-  return BUDGET_REQUEST_IMPORT_COLUMNS.filter((column) => values[column.key].trim()).length;
+  return [...BUDGET_REQUEST_SOURCE_FIELD_MAP.keys()].filter((key) => values[key].trim()).length;
 }
 
 export function isBudgetRequestOrganizationCompatible(code: string, organizationName: string) {

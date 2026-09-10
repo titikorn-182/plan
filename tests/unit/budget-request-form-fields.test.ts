@@ -82,7 +82,8 @@ describe("new budget request fields", () => {
 
   it("keeps every expense group and adds source expense metadata", () => {
     const html = renderStep(2);
-    expect(html).toContain("ชื่อแผนค่าใช้จ่าย");
+    expect(html).not.toContain("ชื่อแผนค่าใช้จ่าย");
+    expect(html).not.toContain("ยอดรวมแผนค่าใช้จ่าย");
     expect(html).toContain("รายละเอียดรายการค่าใช้จ่าย");
     expect(html).toContain("งบดำเนินงาน");
     expect(html).toContain("งบลงทุน");
