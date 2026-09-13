@@ -1,5 +1,6 @@
 import type { Enums } from "@/types/database.generated";
 import type { FiscalYearOption, OrganizationOption, SelectOption } from "@/features/shared/types";
+import type { ProjectProposalDetails } from "@/features/projects/proposal-details";
 
 export type ProjectStatus = Enums<"project_status">;
 
@@ -35,6 +36,7 @@ export type ProjectFormRecord = {
   endsOn: string;
   status: ProjectStatus;
   pendingApproval: boolean;
+  proposalDetails: ProjectProposalDetails;
 };
 
 export type ProjectFormOptions = {

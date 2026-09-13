@@ -1076,6 +1076,7 @@ export type Database = {
           organization_id: string
           owner_id: string | null
           owner_name: string
+          proposal_details: Json
           progress: number
           project_type: string
           starts_on: string | null
@@ -1105,6 +1106,7 @@ export type Database = {
           organization_id: string
           owner_id?: string | null
           owner_name: string
+          proposal_details?: Json
           progress?: number
           project_type: string
           starts_on?: string | null
@@ -1134,6 +1136,7 @@ export type Database = {
           organization_id?: string
           owner_id?: string | null
           owner_name?: string
+          proposal_details?: Json
           progress?: number
           project_type?: string
           starts_on?: string | null

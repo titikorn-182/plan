@@ -14,6 +14,10 @@ import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createEmptyProjectProposalDetails,
+  parseProjectProposalDetails,
+} from "@/features/projects/proposal-details";
 
 const PROJECT_HEALTH_LABELS: Record<string, ProjectRow["health"]> = {
   normal: "ปกติ",
@@ -142,7 +146,7 @@ export async function getProjectFormOptions(
       ? supabase
           .from("projects")
           .select(
-            "id,version,code,organization_id,fiscal_year_id,budget_request_id,title_th,project_type,owner_name,coordinator_name,approved_budget,disbursement_target,starts_on,ends_on,status",
+            "id,version,code,organization_id,fiscal_year_id,budget_request_id,title_th,project_type,owner_name,coordinator_name,approved_budget,disbursement_target,starts_on,ends_on,status,proposal_details",
           )
           .eq("id", projectId)
           .maybeSingle()
@@ -152,6 +156,12 @@ export async function getProjectFormOptions(
   if (error) return result(null, error);
 
   const row = recordResult.data;
+  const parsedProposal = parseProjectProposalDetails(
+    row?.proposal_details ?? createEmptyProjectProposalDetails(),
+  );
+  if (!parsedProposal.success) {
+    return { data: null, error: "รายละเอียดแบบเสนอโครงการที่บันทึกไว้ไม่ถูกต้อง" };
+  }
   const pendingApproval = row
     ? await supabase
         .from("approval_tasks")
@@ -188,6 +198,7 @@ export async function getProjectFormOptions(
           endsOn: row.ends_on ?? "",
           status: row.status,
           pendingApproval: (pendingApproval.count ?? 0) > 0,
+          proposalDetails: parsedProposal.data,
         }
       : null,
   });

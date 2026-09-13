@@ -5,6 +5,11 @@ import { actOnApprovalAction } from "@/features/approvals/actions";
 import { saveDisbursementAction } from "@/features/disbursements/actions";
 import { createEmptyBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import { createEmptyBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
+import {
+  createEmptyProjectProposalDetails,
+  FACULTY_STRATEGIES,
+  PROJECT_CHARACTERISTICS,
+} from "@/features/projects/proposal-details";
 
 // Only the network/cache boundary is mocked; validation, authentication checks,
 // action orchestration, and error translation execute the production code.
@@ -46,6 +51,29 @@ vi.mock("next/cache", () => ({ revalidatePath: mock.revalidate }));
 
 const projectId = "50000000-0000-4000-8000-000000000001";
 const yearId = "30000000-0000-4000-8000-000000000001";
+const projectProposalDetails = {
+  ...createEmptyProjectProposalDetails(),
+  characteristics: [PROJECT_CHARACTERISTICS[0]],
+  strategies: [FACULTY_STRATEGIES[0]],
+  rationale: "หลักการและเหตุผลสำหรับโครงการทดสอบ",
+  objectives: "วัตถุประสงค์สำหรับโครงการทดสอบ",
+  targetGroup: "นักศึกษา 30 คน",
+  goalIndicators: [
+    {
+      goal: "ผู้เรียนมีทักษะที่จำเป็น",
+      longTermIndicator: "",
+      actionIndicator: "ร้อยละผู้ผ่านเกณฑ์",
+      unit: "ร้อยละ",
+      target: "80",
+    },
+  ],
+  actionPlan: [{ description: "ดำเนินกิจกรรม", months: [0] }],
+  location: "คณะรัฐศาสตร์",
+  expenseItems: [{ category: "ค่าตอบแทน" as const, description: "ค่าตอบแทนวิทยากร", amount: 1000 }],
+  expectedResults: "ผู้เข้าร่วมได้รับความรู้ตามเป้าหมาย",
+  processIndicator: "ดำเนินงานแล้วเสร็จตามแผน",
+  outputIndicator: "ผู้เข้าร่วมอย่างน้อย 30 คน",
+};
 const projectInput = {
   id: projectId,
   version: "3",
@@ -61,6 +89,7 @@ const projectInput = {
   disbursementTarget: "25",
   startsOn: "2026-10-01",
   endsOn: "2027-09-30",
+  proposalDetails: JSON.stringify(projectProposalDetails),
 };
 const sourceProposalDetails = {
   ...createEmptyBudgetProposalDetails(),
@@ -92,8 +121,11 @@ describe("project action orchestration", () => {
     { title: "x" },
     { endsOn: "2026-09-30" },
     { endsOn: "2027-02-30" },
-    { approvedBudget: "-1" },
-    { intent: "submit", approvedBudget: "0" },
+    { proposalDetails: "not-json" },
+    {
+      intent: "submit",
+      proposalDetails: JSON.stringify({ ...projectProposalDetails, expenseItems: [] }),
+    },
   ])("rejects invalid input before connecting: %j", async (invalid) => {
     expect((await saveProjectAction({}, form({ ...projectInput, ...invalid }))).success).toBe(
       false,
@@ -197,6 +229,7 @@ describe("budget, approval, and spending actions", () => {
         budgetCycleId: "40000000-0000-4000-8000-000000000001",
         rationale: "เหตุผลทดสอบ",
         amount: "1000",
+        proposalDetails: JSON.stringify(sourceProposalDetails),
       }),
     );
     expect(result).toMatchObject({
@@ -413,6 +446,7 @@ describe("budget expense action persistence", () => {
     budgetCycleId: "40000000-0000-4000-8000-000000000001",
     rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
     amount: "1000",
+    proposalDetails: JSON.stringify(sourceProposalDetails),
   };
 
   it("accepts the form identifier without a named id input", async () => {

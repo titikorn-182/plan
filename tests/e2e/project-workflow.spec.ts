@@ -71,9 +71,25 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
   try {
     await staff.page.goto("/projects/new");
     await staff.page.getByLabel("ชื่อโครงการ", { exact: false }).first().fill(title);
-    await staff.page.getByLabel("วงเงินอนุมัติ (บาท)").fill("1000");
+    await staff.page.getByLabel("การพัฒนาการจัดการเรียนการสอน หรือนักศึกษา").check();
+    await staff.page.getByLabel(/กลยุทธ์ที่ 1/).check();
+    await staff.page.getByLabel("หลักการและเหตุผล").fill("พัฒนาการเรียนรู้ของนักศึกษา");
+    await staff.page.getByLabel("วัตถุประสงค์").fill("ยกระดับทักษะการเรียนรู้");
+    await staff.page.getByLabel("กลุ่มเป้าหมาย").fill("นักศึกษา 30 คน");
+    await staff.page.getByPlaceholder("เป้าประสงค์").fill("ผู้เรียนมีทักษะที่จำเป็น");
+    await staff.page.getByPlaceholder("ตัววัดแผนปฏิบัติการ").fill("ร้อยละผู้ผ่านเกณฑ์");
+    await staff.page.getByPlaceholder("หน่วย").fill("ร้อยละ");
+    await staff.page.getByPlaceholder("ค่าเป้าหมาย").fill("80");
+    await staff.page.getByPlaceholder("ขั้นตอนที่ 1").fill("ดำเนินกิจกรรมตามแผน");
+    await staff.page.getByLabel("ต.ค.").check();
     await staff.page.getByLabel("วันเริ่มต้น").fill("2026-10-01");
     await staff.page.getByLabel("วันสิ้นสุด").fill("2027-09-30");
+    await staff.page.getByLabel("สถานที่ดำเนินการ").fill("คณะรัฐศาสตร์");
+    await staff.page.getByPlaceholder("รายละเอียดรายการค่าใช้จ่าย").fill("ค่าตอบแทนวิทยากร");
+    await staff.page.getByPlaceholder("0.00").fill("1000");
+    await staff.page.getByLabel("ผลที่คาดว่าจะได้รับ").fill("ผู้เข้าร่วมมีทักษะเพิ่มขึ้น");
+    await staff.page.getByLabel("ตัวชี้วัดระดับกระบวนการ").fill("ดำเนินงานแล้วเสร็จตามแผน");
+    await staff.page.getByLabel("ตัวชี้วัดระดับผลผลิต").fill("ผู้เข้าร่วมอย่างน้อย 30 คน");
     await staff.page.getByRole("button", { name: "บันทึกฉบับร่าง", exact: true }).click();
     const projectForm = staff.page.locator(".budget-request-form");
     await expect(projectForm.getByRole("status")).toContainText("บันทึกฉบับร่าง");

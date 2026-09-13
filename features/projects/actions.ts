@@ -6,12 +6,18 @@ import {
   authenticated,
   friendlyError,
   invalid,
-  moneySchema,
   revalidateOperationPaths,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
 import { isProjectPeriodValid } from "@/lib/operations/rules";
 import { INPUT_LIMITS } from "@/lib/config/limits";
+import {
+  deriveProjectType,
+  parseProjectProposalDetails,
+  sumProjectExpenses,
+  validateProjectProposalForSubmission,
+} from "@/features/projects/proposal-details";
+import type { Json } from "@/types/database.generated";
 
 const projectSchema = z.object({
   id: uuidOrEmpty,
@@ -21,13 +27,12 @@ const projectSchema = z.object({
   fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
   budgetRequestId: uuidOrEmpty,
   title: z.string().trim().min(5, "ชื่อโครงการต้องมีอย่างน้อย 5 ตัวอักษร").max(INPUT_LIMITS.title),
-  projectType: z.string().trim().min(2, "กรุณาระบุประเภทโครงการ").max(INPUT_LIMITS.shortText),
   ownerName: z.string().trim().min(2, "กรุณาระบุเจ้าของโครงการ").max(INPUT_LIMITS.personName),
   coordinatorName: z.string().trim().min(2, "กรุณาระบุผู้ประสานงาน").max(INPUT_LIMITS.personName),
-  approvedBudget: moneySchema,
   disbursementTarget: z.coerce.number().min(0).max(100),
   startsOn: z.string().date("กรุณาระบุวันเริ่มต้น"),
   endsOn: z.string().date("กรุณาระบุวันสิ้นสุด"),
+  proposalDetails: z.string().min(2, "ไม่พบรายละเอียดแบบเสนอโครงการ"),
 });
 
 export async function saveProjectAction(
@@ -37,6 +42,15 @@ export async function saveProjectAction(
   const parsed = projectSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
+  const proposal = parseProjectProposalDetails(input.proposalDetails);
+  if (!proposal.success) {
+    return {
+      ...previous,
+      success: false,
+      errors: proposal.errors,
+      message: "รายละเอียดแบบเสนอโครงการไม่ถูกต้อง",
+    };
+  }
 
   if (!isProjectPeriodValid(input.startsOn, input.endsOn)) {
     return {
@@ -46,15 +60,18 @@ export async function saveProjectAction(
       message: "ช่วงเวลาดำเนินงานไม่ถูกต้อง",
     };
   }
-  if (input.intent === "submit" && input.approvedBudget <= 0) {
-    return {
-      ...previous,
-      success: false,
-      errors: { approvedBudget: ["ต้องระบุวงเงินมากกว่า 0 ก่อนส่งอนุมัติ"] },
-      message: "ข้อมูลยังไม่พร้อมส่ง",
-    };
+  const approvedBudget = sumProjectExpenses(proposal.data);
+  if (input.intent === "submit") {
+    const proposalErrors = validateProjectProposalForSubmission(proposal.data);
+    if (Object.keys(proposalErrors).length > 0) {
+      return {
+        ...previous,
+        success: false,
+        errors: proposalErrors,
+        message: "กรุณากรอกแบบเสนอโครงการให้ครบก่อนส่งอนุมัติ",
+      };
+    }
   }
-
   const { supabase, userId } = await authenticated();
   if (!userId)
     return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
@@ -80,11 +97,12 @@ export async function saveProjectAction(
     owner_name: input.ownerName,
     coordinator_name: input.coordinatorName,
     title_th: input.title,
-    project_type: input.projectType,
-    approved_budget: input.approvedBudget,
+    project_type: deriveProjectType(proposal.data),
+    approved_budget: approvedBudget,
     disbursement_target: input.disbursementTarget,
     starts_on: input.startsOn,
     ends_on: input.endsOn,
+    proposal_details: proposal.data as Json,
     updated_by: userId,
   };
   const mutation = input.id

@@ -1,19 +1,27 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { CalendarRange, CircleDollarSign, ClipboardCheck, UserRound } from "lucide-react";
+import { CalendarRange, CircleDollarSign, ClipboardCheck, FileText, UserRound } from "lucide-react";
 import { saveProjectAction } from "@/features/projects/actions";
 import type { OperationState } from "@/features/shared/action-state";
-import {
-  FormActions,
-  FieldError,
-  FieldLabel,
-  FormNotice,
-  FormTopbar,
-  fieldClass,
-} from "@/components/ui/operation-form";
-import { RegisterSection } from "@/components/ui/module-primitives";
+import { FormActions, FormNotice, FormTopbar } from "@/components/ui/operation-form";
 import type { ProjectFormOptions } from "@/features/projects/types";
+import { createEmptyProjectProposalDetails } from "@/features/projects/proposal-details";
+import {
+  ProposalAlignment,
+  ProposalBasics,
+  ProposalBudget,
+  ProposalPlan,
+  ProposalResults,
+} from "@/features/projects/components/project-proposal-sections";
+
+const SECTION_LINKS = [
+  ["project-basics", "ข้อมูลโครงการ"],
+  ["project-alignment", "ความสอดคล้อง"],
+  ["project-plan", "แผนปฏิบัติการ"],
+  ["project-budget", "งบประมาณ"],
+  ["project-results", "ผลลัพธ์"],
+] as const;
 
 export function ProjectForm({ options }: { options: ProjectFormOptions }) {
   const record = options.record;
@@ -25,247 +33,200 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
   const [fiscalYearId, setFiscalYearId] = useState(
     record?.fiscalYearId ?? options.fiscalYears[0]?.id ?? "",
   );
-  const [budget, setBudget] = useState(String(record?.approvedBudget ?? 0));
-  const [target, setTarget] = useState(String(record?.disbursementTarget ?? 25));
+  const [title, setTitle] = useState(record?.title ?? "");
   const [ownerName, setOwnerName] = useState(record?.ownerName ?? options.defaultOwnerName);
-  const [coordinatorName, setCoordinatorName] = useState(
-    record?.coordinatorName ?? options.defaultOwnerName,
-  );
+  const [target, setTarget] = useState(String(record?.disbursementTarget ?? 25));
   const [startsOn, setStartsOn] = useState(record?.startsOn ?? "");
   const [endsOn, setEndsOn] = useState(record?.endsOn ?? "");
+  const [details, setDetails] = useState(() => {
+    if (record) return record.proposalDetails;
+    return {
+      ...createEmptyProjectProposalDetails(),
+      responsiblePeople: [{ name: "", position: "" }],
+      goalIndicators: [
+        { goal: "", longTermIndicator: "", actionIndicator: "", unit: "", target: "" },
+      ],
+      actionPlan: [{ description: "", months: [] }],
+      expenseItems: [{ category: "ค่าตอบแทน" as const, description: "", amount: 0 }],
+    };
+  });
   const editable = !record || (record.status === "proposed" && !record.pendingApproval);
-  const readiness = useMemo(() => {
-    let count = 0;
-    if (ownerName.trim() && coordinatorName.trim()) count++;
-    if (Number(budget) > 0 && Number(target) >= 0 && Number(target) <= 100) count++;
-    if (startsOn && endsOn && endsOn >= startsOn) count++;
-    return count;
-  }, [budget, coordinatorName, endsOn, ownerName, startsOn, target]);
+  const totalBudget = details.expenseItems.reduce((sum, item) => sum + item.amount, 0);
+  const readiness = useMemo(
+    () => [
+      Boolean(
+        title.trim() &&
+        ownerName.trim() &&
+        organizationId &&
+        fiscalYearId &&
+        (details.characteristics.length || details.otherCharacteristic.trim()),
+      ),
+      Boolean(
+        details.strategies.length &&
+        details.rationale.trim() &&
+        details.objectives.trim() &&
+        details.targetGroup.trim() &&
+        details.actionPlan.some((item) => item.description.trim() && item.months.length) &&
+        startsOn &&
+        endsOn &&
+        endsOn >= startsOn,
+      ),
+      Boolean(
+        totalBudget > 0 &&
+        Number(target) >= 0 &&
+        Number(target) <= 100 &&
+        details.expectedResults.trim() &&
+        details.processIndicator.trim() &&
+        details.outputIndicator.trim(),
+      ),
+    ],
+    [
+      details,
+      endsOn,
+      fiscalYearId,
+      organizationId,
+      ownerName,
+      startsOn,
+      target,
+      title,
+      totalBudget,
+    ],
+  );
+  const completed = readiness.filter(Boolean).length;
+  const shared = { details, setDetails, errors: state.errors, disabled: !editable };
+  const coordinatorName =
+    details.responsiblePeople.find((person) => person.name.trim())?.name ?? ownerName;
+
   return (
     <form action={action} className="budget-request-form pb-24">
       <input type="hidden" name="id" value={state.id ?? record?.id ?? ""} />
       <input type="hidden" name="version" value={state.version ?? record?.version ?? 1} />
+      <input type="hidden" name="coordinatorName" value={coordinatorName} />
+      <input type="hidden" name="proposalDetails" value={JSON.stringify(details)} />
       <FormTopbar backHref="/projects" backLabel="กลับทะเบียนโครงการ" state={state} />
       <FormNotice
         state={state}
         idle={
           editable
-            ? "บันทึกเป็นฉบับร่างได้ตลอดเวลา และส่งเข้าสู่ workflow เมื่อข้อมูลพร้อม"
+            ? "บันทึกเป็นฉบับร่างได้ตลอดเวลา ระบบจะตรวจความครบถ้วนอีกครั้งเมื่อส่งอนุมัติ"
             : "ข้อเสนอนี้อยู่ระหว่างอนุมัติหรือเริ่มดำเนินงานแล้ว จึงเปิดแบบอ่านอย่างเดียว"
         }
       />
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <RegisterSection
-          title={record ? `แก้ไขข้อเสนอโครงการ ${record.code}` : "สร้างข้อเสนอโครงการ"}
-          aside={
-            <span className="text-xs text-stone-500">
-              เวอร์ชัน {state.version ?? record?.version ?? 1}
-            </span>
-          }
+
+      <header className="mt-5 border border-stone-200 bg-white px-5 py-5 sm:px-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold tracking-[-0.02em] text-stone-950 sm:text-2xl">
+              {record ? `แก้ไขข้อเสนอโครงการ ${record.code}` : "แบบเสนอโครงการ"}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+              จัดทำข้อเสนอโครงการที่ได้รับจัดสรรจากเงินรายได้ พร้อมแผนปฏิบัติการ งบประมาณ
+              และตัวชี้วัดในที่เดียว
+            </p>
+          </div>
+          <span className="border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-800">
+            เวอร์ชัน {state.version ?? record?.version ?? 1}
+          </span>
+        </div>
+        <nav
+          className="mt-5 flex gap-px overflow-x-auto border border-stone-200 bg-stone-200"
+          aria-label="หัวข้อแบบเสนอโครงการ"
         >
-          <fieldset className="grid gap-5 p-5 sm:p-6 md:grid-cols-2" disabled={!editable}>
-            <label className="md:col-span-2">
-              <FieldLabel required>ชื่อโครงการ</FieldLabel>
-              <input
-                className={fieldClass}
-                name="title"
-                defaultValue={record?.title}
-                maxLength={300}
-                required
-                aria-invalid={Boolean(state.errors?.title?.length)}
-                aria-describedby={state.errors?.title?.length ? "project-title-error" : undefined}
-              />
-              <FieldError id="project-title-error" errors={state.errors?.title} />
-            </label>
-            <label>
-              <FieldLabel required>หน่วยงานเจ้าของโครงการ</FieldLabel>
-              <select
-                className={fieldClass}
-                name="organizationId"
-                value={organizationId}
-                onChange={(event) => setOrganizationId(event.target.value)}
-                required
-                aria-invalid={Boolean(state.errors?.organizationId?.length)}
-                aria-describedby={
-                  state.errors?.organizationId?.length ? "project-organization-error" : undefined
-                }
-              >
-                {options.organizations.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.code} · {item.label}
-                  </option>
-                ))}
-              </select>
-              <FieldError id="project-organization-error" errors={state.errors?.organizationId} />
-            </label>
-            <label>
-              <FieldLabel required>ปีงบประมาณ</FieldLabel>
-              <select
-                className={fieldClass}
-                name="fiscalYearId"
-                value={fiscalYearId}
-                onChange={(event) => setFiscalYearId(event.target.value)}
-                required
-              >
-                {options.fiscalYears.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <FieldLabel>อ้างอิงคำของบที่อนุมัติ</FieldLabel>
-              <select
-                className={fieldClass}
-                name="budgetRequestId"
-                defaultValue={record?.budgetRequestId ?? ""}
-              >
-                <option value="">ไม่ผูกคำของบ</option>
-                {options.budgetRequests.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <FieldLabel required>ประเภทโครงการ</FieldLabel>
-              <select
-                className={fieldClass}
-                name="projectType"
-                defaultValue={record?.projectType ?? "พัฒนาการเรียนการสอน"}
-                aria-invalid={Boolean(state.errors?.projectType?.length)}
-                aria-describedby={
-                  state.errors?.projectType?.length ? "project-type-error" : undefined
-                }
-              >
-                <option>พัฒนาการเรียนการสอน</option>
-                <option>วิจัยและนวัตกรรม</option>
-                <option>บริการวิชาการ</option>
-                <option>พัฒนาระบบบริหาร</option>
-                <option>โครงสร้างพื้นฐานดิจิทัล</option>
-                <option>สิ่งก่อสร้าง</option>
-              </select>
-              <FieldError id="project-type-error" errors={state.errors?.projectType} />
-            </label>
-            <label>
-              <FieldLabel required>เจ้าของโครงการ</FieldLabel>
-              <input
-                className={fieldClass}
-                name="ownerName"
-                value={ownerName}
-                onChange={(event) => setOwnerName(event.target.value)}
-                maxLength={180}
-                required
-                aria-invalid={Boolean(state.errors?.ownerName?.length)}
-                aria-describedby={
-                  state.errors?.ownerName?.length ? "project-owner-error" : undefined
-                }
-              />
-              <FieldError id="project-owner-error" errors={state.errors?.ownerName} />
-            </label>
-            <label>
-              <FieldLabel required>ผู้ประสานงาน</FieldLabel>
-              <input
-                className={fieldClass}
-                name="coordinatorName"
-                value={coordinatorName}
-                onChange={(event) => setCoordinatorName(event.target.value)}
-                maxLength={180}
-                required
-                aria-invalid={Boolean(state.errors?.coordinatorName?.length)}
-                aria-describedby={
-                  state.errors?.coordinatorName?.length ? "project-coordinator-error" : undefined
-                }
-              />
-              <FieldError id="project-coordinator-error" errors={state.errors?.coordinatorName} />
-            </label>
-            <label>
-              <FieldLabel required>วงเงินอนุมัติ (บาท)</FieldLabel>
-              <input
-                className={`${fieldClass} text-right tabular-nums`}
-                name="approvedBudget"
-                type="number"
-                min="0"
-                step="0.01"
-                value={budget}
-                onChange={(event) => setBudget(event.target.value)}
-                required
-                aria-invalid={Boolean(state.errors?.approvedBudget?.length)}
-                aria-describedby={
-                  state.errors?.approvedBudget?.length ? "project-budget-error" : undefined
-                }
-              />
-              <FieldError id="project-budget-error" errors={state.errors?.approvedBudget} />
-            </label>
-            <label>
-              <FieldLabel required>เป้าหมายเบิกจ่าย (%)</FieldLabel>
-              <input
-                className={`${fieldClass} text-right tabular-nums`}
-                name="disbursementTarget"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={target}
-                onChange={(event) => setTarget(event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              <FieldLabel required>วันเริ่มต้น</FieldLabel>
-              <input
-                className={fieldClass}
-                name="startsOn"
-                type="date"
-                value={startsOn}
-                onChange={(event) => setStartsOn(event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              <FieldLabel required>วันสิ้นสุด</FieldLabel>
-              <input
-                className={fieldClass}
-                name="endsOn"
-                type="date"
-                value={endsOn}
-                onChange={(event) => setEndsOn(event.target.value)}
-                required
-                aria-invalid={Boolean(state.errors?.endsOn?.length)}
-                aria-describedby={state.errors?.endsOn?.length ? "project-ends-error" : undefined}
-              />
-              <FieldError id="project-ends-error" errors={state.errors?.endsOn} />
-            </label>
-          </fieldset>
-        </RegisterSection>
+          {SECTION_LINKS.map(([id, label], index) => (
+            <a
+              className="min-w-max flex-1 bg-white px-4 py-3 text-center text-xs font-semibold text-stone-600 hover:bg-orange-50 hover:text-orange-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-300"
+              href={`#${id}`}
+              key={id}
+            >
+              {index + 1}. {label}
+            </a>
+          ))}
+        </nav>
+      </header>
+
+      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <main className="space-y-5">
+          <div className="scroll-mt-28" id="project-basics">
+            <ProposalBasics
+              {...shared}
+              options={options}
+              organizationId={organizationId}
+              fiscalYearId={fiscalYearId}
+              title={title}
+              ownerName={ownerName}
+              setOrganizationId={setOrganizationId}
+              setFiscalYearId={setFiscalYearId}
+              setTitle={setTitle}
+              setOwnerName={setOwnerName}
+            />
+          </div>
+          <div className="scroll-mt-28" id="project-alignment">
+            <ProposalAlignment {...shared} />
+          </div>
+          <div className="scroll-mt-28" id="project-plan">
+            <ProposalPlan
+              {...shared}
+              startsOn={startsOn}
+              endsOn={endsOn}
+              setStartsOn={setStartsOn}
+              setEndsOn={setEndsOn}
+            />
+          </div>
+          <div className="scroll-mt-28" id="project-budget">
+            <ProposalBudget {...shared} target={target} setTarget={setTarget} />
+          </div>
+          <div className="scroll-mt-28" id="project-results">
+            <ProposalResults {...shared} />
+          </div>
+        </main>
+
         <aside className="h-fit border border-stone-200 bg-white xl:sticky xl:top-[120px]">
           <header className="border-b border-stone-200 bg-[#fff4eb] px-4 py-3">
-            <h2 className="text-sm font-bold">จุดตรวจความพร้อม</h2>
+            <h2 className="text-sm font-bold">ความพร้อมก่อนส่ง</h2>
           </header>
           <div className="space-y-4 p-4 text-xs">
             <div className="flex items-center gap-3">
               <ClipboardCheck className="text-[#c9440b]" size={19} />
-              <b>ข้อมูลหลัก {readiness}/3 จุด</b>
+              <b>ข้อมูลครบ {completed}/3 จุด</b>
             </div>
             <div className="h-1.5 bg-stone-200">
-              <div className="h-full bg-[#df4a0c]" style={{ width: `${readiness * (100 / 3)}%` }} />
+              <div
+                className="h-full bg-[#df4a0c] transition-[width] duration-300"
+                style={{ width: `${completed * (100 / 3)}%` }}
+              />
             </div>
-            <ul className="space-y-3 text-stone-600">
+            <ul className="space-y-3 text-stone-700">
               <li className="flex gap-2">
-                <UserRound size={16} /> เจ้าของและผู้ประสานงาน
+                <UserRound
+                  className={readiness[0] ? "text-emerald-600" : "text-stone-400"}
+                  size={16}
+                />{" "}
+                ข้อมูลโครงการและผู้รับผิดชอบ
               </li>
               <li className="flex gap-2">
-                <CircleDollarSign size={16} /> วงเงินและเป้าหมายเบิกจ่าย
+                <CalendarRange
+                  className={readiness[1] ? "text-emerald-600" : "text-stone-400"}
+                  size={16}
+                />{" "}
+                ความสอดคล้องและแผนงาน
               </li>
               <li className="flex gap-2">
-                <CalendarRange size={16} /> ช่วงเวลาดำเนินงาน
+                <CircleDollarSign
+                  className={readiness[2] ? "text-emerald-600" : "text-stone-400"}
+                  size={16}
+                />{" "}
+                งบประมาณ ผลลัพธ์ และตัวชี้วัด
               </li>
             </ul>
-            <p className="border-t border-stone-200 pt-4 leading-5">
-              เมื่อส่ง ระบบจะสร้างงานตรวจสอบตามบทบาทและหน่วยงานโดยอัตโนมัติ
-            </p>
+            <div className="border-t border-stone-200 pt-4">
+              <p className="flex items-center gap-2 font-bold tabular-nums">
+                <FileText size={16} /> วงเงินรวม{" "}
+                {totalBudget.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท
+              </p>
+              <p className="mt-2 leading-5 text-stone-600">
+                เมื่อส่ง ระบบจะสร้างงานตรวจสอบตามบทบาทและหน่วยงานโดยอัตโนมัติ
+              </p>
+            </div>
           </div>
         </aside>
       </div>
