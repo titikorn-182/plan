@@ -58,6 +58,8 @@ const projectProposalDetails = {
   rationale: "หลักการและเหตุผลสำหรับโครงการทดสอบ",
   objectives: "วัตถุประสงค์สำหรับโครงการทดสอบ",
   targetGroup: "นักศึกษา 30 คน",
+  sdgs: ["SDG 4 การศึกษาที่มีคุณภาพ" as const],
+  sdgAlignmentDescription: "สนับสนุนการเข้าถึงการศึกษาที่มีคุณภาพ",
   startWeek: 1,
   endWeek: 4,
   goalIndicators: [

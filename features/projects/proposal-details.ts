@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { INPUT_LIMITS } from "@/lib/config/limits";
+import { SDG_OPTIONS } from "@/features/shared/sdgs";
 
 export const PROJECT_CHARACTERISTICS = [
   "การพัฒนาการจัดการเรียนการสอน หรือนักศึกษา",
@@ -68,6 +69,8 @@ const proposalSchema = z.object({
   rationale: text(),
   objectives: text(),
   targetGroup: text(),
+  sdgs: z.array(z.enum(SDG_OPTIONS)).max(SDG_OPTIONS.length),
+  sdgAlignmentDescription: text(),
   startWeek: z.number().int().min(1).max(4).nullable(),
   endWeek: z.number().int().min(1).max(4).nullable(),
   actionPlan: z
@@ -112,6 +115,8 @@ export function createEmptyProjectProposalDetails(): ProjectProposalDetails {
     rationale: "",
     objectives: "",
     targetGroup: "",
+    sdgs: [],
+    sdgAlignmentDescription: "",
     startWeek: null,
     endWeek: null,
     actionPlan: [],
@@ -175,6 +180,9 @@ export function validateProjectProposalForSubmission(
   requireText("expectedResults", "กรุณาระบุผลที่คาดว่าจะได้รับ");
   requireText("processIndicator", "กรุณาระบุตัวชี้วัดระดับกระบวนการ");
   requireText("outputIndicator", "กรุณาระบุตัวชี้วัดระดับผลผลิต");
+  if (!details.sdgs.length)
+    errors["proposalDetails.sdgs"] = ["กรุณาเลือกเป้าหมาย SDG อย่างน้อย 1 เป้าหมาย"];
+  requireText("sdgAlignmentDescription", "กรุณาอธิบายความเชื่อมโยงกับ SDG ที่เลือก");
   if (details.startWeek === null)
     errors["proposalDetails.startWeek"] = ["กรุณาเลือกสัปดาห์เริ่มต้น"];
   if (details.endWeek === null) errors["proposalDetails.endWeek"] = ["กรุณาเลือกสัปดาห์สิ้นสุด"];

@@ -67,6 +67,8 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
         details.objectives.trim() &&
         details.targetGroup.trim() &&
         details.actionPlan.some((item) => item.description.trim() && item.months.length) &&
+        details.sdgs.length > 0 &&
+        details.sdgAlignmentDescription.trim() &&
         details.startWeek !== null &&
         details.endWeek !== null &&
         startsOn &&

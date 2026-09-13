@@ -11,6 +11,7 @@ import {
   parseBudgetRequestProjectMembers,
   type BudgetRequestProjectMember,
 } from "@/features/budget-requests/project-members";
+import { SDG_OPTIONS } from "@/features/shared/sdgs";
 
 export const BUDGET_PROJECT_TYPE_SUGGESTIONS = BUDGET_REQUEST_PROJECT_TYPE_OPTIONS;
 
@@ -33,25 +34,7 @@ export const BUDGET_FUND_OPTIONS = [
   { code: "15", name: "กองทุนบุคลากร" },
 ] as const;
 
-export const BUDGET_SDG_OPTIONS = [
-  "SDG 1 ขจัดความยากจน",
-  "SDG 2 ขจัดความหิวโหย",
-  "SDG 3 การมีสุขภาพและความเป็นอยู่ที่ดี",
-  "SDG 4 การศึกษาที่มีคุณภาพ",
-  "SDG 5 ความเท่าเทียมทางเพศ",
-  "SDG 6 น้ำสะอาดและสุขาภิบาล",
-  "SDG 7 พลังงานสะอาดและจ่ายได้",
-  "SDG 8 งานที่มีคุณค่าและเศรษฐกิจที่เติบโต",
-  "SDG 9 อุตสาหกรรม นวัตกรรม โครงสร้างพื้นฐาน",
-  "SDG 10 ลดความเหลื่อมล้ำ",
-  "SDG 11 เมืองและชุมชนยั่งยืน",
-  "SDG 12 การผลิตและบริโภคที่รับผิดชอบ",
-  "SDG 13 การรับมือกับ Climate Change",
-  "SDG 14 นิเวศทางทะเลและมหาสมุทร",
-  "SDG 15 ระบบนิเวศบนบก",
-  "SDG 16 สันติภาพและสถาบันเข้มแข็ง",
-  "SDG 17 หุ้นส่วนเพื่อการพัฒนา",
-] as const;
+export const BUDGET_SDG_OPTIONS = SDG_OPTIONS;
 
 const LEGACY_BUDGET_SDG_LABELS: Readonly<Record<string, (typeof BUDGET_SDG_OPTIONS)[number]>> = {
   "SDG 8 งานที่มีคุณค่าและการเติบโตทางเศรษฐกิจ": "SDG 8 งานที่มีคุณค่าและเศรษฐกิจที่เติบโต",

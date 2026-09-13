@@ -3,6 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { FieldError, FieldLabel, areaClass, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection } from "@/components/ui/module-primitives";
+import { SdgSelector } from "@/components/ui/sdg-selector";
 import type { OperationState } from "@/features/shared/action-state";
 import type { ProjectFormOptions } from "@/features/projects/types";
 import {
@@ -583,6 +584,32 @@ export function ProposalPlan({
               </div>
             ))}
           </div>
+        </div>
+        <div className="border-t border-stone-200 pt-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-stone-950">
+              ความสอดคล้องกับการพัฒนาที่ยั่งยืน (SDGs)
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-stone-600">
+              เลือกเป้าหมายที่โครงการสนับสนุนและอธิบายความเชื่อมโยงกับผลลัพธ์ที่คาดหวัง
+            </p>
+          </div>
+          <SdgSelector
+            errorId="project-sdgs-error"
+            errors={errors?.["proposalDetails.sdgs"]}
+            selected={details.sdgs}
+            onChange={(sdgs) => setDetails({ ...details, sdgs })}
+          />
+          <label className="mt-5 block">
+            <FieldLabel required>คำอธิบายความเชื่อมโยง</FieldLabel>
+            <textarea
+              className={areaClass}
+              value={details.sdgAlignmentDescription}
+              onChange={(e) => setDetails({ ...details, sdgAlignmentDescription: e.target.value })}
+              placeholder="อธิบายว่าโครงการสนับสนุน SDG ที่เลือกอย่างไร และจะเกิดผลลัพธ์ใด"
+            />
+            <FieldError errors={errors?.["proposalDetails.sdgAlignmentDescription"]} />
+          </label>
         </div>
         <div className="grid gap-5 border-t border-stone-200 pt-5 md:grid-cols-2">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">

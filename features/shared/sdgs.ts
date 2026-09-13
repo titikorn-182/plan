@@ -1,0 +1,41 @@
+export const SDG_OPTIONS = [
+  "SDG 1 ขจัดความยากจน",
+  "SDG 2 ขจัดความหิวโหย",
+  "SDG 3 การมีสุขภาพและความเป็นอยู่ที่ดี",
+  "SDG 4 การศึกษาที่มีคุณภาพ",
+  "SDG 5 ความเท่าเทียมทางเพศ",
+  "SDG 6 น้ำสะอาดและสุขาภิบาล",
+  "SDG 7 พลังงานสะอาดและจ่ายได้",
+  "SDG 8 งานที่มีคุณค่าและเศรษฐกิจที่เติบโต",
+  "SDG 9 อุตสาหกรรม นวัตกรรม โครงสร้างพื้นฐาน",
+  "SDG 10 ลดความเหลื่อมล้ำ",
+  "SDG 11 เมืองและชุมชนยั่งยืน",
+  "SDG 12 การผลิตและบริโภคที่รับผิดชอบ",
+  "SDG 13 การรับมือกับ Climate Change",
+  "SDG 14 นิเวศทางทะเลและมหาสมุทร",
+  "SDG 15 ระบบนิเวศบนบก",
+  "SDG 16 สันติภาพและสถาบันเข้มแข็ง",
+  "SDG 17 หุ้นส่วนเพื่อการพัฒนา",
+] as const;
+
+export type SdgOption = (typeof SDG_OPTIONS)[number];
+
+export const SDG_COLORS = [
+  { background: "#e5243b", foreground: "#ffffff" },
+  { background: "#dda63a", foreground: "#201a0c" },
+  { background: "#4c9f38", foreground: "#ffffff" },
+  { background: "#c5192d", foreground: "#ffffff" },
+  { background: "#ff3a21", foreground: "#ffffff" },
+  { background: "#26bde2", foreground: "#102126" },
+  { background: "#fcc30b", foreground: "#211d05" },
+  { background: "#a21942", foreground: "#ffffff" },
+  { background: "#fd6925", foreground: "#211008" },
+  { background: "#dd1367", foreground: "#ffffff" },
+  { background: "#fd9d24", foreground: "#211409" },
+  { background: "#bf8b2e", foreground: "#211909" },
+  { background: "#3f7e44", foreground: "#ffffff" },
+  { background: "#0a97d9", foreground: "#ffffff" },
+  { background: "#56c02b", foreground: "#102108" },
+  { background: "#00689d", foreground: "#ffffff" },
+  { background: "#19486a", foreground: "#ffffff" },
+] as const;

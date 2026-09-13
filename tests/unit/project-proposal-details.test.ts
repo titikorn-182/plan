@@ -7,12 +7,17 @@ import {
   sumProjectExpenses,
   validateProjectProposalForSubmission,
 } from "@/features/projects/proposal-details";
+import { SDG_OPTIONS } from "@/features/shared/sdgs";
 
 describe("project proposal details", () => {
   it("upgrades an empty stored object to the current structure", () => {
     const parsed = parseProjectProposalDetails({});
     expect(parsed.success).toBe(true);
-    if (parsed.success) expect(parsed.data.actionPlan).toEqual([]);
+    if (parsed.success) {
+      expect(parsed.data.actionPlan).toEqual([]);
+      expect(parsed.data.sdgs).toEqual([]);
+      expect(parsed.data.sdgAlignmentDescription).toBe("");
+    }
   });
 
   it("totals expense rows and derives the register project type", () => {
@@ -38,5 +43,15 @@ describe("project proposal details", () => {
   it("rejects unsafe shapes without using untyped values", () => {
     expect(parseProjectProposalDetails({ actionPlan: "invalid" }).success).toBe(false);
     expect(parseProjectProposalDetails("not-json").success).toBe(false);
+  });
+
+  it("accepts known SDGs and rejects unknown goals", () => {
+    const valid = parseProjectProposalDetails({
+      sdgs: [SDG_OPTIONS[3], SDG_OPTIONS[16]],
+      sdgAlignmentDescription: "สนับสนุนการศึกษาและความร่วมมือ",
+    });
+    expect(valid.success).toBe(true);
+    if (valid.success) expect(valid.data.sdgs).toEqual([SDG_OPTIONS[3], SDG_OPTIONS[16]]);
+    expect(parseProjectProposalDetails({ sdgs: ["SDG 99"] }).success).toBe(false);
   });
 });

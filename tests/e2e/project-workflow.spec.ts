@@ -82,6 +82,10 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.getByPlaceholder("ค่าเป้าหมาย").fill("80");
     await staff.page.getByPlaceholder("ขั้นตอนที่ 1").fill("ดำเนินกิจกรรมตามแผน");
     await staff.page.getByLabel("ต.ค.").check();
+    await staff.page.getByLabel(/SDG 4 การศึกษาที่มีคุณภาพ/).check();
+    await staff.page
+      .getByPlaceholder("อธิบายว่าโครงการสนับสนุน SDG ที่เลือกอย่างไร")
+      .fill("สนับสนุนการเรียนรู้ที่มีคุณภาพและเข้าถึงได้");
     await staff.page.getByLabel("วันเริ่มต้น").fill("2026-10-01");
     await staff.page.getByLabel("สัปดาห์เริ่มต้น").selectOption("1");
     await staff.page.getByLabel("วันสิ้นสุด").fill("2027-09-30");
