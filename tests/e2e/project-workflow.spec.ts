@@ -95,7 +95,11 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.getByLabel("สัปดาห์สิ้นสุด").selectOption("4");
     await staff.page.getByLabel("สถานที่ดำเนินการ").fill("คณะรัฐศาสตร์");
     await staff.page.getByPlaceholder("รายละเอียดรายการค่าใช้จ่าย").fill("ค่าตอบแทนวิทยากร");
-    await staff.page.getByPlaceholder("0.00").fill("1000");
+    await staff.page.getByLabel("อัตรา").fill("1000");
+    await staff.page.getByLabel("หน่วย").fill("1");
+    await staff.page.getByLabel("จำนวน").fill("1");
+    await staff.page.getByLabel("ครั้ง").fill("1");
+    await expect(staff.page.getByLabel("จำนวนเงินรวมรายการที่ 1")).toHaveText("1,000.00");
     await staff.page.getByLabel("ผลที่คาดว่าจะได้รับ").fill("ผู้เข้าร่วมมีทักษะเพิ่มขึ้น");
     await staff.page.getByLabel("ตัวชี้วัดระดับกระบวนการ").fill("ดำเนินงานแล้วเสร็จตามแผน");
     await staff.page.getByLabel("ตัวชี้วัดระดับผลผลิต").fill("ผู้เข้าร่วมอย่างน้อย 30 คน");

@@ -38,7 +38,42 @@ export const FISCAL_MONTHS = [
   "ก.ย.",
 ] as const;
 
+const MAX_PROJECT_EXPENSE_AMOUNT = 999_999_999_999;
+const MAX_PROJECT_EXPENSE_FACTOR = 999_999;
+
+export type ProjectExpenseCalculation = {
+  rate: number;
+  units: number;
+  quantity: number;
+  occurrences: number;
+};
+
+export function calculateProjectExpenseAmount(item: ProjectExpenseCalculation): number {
+  const amount = item.rate * item.units * item.quantity * item.occurrences;
+  return Number.isFinite(amount) ? Math.round((amount + Number.EPSILON) * 100) / 100 : 0;
+}
+
 const text = (max: number = INPUT_LIMITS.longText) => z.string().trim().max(max);
+const expenseFactor = z.number().finite().int().min(0).max(MAX_PROJECT_EXPENSE_FACTOR);
+const expenseItemSchema = z
+  .object({
+    category: z.enum(EXPENSE_CATEGORIES),
+    description: text(INPUT_LIMITS.title),
+    rate: z.number().finite().min(0).max(MAX_PROJECT_EXPENSE_AMOUNT),
+    units: expenseFactor,
+    quantity: expenseFactor,
+    occurrences: expenseFactor,
+    amount: z.number().finite().min(0).max(MAX_PROJECT_EXPENSE_AMOUNT),
+  })
+  .superRefine((item, context) => {
+    if (calculateProjectExpenseAmount(item) > MAX_PROJECT_EXPENSE_AMOUNT) {
+      context.addIssue({
+        code: "custom",
+        path: ["amount"],
+        message: "จำนวนเงินรวมต้องไม่เกิน 999,999,999,999 บาท",
+      });
+    }
+  });
 const proposalSchema = z.object({
   characteristics: z.array(z.enum(PROJECT_CHARACTERISTICS)).max(PROJECT_CHARACTERISTICS.length),
   otherCharacteristic: text(INPUT_LIMITS.title),
@@ -82,15 +117,7 @@ const proposalSchema = z.object({
     )
     .max(40),
   location: text(INPUT_LIMITS.title),
-  expenseItems: z
-    .array(
-      z.object({
-        category: z.enum(EXPENSE_CATEGORIES),
-        description: text(INPUT_LIMITS.title),
-        amount: z.number().finite().min(0).max(999_999_999_999),
-      }),
-    )
-    .max(100),
+  expenseItems: z.array(expenseItemSchema).max(100),
   expectedResults: text(),
   processIndicator: text(),
   outputIndicator: text(),
@@ -100,6 +127,18 @@ export type ProjectProposalDetails = z.infer<typeof proposalSchema>;
 export type ProjectProposalParseResult =
   | { success: true; data: ProjectProposalDetails }
   | { success: false; errors: Record<string, string[]> };
+
+export function createEmptyProjectExpenseItem(): ProjectProposalDetails["expenseItems"][number] {
+  return {
+    category: "ค่าตอบแทน",
+    description: "",
+    rate: 0,
+    units: 0,
+    quantity: 0,
+    occurrences: 0,
+    amount: 0,
+  };
+}
 
 export function createEmptyProjectProposalDetails(): ProjectProposalDetails {
   return {
@@ -141,10 +180,41 @@ export function parseProjectProposalDetails(input: unknown): ProjectProposalPars
     }
   }
   if (source && typeof source === "object" && !Array.isArray(source)) {
-    source = { ...createEmptyProjectProposalDetails(), ...(source as Record<string, unknown>) };
+    const record = source as Record<string, unknown>;
+    const expenseItems = Array.isArray(record.expenseItems)
+      ? record.expenseItems.map((item) => {
+          if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+          const expense = item as Record<string, unknown>;
+          const legacyAmount = typeof expense.amount === "number" ? expense.amount : 0;
+          const hasCalculation = ["rate", "units", "quantity", "occurrences"].some(
+            (key) => key in expense,
+          );
+          return {
+            ...expense,
+            rate: hasCalculation ? expense.rate : legacyAmount,
+            units: hasCalculation ? expense.units : legacyAmount > 0 ? 1 : 0,
+            quantity: hasCalculation ? expense.quantity : legacyAmount > 0 ? 1 : 0,
+            occurrences: hasCalculation ? expense.occurrences : legacyAmount > 0 ? 1 : 0,
+          };
+        })
+      : record.expenseItems === undefined
+        ? []
+        : record.expenseItems;
+    source = { ...createEmptyProjectProposalDetails(), ...record, expenseItems };
   }
   const parsed = proposalSchema.safeParse(source ?? createEmptyProjectProposalDetails());
-  if (parsed.success) return { success: true, data: parsed.data };
+  if (parsed.success) {
+    return {
+      success: true,
+      data: {
+        ...parsed.data,
+        expenseItems: parsed.data.expenseItems.map((item) => ({
+          ...item,
+          amount: calculateProjectExpenseAmount(item),
+        })),
+      },
+    };
+  }
   const errors: Record<string, string[]> = {};
   for (const issue of parsed.error.issues) {
     const key = issue.path.length ? `proposalDetails.${issue.path.join(".")}` : "proposalDetails";
@@ -154,7 +224,12 @@ export function parseProjectProposalDetails(input: unknown): ProjectProposalPars
 }
 
 export function sumProjectExpenses(details: ProjectProposalDetails): number {
-  return details.expenseItems.reduce((sum, item) => sum + item.amount, 0);
+  return (
+    details.expenseItems.reduce(
+      (sum, item) => sum + Math.round(calculateProjectExpenseAmount(item) * 100),
+      0,
+    ) / 100
+  );
 }
 
 export function deriveProjectType(details: ProjectProposalDetails): string {
@@ -199,10 +274,15 @@ export function validateProjectProposalForSubmission(
   if (sumProjectExpenses(details) <= 0)
     errors["proposalDetails.expenseItems"] = ["กรุณาเพิ่มรายละเอียดงบประมาณมากกว่า 0 บาท"];
   details.expenseItems.forEach((item, index) => {
-    if (item.amount > 0 && !item.description)
+    const prefix = `proposalDetails.expenseItems.${index}`;
+    if (!item.description)
       errors[`proposalDetails.expenseItems.${index}.description`] = [
         "กรุณาระบุรายละเอียดรายการค่าใช้จ่าย",
       ];
+    if (item.rate <= 0) errors[`${prefix}.rate`] = ["กรุณาระบุอัตรามากกว่า 0 บาท"];
+    if (item.units <= 0) errors[`${prefix}.units`] = ["กรุณาระบุหน่วยมากกว่า 0"];
+    if (item.quantity <= 0) errors[`${prefix}.quantity`] = ["กรุณาระบุจำนวนมากกว่า 0"];
+    if (item.occurrences <= 0) errors[`${prefix}.occurrences`] = ["กรุณาระบุครั้งมากกว่า 0"];
   });
   details.responsiblePeople.forEach((person, index) => {
     if (person.position && !person.name)

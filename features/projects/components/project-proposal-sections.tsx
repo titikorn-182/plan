@@ -7,6 +7,8 @@ import { SdgSelector } from "@/components/ui/sdg-selector";
 import type { OperationState } from "@/features/shared/action-state";
 import type { ProjectFormOptions } from "@/features/projects/types";
 import {
+  calculateProjectExpenseAmount,
+  createEmptyProjectExpenseItem,
   EXPENSE_CATEGORIES,
   EFFICIENCY_CHECKS,
   FACULTY_STRATEGIES,
@@ -706,7 +708,24 @@ export function ProposalBudget({
   target,
   setTarget,
 }: Props & { target: string; setTarget: (value: string) => void }) {
-  const total = details.expenseItems.reduce((sum, item) => sum + item.amount, 0);
+  const total =
+    details.expenseItems.reduce(
+      (sum, item) => sum + Math.round(calculateProjectExpenseAmount(item) * 100),
+      0,
+    ) / 100;
+  const updateExpenseItem = (
+    index: number,
+    values: Partial<ProjectProposalDetails["expenseItems"][number]>,
+  ) => {
+    const next = { ...details.expenseItems[index], ...values };
+    setDetails({
+      ...details,
+      expenseItems: replaceAt(details.expenseItems, index, {
+        ...next,
+        amount: calculateProjectExpenseAmount(next),
+      }),
+    });
+  };
   return (
     <RegisterSection
       title="รายละเอียดงบประมาณ"
@@ -719,8 +738,8 @@ export function ProposalBudget({
       <fieldset className="space-y-4 p-5 sm:p-6" disabled={disabled}>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <p className="max-w-2xl text-xs leading-5 text-stone-600">
-            แจกแจงเฉพาะค่าตอบแทน ค่าใช้สอย และค่าวัสดุ ระบบจะรวมเป็นวงเงินอนุมัติให้อัตโนมัติ
-            และถือถัวเฉลี่ยได้ทุกรายการ
+            ระบุอัตรา หน่วย จำนวน และจำนวนครั้งของแต่ละรายการ ระบบจะคำนวณจำนวนเงินรวมและ
+            วงเงินอนุมัติให้อัตโนมัติ
           </p>
           <button
             className="inline-flex min-h-10 items-center gap-2 border border-orange-300 px-4 text-sm font-bold text-orange-800 hover:bg-orange-50"
@@ -728,10 +747,7 @@ export function ProposalBudget({
             onClick={() =>
               setDetails({
                 ...details,
-                expenseItems: [
-                  ...details.expenseItems,
-                  { category: "ค่าตอบแทน", description: "", amount: 0 },
-                ],
+                expenseItems: [...details.expenseItems, createEmptyProjectExpenseItem()],
               })
             }
           >
@@ -739,66 +755,171 @@ export function ProposalBudget({
           </button>
         </div>
         <FieldError errors={errors?.["proposalDetails.expenseItems"]} />
+        <div
+          className="hidden gap-3 border border-stone-200 bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700 xl:grid xl:grid-cols-[minmax(260px,1fr)_120px_90px_90px_90px_150px_44px]"
+          aria-hidden="true"
+        >
+          <span>รายการค่าใช้จ่าย</span>
+          <span className="text-right">อัตรา</span>
+          <span className="text-right">หน่วย</span>
+          <span className="text-right">จำนวน</span>
+          <span className="text-right">ครั้ง</span>
+          <span className="text-right">จำนวนเงินรวม</span>
+          <span />
+        </div>
         <div className="space-y-3">
           {details.expenseItems.map((item, index) => (
             <div
-              className="grid gap-3 border border-stone-200 bg-stone-50 p-3 md:grid-cols-[180px_1fr_180px_44px]"
+              className="grid gap-3 border border-stone-200 bg-stone-50 p-3 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_120px_90px_90px_90px_150px_44px] xl:items-start"
               key={index}
             >
-              <select
-                className={fieldClass}
-                value={item.category}
-                onChange={(e) =>
-                  setDetails({
-                    ...details,
-                    expenseItems: replaceAt(details.expenseItems, index, {
-                      ...item,
+              <div className="sm:col-span-2 xl:col-span-1">
+                <span className="text-xs font-semibold text-stone-700 xl:sr-only">
+                  รายการค่าใช้จ่าย
+                </span>
+                <select
+                  className={fieldClass}
+                  value={item.category}
+                  onChange={(e) =>
+                    updateExpenseItem(index, {
                       category: e.target.value as (typeof EXPENSE_CATEGORIES)[number],
-                    }),
-                  })
-                }
-              >
-                {EXPENSE_CATEGORIES.map((category) => (
-                  <option key={category}>{category}</option>
-                ))}
-              </select>
-              <input
-                className={fieldClass}
-                value={item.description}
-                onChange={(e) =>
-                  setDetails({
-                    ...details,
-                    expenseItems: replaceAt(details.expenseItems, index, {
-                      ...item,
-                      description: e.target.value,
-                    }),
-                  })
-                }
-                placeholder="รายละเอียดรายการค่าใช้จ่าย"
-              />
-              <input
-                className={`${fieldClass} text-right tabular-nums`}
-                type="number"
-                min="0"
-                step="0.01"
-                value={item.amount || ""}
-                onChange={(e) =>
-                  setDetails({
-                    ...details,
-                    expenseItems: replaceAt(details.expenseItems, index, {
-                      ...item,
-                      amount: Number(e.target.value),
-                    }),
-                  })
-                }
-                placeholder="0.00"
-              />
+                    })
+                  }
+                  aria-label={`หมวดค่าใช้จ่ายรายการที่ ${index + 1}`}
+                >
+                  {EXPENSE_CATEGORIES.map((category) => (
+                    <option key={category}>{category}</option>
+                  ))}
+                </select>
+                <input
+                  className={fieldClass}
+                  value={item.description}
+                  onChange={(e) => updateExpenseItem(index, { description: e.target.value })}
+                  placeholder="รายละเอียดรายการค่าใช้จ่าย"
+                  aria-label={`รายละเอียดรายการค่าใช้จ่ายที่ ${index + 1}`}
+                  aria-invalid={Boolean(
+                    errors?.[`proposalDetails.expenseItems.${index}.description`]?.length,
+                  )}
+                  aria-describedby={`project-expense-${index}-description-error`}
+                />
+                <FieldError
+                  errors={errors?.[`proposalDetails.expenseItems.${index}.description`]}
+                  id={`project-expense-${index}-description-error`}
+                />
+              </div>
+              <label>
+                <span className="text-xs font-semibold text-stone-700 xl:sr-only">อัตรา</span>
+                <input
+                  className={`${fieldClass} text-right tabular-nums`}
+                  type="number"
+                  min="0"
+                  max="999999999999"
+                  step="0.01"
+                  value={item.rate || ""}
+                  onChange={(e) => updateExpenseItem(index, { rate: Number(e.target.value) })}
+                  placeholder="0.00"
+                  aria-invalid={Boolean(
+                    errors?.[`proposalDetails.expenseItems.${index}.rate`]?.length,
+                  )}
+                  aria-describedby={`project-expense-${index}-rate-error`}
+                />
+                <FieldError
+                  errors={errors?.[`proposalDetails.expenseItems.${index}.rate`]}
+                  id={`project-expense-${index}-rate-error`}
+                />
+              </label>
+              <label>
+                <span className="text-xs font-semibold text-stone-700 xl:sr-only">หน่วย</span>
+                <input
+                  className={`${fieldClass} text-right tabular-nums`}
+                  type="number"
+                  min="0"
+                  max="999999"
+                  step="1"
+                  value={item.units || ""}
+                  onChange={(e) => updateExpenseItem(index, { units: Number(e.target.value) })}
+                  placeholder="0"
+                  aria-invalid={Boolean(
+                    errors?.[`proposalDetails.expenseItems.${index}.units`]?.length,
+                  )}
+                  aria-describedby={`project-expense-${index}-units-error`}
+                />
+                <FieldError
+                  errors={errors?.[`proposalDetails.expenseItems.${index}.units`]}
+                  id={`project-expense-${index}-units-error`}
+                />
+              </label>
+              <label>
+                <span className="text-xs font-semibold text-stone-700 xl:sr-only">จำนวน</span>
+                <input
+                  className={`${fieldClass} text-right tabular-nums`}
+                  type="number"
+                  min="0"
+                  max="999999"
+                  step="1"
+                  value={item.quantity || ""}
+                  onChange={(e) => updateExpenseItem(index, { quantity: Number(e.target.value) })}
+                  placeholder="0"
+                  aria-invalid={Boolean(
+                    errors?.[`proposalDetails.expenseItems.${index}.quantity`]?.length,
+                  )}
+                  aria-describedby={`project-expense-${index}-quantity-error`}
+                />
+                <FieldError
+                  errors={errors?.[`proposalDetails.expenseItems.${index}.quantity`]}
+                  id={`project-expense-${index}-quantity-error`}
+                />
+              </label>
+              <label>
+                <span className="text-xs font-semibold text-stone-700 xl:sr-only">ครั้ง</span>
+                <input
+                  className={`${fieldClass} text-right tabular-nums`}
+                  type="number"
+                  min="0"
+                  max="999999"
+                  step="1"
+                  value={item.occurrences || ""}
+                  onChange={(e) =>
+                    updateExpenseItem(index, { occurrences: Number(e.target.value) })
+                  }
+                  placeholder="0"
+                  aria-invalid={Boolean(
+                    errors?.[`proposalDetails.expenseItems.${index}.occurrences`]?.length,
+                  )}
+                  aria-describedby={`project-expense-${index}-occurrences-error`}
+                />
+                <FieldError
+                  errors={errors?.[`proposalDetails.expenseItems.${index}.occurrences`]}
+                  id={`project-expense-${index}-occurrences-error`}
+                />
+              </label>
+              <label>
+                <span className="text-xs font-semibold text-stone-700 xl:sr-only">
+                  จำนวนเงินรวม
+                </span>
+                <output
+                  className="mt-1.5 flex h-11 w-full items-center justify-end border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-900 tabular-nums"
+                  aria-label={`จำนวนเงินรวมรายการที่ ${index + 1}`}
+                  aria-describedby={`project-expense-${index}-amount-error`}
+                >
+                  {calculateProjectExpenseAmount(item).toLocaleString("th-TH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </output>
+                <FieldError
+                  errors={errors?.[`proposalDetails.expenseItems.${index}.amount`]}
+                  id={`project-expense-${index}-amount-error`}
+                />
+              </label>
               <button
-                className="mt-1.5 h-11 border border-stone-300 bg-white hover:border-red-300 hover:text-red-700"
+                className="mt-1.5 h-11 border border-stone-300 bg-white hover:border-red-300 hover:text-red-700 sm:self-end xl:self-start"
                 type="button"
                 onClick={() =>
                   setDetails({ ...details, expenseItems: removeAt(details.expenseItems, index) })
                 }
+                aria-label={`ลบรายการค่าใช้จ่ายที่ ${index + 1}`}
+                title="ลบรายการ"
               >
                 <Trash2 className="mx-auto" size={16} />
               </button>

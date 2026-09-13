@@ -6,7 +6,11 @@ import { saveProjectAction } from "@/features/projects/actions";
 import type { OperationState } from "@/features/shared/action-state";
 import { FormActions, FormNotice, FormTopbar } from "@/components/ui/operation-form";
 import type { ProjectFormOptions } from "@/features/projects/types";
-import { createEmptyProjectProposalDetails } from "@/features/projects/proposal-details";
+import {
+  createEmptyProjectExpenseItem,
+  createEmptyProjectProposalDetails,
+  sumProjectExpenses,
+} from "@/features/projects/proposal-details";
 import {
   ProposalAlignment,
   ProposalBasics,
@@ -47,11 +51,11 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
         { goal: "", longTermIndicator: "", actionIndicator: "", unit: "", target: "" },
       ],
       actionPlan: [{ description: "", months: [] }],
-      expenseItems: [{ category: "ค่าตอบแทน" as const, description: "", amount: 0 }],
+      expenseItems: [createEmptyProjectExpenseItem()],
     };
   });
   const editable = !record || (record.status === "proposed" && !record.pendingApproval);
-  const totalBudget = details.expenseItems.reduce((sum, item) => sum + item.amount, 0);
+  const totalBudget = sumProjectExpenses(details);
   const readiness = useMemo(
     () => [
       Boolean(
