@@ -31,6 +31,7 @@ test("Admin can reach every module through the complete menu", async ({ browser 
       ["แผนและคำของบ", "/budget-requests"],
       ["โครงการและการดำเนินงาน", "/projects"],
       ["รายงานรายไตรมาส", "/reports/quarterly"],
+      ["รายงานผลโครงการ", "/reports/project-results"],
       ["เบิกจ่ายงบประมาณ", "/disbursements"],
       ["KPI และคุณภาพ", "/kpi"],
       ["หลักฐานและเอกสาร", "/evidence"],
