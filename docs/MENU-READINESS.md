@@ -16,8 +16,9 @@
 | ภาพรวมผู้บริหาร | `/reports` |
 | แผนและคำของบ | `/budget-requests` |
 | ข้อเสนอโครงการ | `/projects` |
-| รายงานรายไตรมาส | `/reports/quarterly` |
+| รายงานผลโครงการ | `/reports/project-results` |
 | เบิกจ่ายงบประมาณ | `/disbursements` |
+| รายงานรายไตรมาส | `/reports/quarterly` |
 | KPI และคุณภาพ | `/kpi` |
 | หลักฐานและเอกสาร | `/evidence` |
 | Workflow อนุมัติ | `/approvals` |

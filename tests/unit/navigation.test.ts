@@ -31,6 +31,14 @@ describe("workspace menu access", () => {
     }
   });
 
+  it("orders project work from proposal through results and disbursement", () => {
+    expect(primaryNavigation.map((item) => item.href).slice(3, 6)).toEqual([
+      "/projects",
+      "/reports/project-results",
+      "/disbursements",
+    ]);
+  });
+
   it.each(["staff", "user", "executive"] as const)(
     "keeps Admin-only menus hidden for %s",
     (role) => {
