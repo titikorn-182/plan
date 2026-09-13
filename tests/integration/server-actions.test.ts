@@ -58,6 +58,8 @@ const projectProposalDetails = {
   rationale: "หลักการและเหตุผลสำหรับโครงการทดสอบ",
   objectives: "วัตถุประสงค์สำหรับโครงการทดสอบ",
   targetGroup: "นักศึกษา 30 คน",
+  startWeek: 1,
+  endWeek: 4,
   goalIndicators: [
     {
       goal: "ผู้เรียนมีทักษะที่จำเป็น",

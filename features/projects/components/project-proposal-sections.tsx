@@ -585,29 +585,77 @@ export function ProposalPlan({
           </div>
         </div>
         <div className="grid gap-5 border-t border-stone-200 pt-5 md:grid-cols-2">
-          <label>
-            <FieldLabel required>วันเริ่มต้น</FieldLabel>
-            <input
-              className={fieldClass}
-              name="startsOn"
-              type="date"
-              value={startsOn}
-              onChange={(e) => setStartsOn(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            <FieldLabel required>วันสิ้นสุด</FieldLabel>
-            <input
-              className={fieldClass}
-              name="endsOn"
-              type="date"
-              value={endsOn}
-              onChange={(e) => setEndsOn(e.target.value)}
-              required
-            />
-            <FieldError errors={errors?.endsOn} />
-          </label>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+            <label>
+              <FieldLabel required>วันเริ่มต้น</FieldLabel>
+              <input
+                className={fieldClass}
+                name="startsOn"
+                type="date"
+                value={startsOn}
+                onChange={(e) => setStartsOn(e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              <FieldLabel required>สัปดาห์เริ่มต้น</FieldLabel>
+              <select
+                className={fieldClass}
+                value={details.startWeek ?? ""}
+                onChange={(e) =>
+                  setDetails({
+                    ...details,
+                    startWeek: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+                required
+              >
+                <option value="">เลือกสัปดาห์</option>
+                {[1, 2, 3, 4].map((week) => (
+                  <option key={week} value={week}>
+                    สัปดาห์ที่ {week}
+                  </option>
+                ))}
+              </select>
+              <FieldError errors={errors?.["proposalDetails.startWeek"]} />
+            </label>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+            <label>
+              <FieldLabel required>วันสิ้นสุด</FieldLabel>
+              <input
+                className={fieldClass}
+                name="endsOn"
+                type="date"
+                value={endsOn}
+                onChange={(e) => setEndsOn(e.target.value)}
+                required
+              />
+              <FieldError errors={errors?.endsOn} />
+            </label>
+            <label>
+              <FieldLabel required>สัปดาห์สิ้นสุด</FieldLabel>
+              <select
+                className={fieldClass}
+                value={details.endWeek ?? ""}
+                onChange={(e) =>
+                  setDetails({
+                    ...details,
+                    endWeek: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+                required
+              >
+                <option value="">เลือกสัปดาห์</option>
+                {[1, 2, 3, 4].map((week) => (
+                  <option key={week} value={week}>
+                    สัปดาห์ที่ {week}
+                  </option>
+                ))}
+              </select>
+              <FieldError errors={errors?.["proposalDetails.endWeek"]} />
+            </label>
+          </div>
           <label className="md:col-span-2">
             <FieldLabel required>สถานที่ดำเนินการ</FieldLabel>
             <input

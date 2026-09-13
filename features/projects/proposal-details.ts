@@ -68,6 +68,8 @@ const proposalSchema = z.object({
   rationale: text(),
   objectives: text(),
   targetGroup: text(),
+  startWeek: z.number().int().min(1).max(4).nullable(),
+  endWeek: z.number().int().min(1).max(4).nullable(),
   actionPlan: z
     .array(
       z.object({
@@ -110,6 +112,8 @@ export function createEmptyProjectProposalDetails(): ProjectProposalDetails {
     rationale: "",
     objectives: "",
     targetGroup: "",
+    startWeek: null,
+    endWeek: null,
     actionPlan: [],
     location: "",
     expenseItems: [],
@@ -171,6 +175,9 @@ export function validateProjectProposalForSubmission(
   requireText("expectedResults", "กรุณาระบุผลที่คาดว่าจะได้รับ");
   requireText("processIndicator", "กรุณาระบุตัวชี้วัดระดับกระบวนการ");
   requireText("outputIndicator", "กรุณาระบุตัวชี้วัดระดับผลผลิต");
+  if (details.startWeek === null)
+    errors["proposalDetails.startWeek"] = ["กรุณาเลือกสัปดาห์เริ่มต้น"];
+  if (details.endWeek === null) errors["proposalDetails.endWeek"] = ["กรุณาเลือกสัปดาห์สิ้นสุด"];
   if (
     !details.goalIndicators.some(
       (item) => item.goal && item.actionIndicator && item.unit && item.target,

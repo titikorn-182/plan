@@ -83,7 +83,9 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.getByPlaceholder("ขั้นตอนที่ 1").fill("ดำเนินกิจกรรมตามแผน");
     await staff.page.getByLabel("ต.ค.").check();
     await staff.page.getByLabel("วันเริ่มต้น").fill("2026-10-01");
+    await staff.page.getByLabel("สัปดาห์เริ่มต้น").selectOption("1");
     await staff.page.getByLabel("วันสิ้นสุด").fill("2027-09-30");
+    await staff.page.getByLabel("สัปดาห์สิ้นสุด").selectOption("4");
     await staff.page.getByLabel("สถานที่ดำเนินการ").fill("คณะรัฐศาสตร์");
     await staff.page.getByPlaceholder("รายละเอียดรายการค่าใช้จ่าย").fill("ค่าตอบแทนวิทยากร");
     await staff.page.getByPlaceholder("0.00").fill("1000");
