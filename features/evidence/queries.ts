@@ -23,7 +23,7 @@ export async function getEvidenceWorkspace(page = 1): Promise<
   const supabase = await createClient();
   const pageSize = QUERY_LIMITS.evidencePageSize;
   const [from, to] = getPaginationRange(page, pageSize);
-  const [evidence, budgets, projects, reports, kpis] = await Promise.all([
+  const [evidence, budgets, projects, reports, completionReports, kpis] = await Promise.all([
     supabase
       .from("evidence_register")
       .select("*", { count: "exact" })
@@ -51,13 +51,24 @@ export async function getEvidenceWorkspace(page = 1): Promise<
       .order("due_at", { ascending: false })
       .limit(QUERY_LIMITS.selectOptions),
     supabase
+      .from("project_completion_reports")
+      .select("id,organization_id,projects!inner(code,title_th)")
+      .order("due_at", { ascending: false })
+      .limit(QUERY_LIMITS.selectOptions),
+    supabase
       .from("kpi_results")
       .select("id,organization_id,kpi_definitions!inner(code,name)")
       .not("id", "in", RETIRED_DEMO_FILTERS.kpiResults)
       .order("updated_at", { ascending: false })
       .limit(QUERY_LIMITS.selectOptions),
   ]);
-  const error = evidence.error ?? budgets.error ?? projects.error ?? reports.error ?? kpis.error;
+  const error =
+    evidence.error ??
+    budgets.error ??
+    projects.error ??
+    reports.error ??
+    completionReports.error ??
+    kpis.error;
   const entities: EvidenceEntityOption[] = [];
 
   (budgets.data ?? []).forEach((row) =>
@@ -84,6 +95,16 @@ export async function getEvidenceWorkspace(page = 1): Promise<
       entityType: "quarterly_report",
       organizationId: row.organization_id,
       label: `รายงาน Q${row.quarter} · ${project.code} ${project.title_th}`,
+    });
+  });
+  (completionReports.data ?? []).forEach((row) => {
+    const project = Array.isArray(row.projects) ? row.projects[0] : row.projects;
+    if (!project) return;
+    entities.push({
+      id: row.id,
+      entityType: "project_completion_report",
+      organizationId: row.organization_id,
+      label: `รายงานผล · ${project.code} ${project.title_th}`,
     });
   });
   (kpis.data ?? []).forEach((row) => {

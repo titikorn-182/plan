@@ -1055,6 +1055,127 @@ export type Database = {
           },
         ]
       }
+      project_completion_reports: {
+        Row: {
+          actual_results: string | null
+          beneficiary_summary: string | null
+          created_at: string
+          created_by: string | null
+          due_at: string
+          evidence_count: number
+          expense_summary: string | null
+          fiscal_year_id: string
+          follow_up_plan: string | null
+          id: string
+          indicator_results: string | null
+          lessons_learned: string | null
+          objective_achievement: string | null
+          organization_id: string
+          problems: string | null
+          project_id: string
+          status: Database["public"]["Enums"]["report_status"]
+          submitted_at: string | null
+          updated_at: string
+          updated_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+          version: number
+        }
+        Insert: {
+          actual_results?: string | null
+          beneficiary_summary?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at: string
+          evidence_count?: number
+          expense_summary?: string | null
+          fiscal_year_id: string
+          follow_up_plan?: string | null
+          id?: string
+          indicator_results?: string | null
+          lessons_learned?: string | null
+          objective_achievement?: string | null
+          organization_id: string
+          problems?: string | null
+          project_id: string
+          status?: Database["public"]["Enums"]["report_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Update: {
+          actual_results?: string | null
+          beneficiary_summary?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at?: string
+          evidence_count?: number
+          expense_summary?: string | null
+          fiscal_year_id?: string
+          follow_up_plan?: string | null
+          id?: string
+          indicator_results?: string | null
+          lessons_learned?: string | null
+          objective_achievement?: string | null
+          organization_id?: string
+          problems?: string | null
+          project_id?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_completion_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           approved_budget: number
@@ -1587,6 +1708,41 @@ export type Database = {
           version: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_completion_report_register: {
+        Row: {
+          buddhist_year: number | null
+          due_at: string | null
+          ends_on: string | null
+          evidence_count: number | null
+          fiscal_year_id: string | null
+          id: string | null
+          organization_id: string | null
+          project_code: string | null
+          project_id: string | null
+          status: string | null
+          submitted_at: string | null
+          title: string | null
+          unit: string | null
+          updated_at: string | null
+          version: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_organization_id_fkey"
             columns: ["organization_id"]

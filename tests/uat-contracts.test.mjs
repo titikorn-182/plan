@@ -6,11 +6,12 @@ import { resolve } from "node:path";
 const root = process.cwd();
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 
-test("all eight operational surfaces are present", () => {
+test("all operational surfaces are present", () => {
   const workspace = "app/(workspace)";
   const routes = [
     `${workspace}/projects/new/page.tsx`,
     `${workspace}/reports/quarterly/new/page.tsx`,
+    `${workspace}/reports/project-results/new/page.tsx`,
     `${workspace}/disbursements/new/page.tsx`,
     `${workspace}/kpi/[id]/edit/page.tsx`,
     `${workspace}/evidence/page.tsx`,
@@ -33,6 +34,7 @@ test("every mutating action performs an authenticated session check", () => {
     "features/notifications/actions.ts",
     "features/projects/actions.ts",
     "features/quarterly-reports/actions.ts",
+    "features/project-completion-reports/actions.ts",
     "features/reports/actions.ts",
     "features/shared/period-actions.ts",
   ];
@@ -120,6 +122,7 @@ test("large operational registers use server-side pagination", () => {
     "features/notifications/queries.ts",
     "features/projects/queries.ts",
     "features/quarterly-reports/queries.ts",
+    "features/project-completion-reports/queries.ts",
   ];
   queryFiles.forEach((path) => {
     const source = read(path);
@@ -156,6 +159,7 @@ test("mutations revalidate only their affected paths", () => {
     "features/kpi/actions.ts",
     "features/projects/actions.ts",
     "features/quarterly-reports/actions.ts",
+    "features/project-completion-reports/actions.ts",
   ].map(read);
 
   assert.equal(helper.includes("refreshOperations"), false);

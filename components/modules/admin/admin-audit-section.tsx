@@ -24,6 +24,7 @@ const entityLabel: Record<string, string> = {
   budget_request: "คำของบประมาณ",
   project: "โครงการ",
   quarterly_report: "รายงานรายไตรมาส",
+  project_completion_report: "รายงานผลโครงการ",
   disbursement: "รายการเบิกจ่าย",
   kpi_result: "ผล KPI",
   attachment: "หลักฐาน",

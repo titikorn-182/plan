@@ -87,6 +87,59 @@ describe("quarterly and KPI verification", () => {
   });
 });
 
+describe("project completion reporting", () => {
+  test("derives the 15-day deadline, syncs evidence, and closes the project after approval", async () => {
+    await db.query("update projects set status='active' where id=$1", [ids.project]);
+    const { rows } = await asUser(db, ids.staff, () =>
+      db.query<{ id: string; due_at: Date }>(
+        `insert into project_completion_reports (
+          project_id,fiscal_year_id,organization_id,due_at,actual_results,
+          objective_achievement,indicator_results,beneficiary_summary,expense_summary,created_by
+        ) values ($1,$2,$3,'2099-01-01','Completed activities','Objectives achieved',
+          'Indicators achieved','Target groups benefited','Budget reconciled',$4)
+        returning id,due_at`,
+        [ids.project, ids.year, ids.org, ids.staff],
+      ),
+    );
+    const report = rows[0];
+    expect(report.due_at.toISOString().slice(0, 10)).toBe("2027-10-15");
+
+    await asUser(db, ids.staff, () =>
+      db.query(
+        "insert into attachments (organization_id,entity_type,entity_id,file_name,storage_path,mime_type,size_bytes,uploaded_by) values ($1,'project_completion_report',$2,'result.pdf',$3,'application/pdf',10,$4)",
+        [
+          ids.org,
+          report.id,
+          `${ids.org}/project_completion_report/${report.id}/${ids.staff}/result.pdf`,
+          ids.staff,
+        ],
+      ),
+    );
+    expect(
+      (
+        await db.query("select evidence_count from project_completion_reports where id=$1", [
+          report.id,
+        ])
+      ).rows,
+    ).toEqual([{ evidence_count: 1 }]);
+
+    await asUser(db, ids.staff, () =>
+      db.query("select submit_entity_for_approval('project_completion_report',$1)", [report.id]),
+    );
+    await reviewBothStages(report.id);
+    expect(
+      (
+        await db.query("select status,verified_by from project_completion_reports where id=$1", [
+          report.id,
+        ])
+      ).rows,
+    ).toEqual([{ status: "approved", verified_by: ids.executive }]);
+    expect(
+      (await db.query("select status,progress from projects where id=$1", [ids.project])).rows,
+    ).toEqual([{ status: "completed", progress: 100 }]);
+  });
+});
+
 describe("evidence review permissions", () => {
   test("only authorized reviewers can certify evidence; rejection needs a reason", async () => {
     const { rows } = await asUser(db, ids.staff, () =>

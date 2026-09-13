@@ -1,6 +1,7 @@
 import {
   ChartNoAxesCombined,
   Bell,
+  ClipboardCheck,
   FileChartColumn,
   FileCheck2,
   FileText,
@@ -27,6 +28,7 @@ export const primaryNavigation: readonly NavigationItem[] = [
   { label: "แผนและคำของบ", href: "/budget-requests", icon: FileText },
   { label: "โครงการและการดำเนินงาน", href: "/projects", icon: FolderKanban },
   { label: "รายงานรายไตรมาส", href: "/reports/quarterly", icon: FileChartColumn },
+  { label: "รายงานผลโครงการ", href: "/reports/project-results", icon: ClipboardCheck },
   { label: "เบิกจ่ายงบประมาณ", href: "/disbursements", icon: WalletCards },
   { label: "KPI และคุณภาพ", href: "/kpi", icon: Target },
   { label: "หลักฐานและเอกสาร", href: "/evidence", icon: FileCheck2 },
@@ -75,6 +77,18 @@ const WORKSPACE_TITLES: ReadonlyArray<{
   {
     matches: (pathname) => pathname === "/reports/quarterly",
     title: "ติดตามผลการดำเนินงานรายไตรมาส",
+  },
+  {
+    matches: (pathname) => /^\/reports\/project-results\/[^/]+\/edit$/.test(pathname),
+    title: "รายงานผลการดำเนินงานโครงการ",
+  },
+  {
+    matches: (pathname) => pathname === "/reports/project-results/new",
+    title: "จัดทำรายงานผลโครงการ",
+  },
+  {
+    matches: (pathname) => pathname === "/reports/project-results",
+    title: "ติดตามรายงานผลโครงการ",
   },
   { matches: (pathname) => pathname === "/reports", title: "รายงานและส่งออกข้อมูล" },
   { matches: (pathname) => pathname === "/disbursements/new", title: "บันทึกการเบิกจ่าย" },

@@ -51,6 +51,8 @@ describe("workspace menu access", () => {
     ["/projects/new", "/projects"],
     ["/reports/quarterly/new", "/reports/quarterly"],
     ["/reports/quarterly/record/edit", "/reports/quarterly"],
+    ["/reports/project-results/new", "/reports/project-results"],
+    ["/reports/project-results/record/edit", "/reports/project-results"],
     ["/notifications", "/notifications"],
     ["/projectsmith", undefined],
   ])("selects the most specific menu for %s", (pathname, href) => {

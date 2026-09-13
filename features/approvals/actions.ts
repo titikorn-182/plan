@@ -14,6 +14,7 @@ const entityPath: Readonly<Record<string, string>> = {
   budget_request: "/budget-requests",
   project: "/projects",
   quarterly_report: "/reports/quarterly",
+  project_completion_report: "/reports/project-results",
   kpi_result: "/kpi",
 };
 

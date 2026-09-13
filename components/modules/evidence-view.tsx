@@ -35,6 +35,7 @@ const entityLabel: Record<string, string> = {
   budget_request: "คำของบ",
   project: "โครงการ",
   quarterly_report: "รายงานไตรมาส",
+  project_completion_report: "รายงานผลโครงการ",
   kpi_result: "ผล KPI",
 };
 
@@ -90,17 +91,24 @@ export function EvidenceView({
   entities,
   pagination,
   role,
+  initialEntityId,
+  initialEntityType,
 }: {
   rows: EvidenceRow[];
   entities: EvidenceEntityOption[];
   pagination: PaginationMeta;
   role: AppRole;
+  initialEntityId?: string;
+  initialEntityType?: string;
 }) {
   const router = useRouter();
   const uploadFormRef = useRef<HTMLFormElement>(null);
   const [uploadState, setUploadState] = useState<OperationState>({});
   const [uploading, setUploading] = useState(false);
-  const [entityId, setEntityId] = useState(entities[0]?.id ?? "");
+  const initialEntity = entities.find(
+    (item) => item.id === initialEntityId && item.entityType === initialEntityType,
+  );
+  const [entityId, setEntityId] = useState(initialEntity?.id ?? entities[0]?.id ?? "");
   const selected = useMemo(
     () => entities.find((item) => item.id === entityId),
     [entities, entityId],

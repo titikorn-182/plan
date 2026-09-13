@@ -4,6 +4,7 @@ export const EVIDENCE_ENTITY_TYPES = [
   "budget_request",
   "project",
   "quarterly_report",
+  "project_completion_report",
   "kpi_result",
 ] as const;
 export type EvidenceEntityType = (typeof EVIDENCE_ENTITY_TYPES)[number];

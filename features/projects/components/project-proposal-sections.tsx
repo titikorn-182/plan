@@ -860,7 +860,7 @@ export function ProposalResults({ details, setDetails, errors, disabled }: Props
         <div className="border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <b>เงื่อนไขการติดตามหลังสิ้นสุดโครงการ</b>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5">
-            <li>ส่งใช้ใบสำคัญภายใน 30 วันหลังเสร็จสิ้นโครงการ</li>
+            <li>ส่งใช้ใบสำคัญภายใน 15 วันหลังเสร็จสิ้นโครงการ</li>
             <li>ส่งรายงานผลโครงการภายใน 15 วันหลังเสร็จสิ้นโครงการ</li>
           </ul>
         </div>

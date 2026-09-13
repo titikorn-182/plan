@@ -27,6 +27,7 @@ const typeLabel: Record<string, string> = {
   budget_request: "คำของบ",
   project: "โครงการ",
   quarterly_report: "รายงานไตรมาส",
+  project_completion_report: "รายงานผลโครงการ",
   kpi_result: "ผล KPI",
 };
 const roleLabel = APPROVAL_ROLE_LABELS;
@@ -35,6 +36,8 @@ const statusLabel = WORKFLOW_STATUS_LABELS;
 function entityHref(task: WorkflowTask) {
   if (task.entityType === "project") return `/projects/${task.entityId}/edit`;
   if (task.entityType === "quarterly_report") return `/reports/quarterly/${task.entityId}/edit`;
+  if (task.entityType === "project_completion_report")
+    return `/reports/project-results/${task.entityId}/edit`;
   if (task.entityType === "kpi_result") return `/kpi/${task.entityId}/edit`;
   return "/budget-requests";
 }
