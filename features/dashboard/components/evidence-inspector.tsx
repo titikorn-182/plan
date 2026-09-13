@@ -173,7 +173,7 @@ export function EvidenceInspector({
             <ExternalLink size={14} />
           </Link>
           <Link href="/projects">
-            <span>โครงการและการดำเนินงาน</span>
+            <span>ข้อเสนอโครงการ</span>
             <strong>{selected.projectCount} โครงการ</strong>
             <ExternalLink size={14} />
           </Link>

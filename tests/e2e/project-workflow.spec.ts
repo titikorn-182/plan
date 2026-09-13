@@ -29,7 +29,7 @@ test("Admin can reach every module through the complete menu", async ({ browser 
     const destinations = [
       ["ภาพรวมผู้บริหาร", "/reports"],
       ["แผนและคำของบ", "/budget-requests"],
-      ["โครงการและการดำเนินงาน", "/projects"],
+      ["ข้อเสนอโครงการ", "/projects"],
       ["รายงานรายไตรมาส", "/reports/quarterly"],
       ["รายงานผลโครงการ", "/reports/project-results"],
       ["เบิกจ่ายงบประมาณ", "/disbursements"],

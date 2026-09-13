@@ -26,7 +26,7 @@ export const primaryNavigation: readonly NavigationItem[] = [
   { label: "หน้าหลักฐาน", href: "/", icon: LayoutDashboard },
   { label: "ภาพรวมผู้บริหาร", href: "/reports", icon: ChartNoAxesCombined },
   { label: "แผนและคำของบ", href: "/budget-requests", icon: FileText },
-  { label: "โครงการและการดำเนินงาน", href: "/projects", icon: FolderKanban },
+  { label: "ข้อเสนอโครงการ", href: "/projects", icon: FolderKanban },
   { label: "รายงานรายไตรมาส", href: "/reports/quarterly", icon: FileChartColumn },
   { label: "รายงานผลโครงการ", href: "/reports/project-results", icon: ClipboardCheck },
   { label: "เบิกจ่ายงบประมาณ", href: "/disbursements", icon: WalletCards },
