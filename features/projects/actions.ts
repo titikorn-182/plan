@@ -90,44 +90,24 @@ export async function saveProjectAction(
   }
   if (!fiscal) return { ...previous, success: false, message: "ไม่พบปีงบประมาณที่เลือก" };
 
-  const values = {
-    organization_id: input.organizationId,
-    fiscal_year_id: input.fiscalYearId,
-    budget_request_id: input.budgetRequestId || null,
-    owner_name: input.ownerName,
-    coordinator_name: input.coordinatorName,
-    title_th: input.title,
-    project_type: deriveProjectType(proposal.data),
-    approved_budget: approvedBudget,
-    disbursement_target: input.disbursementTarget,
-    starts_on: input.startsOn,
-    ends_on: input.endsOn,
-    proposal_details: proposal.data as Json,
-    updated_by: userId,
-  };
-  const mutation = input.id
-    ? supabase
-        .from("projects")
-        .update(values)
-        .eq("id", input.id)
-        .eq("version", input.version)
-        .eq("status", "proposed")
-        .select("id,code,version")
-        .maybeSingle()
-    : supabase
-        .from("projects")
-        .insert({
-          ...values,
-          owner_id: userId,
-          coordinator_id: userId,
-          code: `PR${String(fiscal.buddhist_year).slice(-2)}${Date.now().toString().slice(-8)}`,
-          status: "proposed",
-          health: "normal",
-          created_by: userId,
-        })
-        .select("id,code,version")
-        .single();
-  const { data, error } = await mutation;
+  const { data, error } = await supabase.rpc("save_project_transaction", {
+    p_id: input.id || null,
+    p_version: input.version,
+    p_organization_id: input.organizationId,
+    p_fiscal_year_id: input.fiscalYearId,
+    p_budget_request_id: input.budgetRequestId || null,
+    p_owner_name: input.ownerName,
+    p_coordinator_name: input.coordinatorName,
+    p_title_th: input.title,
+    p_project_type: deriveProjectType(proposal.data),
+    p_approved_budget: approvedBudget,
+    p_disbursement_target: input.disbursementTarget,
+    p_starts_on: input.startsOn,
+    p_ends_on: input.endsOn,
+    p_proposal_details: proposal.data as Json,
+    p_submit: input.intent === "submit",
+    p_comment: input.intent === "submit" ? "ส่งข้อเสนอโครงการเพื่อพิจารณา" : null,
+  });
   if (error) {
     return {
       ...previous,
@@ -143,22 +123,6 @@ export async function saveProjectAction(
       success: false,
       message: "รายการถูกแก้ไขโดยผู้ใช้อื่น กรุณาเปิดหน้าใหม่อีกครั้ง",
     };
-  }
-
-  if (input.intent === "submit") {
-    const { error: submitError } = await supabase.rpc("submit_entity_for_approval", {
-      p_entity_type: "project",
-      p_entity_id: data.id,
-      p_comment: "ส่งข้อเสนอโครงการเพื่อพิจารณา",
-    });
-    if (submitError) {
-      return {
-        success: false,
-        id: data.id,
-        version: data.version,
-        message: `บันทึก ${data.code} แล้ว แต่ส่งอนุมัติไม่สำเร็จ: ${friendlyError(submitError)}`,
-      };
-    }
   }
 
   revalidateOperationPaths(

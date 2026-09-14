@@ -1,4 +1,4 @@
-import type { Database as GeneratedDatabase } from "@/types/database.generated";
+import type { Database as GeneratedDatabase, Json } from "@/types/database.generated";
 
 type PublicSchema = GeneratedDatabase["public"];
 type ReportScheduleRow = {
@@ -121,6 +121,47 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
       };
     };
     Functions: PublicSchema["Functions"] & {
+      save_budget_request_transaction: {
+        Args: {
+          p_id: string | null;
+          p_version: number;
+          p_fiscal_year_id: string;
+          p_budget_cycle_id: string;
+          p_organization_id: string;
+          p_owner_name: string;
+          p_title_th: string;
+          p_category: string;
+          p_project_type: string;
+          p_rationale: string;
+          p_requested_amount: number;
+          p_expense_breakdown: Json | null;
+          p_proposal_details: Json;
+          p_submit?: boolean;
+          p_comment?: string | null;
+        };
+        Returns: { id: string; code: string; version: number };
+      };
+      save_project_transaction: {
+        Args: {
+          p_id: string | null;
+          p_version: number;
+          p_organization_id: string;
+          p_fiscal_year_id: string;
+          p_budget_request_id: string | null;
+          p_owner_name: string;
+          p_coordinator_name: string;
+          p_title_th: string;
+          p_project_type: string;
+          p_approved_budget: number;
+          p_disbursement_target: number;
+          p_starts_on: string;
+          p_ends_on: string;
+          p_proposal_details: Json;
+          p_submit?: boolean;
+          p_comment?: string | null;
+        };
+        Returns: { id: string; code: string; version: number };
+      };
       submit_budget_request_for_approval: {
         Args: { p_entity_id: string; p_comment?: string };
         Returns: string;

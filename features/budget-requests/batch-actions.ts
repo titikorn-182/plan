@@ -280,8 +280,7 @@ export async function saveBudgetRequestBatchAction(
     };
   }
 
-  const now = Date.now();
-  const insertRows = groupsToInsert.map((group, index) => {
+  const insertRows = groupsToInsert.map((group) => {
     const organizationName = organizations.get(group.organizationId) ?? "";
     if (!isBudgetRequestOrganizationCompatible(group.values.organizationCode, organizationName)) {
       validationErrors.push(
@@ -302,7 +301,8 @@ export async function saveBudgetRequestBatchAction(
     return {
       budget_cycle_id: parsed.data.budgetCycleId,
       category: budgetCategory(group.values.projectType),
-      code: `BR${String(fiscalYearResult.data.buddhist_year).slice(-2)}${String(now + index).slice(-8)}`,
+      // The insert trigger replaces an empty value with a concurrency-safe code.
+      code: "",
       coordinator_id: userId,
       coordinator_name: group.values.ownerName,
       created_by: userId,

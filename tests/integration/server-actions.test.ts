@@ -110,7 +110,10 @@ function response(data: QueryResponse["data"], error: QueryResponse["error"] = n
 }
 function savedProject() {
   response({ buddhist_year: 2570 });
-  response({ id: projectId, code: "TEST-P1", version: 4 });
+  mock.client.rpc.mockResolvedValue({
+    data: { id: projectId, code: "TEST-P1", version: 4 },
+    error: null,
+  });
 }
 
 beforeEach(() => {
@@ -142,26 +145,29 @@ describe("project action orchestration", () => {
     expect((await saveProjectAction({}, form(projectInput))).message).toContain("เซสชันหมดอายุ");
     expect(mock.client.from).not.toHaveBeenCalled();
   });
-  it("saves with the record ID, proposed status, and optimistic version filter", async () => {
+  it("saves through the transaction RPC with optimistic version data", async () => {
     savedProject();
     expect(await saveProjectAction({}, form(projectInput))).toMatchObject({
       success: true,
       id: projectId,
       version: 4,
     });
-    expect(mock.chain.eq).toHaveBeenCalledWith("id", projectId);
-    expect(mock.chain.eq).toHaveBeenCalledWith("version", 3);
-    expect(mock.chain.eq).toHaveBeenCalledWith("status", "proposed");
-    expect(mock.client.rpc).not.toHaveBeenCalled();
+    expect(mock.client.rpc).toHaveBeenCalledWith(
+      "save_project_transaction",
+      expect.objectContaining({ p_id: projectId, p_version: 3, p_submit: false }),
+    );
     expect(mock.revalidate).toHaveBeenCalledWith("/projects");
   });
   it("does not submit when another editor already changed the version", async () => {
     response({ buddhist_year: 2570 });
-    response(null);
+    mock.client.rpc.mockResolvedValue({
+      data: null,
+      error: { code: "40001", message: "stale version" },
+    });
     const result = await saveProjectAction({}, form({ ...projectInput, intent: "submit" }));
     expect(result.success).toBe(false);
     expect(result.message).toContain("ผู้ใช้อื่น");
-    expect(mock.client.rpc).not.toHaveBeenCalled();
+    expect(mock.client.rpc).toHaveBeenCalledTimes(1);
   });
   it("submits the saved entity and refreshes its workflow views", async () => {
     savedProject();
@@ -169,21 +175,21 @@ describe("project action orchestration", () => {
       true,
     );
     expect(mock.client.rpc).toHaveBeenCalledWith(
-      "submit_entity_for_approval",
-      expect.objectContaining({ p_entity_type: "project", p_entity_id: projectId }),
+      "save_project_transaction",
+      expect.objectContaining({ p_id: projectId, p_submit: true }),
     );
     expect(mock.revalidate).toHaveBeenCalledWith("/approvals");
     expect(mock.revalidate).toHaveBeenCalledWith("/notifications");
   });
-  it("retains saved ID/version when workflow submission fails", async () => {
+  it("keeps the original ID/version when the atomic submission rolls back", async () => {
     savedProject();
     mock.client.rpc.mockResolvedValue({
       data: null,
       error: { code: "42501", message: "internal policy details" },
     });
     const result = await saveProjectAction({}, form({ ...projectInput, intent: "submit" }));
-    expect(result).toMatchObject({ success: false, id: projectId, version: 4 });
-    expect(result.message).toContain("แต่ส่งอนุมัติไม่สำเร็จ");
+    expect(result).toMatchObject({ success: false, id: projectId, version: 3 });
+    expect(result.message).toContain("ไม่มีสิทธิ์");
     expect(result.message).not.toContain("internal policy details");
   });
   it("does not expose unexpected database errors to the user", async () => {
@@ -201,7 +207,10 @@ describe("budget, approval, and spending actions", () => {
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
     response({ name_th: "สำนักงานเลขานุการ-งานแผนและงบประมาณ" });
-    response({ id: projectId, code: "TEST-P1", version: 4 });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 4 },
+      error: null,
+    });
     const result = await saveBudgetRequestAction(
       {},
       form({
@@ -214,12 +223,14 @@ describe("budget, approval, and spending actions", () => {
       }),
     );
     expect(result.success).toBe(true);
-    expect(mock.chain.update).toHaveBeenCalledWith(
-      expect.objectContaining({ requested_amount: 1000, expense_breakdown: null }),
-    );
     expect(mock.client.rpc).toHaveBeenCalledWith(
-      "submit_budget_request_for_approval",
-      expect.objectContaining({ p_entity_id: projectId }),
+      "save_budget_request_transaction",
+      expect.objectContaining({
+        p_id: projectId,
+        p_requested_amount: 1000,
+        p_expense_breakdown: null,
+        p_submit: true,
+      }),
     );
   });
   it("rejects a budget cycle from a different fiscal year", async () => {
@@ -456,14 +467,18 @@ describe("budget expense action persistence", () => {
   it("accepts the form identifier without a named id input", async () => {
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
-    response({ id: projectId, code: "TEST-BR1", version: 4 });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 4 },
+      error: null,
+    });
     const data = form({ ...budgetInput, budgetRequestId: projectId });
     data.delete("id");
     const result = await saveBudgetRequestAction({}, data);
     expect(result.success).toBe(true);
-    expect(mock.chain.update).toHaveBeenCalled();
-    expect(mock.chain.eq).toHaveBeenCalledWith("id", projectId);
-    expect(mock.chain.insert).not.toHaveBeenCalled();
+    expect(mock.client.rpc).toHaveBeenCalledWith(
+      "save_budget_request_transaction",
+      expect.objectContaining({ p_id: projectId, p_version: 3 }),
+    );
   });
 
   it.each(["save", "submit"])("persists categories and total together on %s", async (intent) => {
@@ -484,7 +499,10 @@ describe("budget expense action persistence", () => {
     if (intent === "submit") {
       response({ name_th: "สำนักงานเลขานุการ-งานแผนและงบประมาณ" });
     }
-    response({ id: projectId, code: "TEST-BR1", version: 1 });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 1 },
+      error: null,
+    });
     const result = await saveBudgetRequestAction(
       {},
       form({
@@ -496,19 +514,21 @@ describe("budget expense action persistence", () => {
       }),
     );
     expect(result.success).toBe(true);
-    expect(mock.chain.insert).toHaveBeenCalledWith(
+    expect(mock.client.rpc).toHaveBeenCalledWith(
+      "save_budget_request_transaction",
       expect.objectContaining({
-        requested_amount: 1000,
-        expense_breakdown: {
+        p_id: null,
+        p_requested_amount: 1000,
+        p_expense_breakdown: {
           ...createEmptyBudgetExpenseBreakdown(),
           operating_services: 700.25,
           personnel_compensation: 299.75,
         },
-        proposal_details: proposalDetails,
+        p_proposal_details: proposalDetails,
+        p_submit: intent === "submit",
       }),
     );
-    expect(mock.chain.update).not.toHaveBeenCalled();
-    expect(mock.client.rpc).toHaveBeenCalledTimes(intent === "submit" ? 1 : 0);
+    expect(mock.client.rpc).toHaveBeenCalledTimes(1);
   });
 
   it("persists detailed expense items with their calculated total", async () => {
@@ -531,7 +551,10 @@ describe("budget expense action persistence", () => {
     const proposalDetails = { ...sourceProposalDetails, expenseItems };
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
-    response({ id: projectId, code: "TEST-BR1", version: 4 });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 4 },
+      error: null,
+    });
 
     const result = await saveBudgetRequestAction(
       {},
@@ -544,11 +567,12 @@ describe("budget expense action persistence", () => {
     );
 
     expect(result.success).toBe(true);
-    expect(mock.chain.update).toHaveBeenCalledWith(
+    expect(mock.client.rpc).toHaveBeenCalledWith(
+      "save_budget_request_transaction",
       expect.objectContaining({
-        requested_amount: 1000,
-        expense_breakdown: null,
-        proposal_details: proposalDetails,
+        p_requested_amount: 1000,
+        p_expense_breakdown: null,
+        p_proposal_details: proposalDetails,
       }),
     );
   });
@@ -557,16 +581,23 @@ describe("budget expense action persistence", () => {
     const breakdown = { ...createEmptyBudgetExpenseBreakdown(), capital_construction: 1000 };
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
-    response({ id: projectId, code: "TEST-BR1", version: 4 });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 4 },
+      error: null,
+    });
     const result = await saveBudgetRequestAction(
       {},
       form({ ...budgetInput, expenseBreakdown: JSON.stringify(breakdown) }),
     );
     expect(result.success).toBe(true);
-    expect(mock.chain.update).toHaveBeenCalledWith(
-      expect.objectContaining({ requested_amount: 1000, expense_breakdown: breakdown }),
+    expect(mock.client.rpc).toHaveBeenCalledWith(
+      "save_budget_request_transaction",
+      expect.objectContaining({
+        p_version: 3,
+        p_requested_amount: 1000,
+        p_expense_breakdown: breakdown,
+      }),
     );
-    expect(mock.chain.eq).toHaveBeenCalledWith("version", 3);
   });
 
   it.each([

@@ -61,6 +61,13 @@ describe("production RLS policies applied to PostgreSQL", () => {
     );
     expect(await projectCodes(ids.staff)).toEqual([]);
   });
+  test("roles that have not started cannot read project data", async () => {
+    await db.query(
+      "update user_roles set active_from = now() + interval '1 hour' where profile_id = $1",
+      [ids.staff],
+    );
+    expect(await projectCodes(ids.staff)).toEqual([]);
+  });
   test("expired organization scope removes the reviewer's access", async () => {
     await db.query(
       "update user_organization_scopes set active_until = now() - interval '1 second' where profile_id = $1",
@@ -131,6 +138,146 @@ describe("production RLS policies applied to PostgreSQL", () => {
 });
 
 describe("workflow transactions and database guards", () => {
+  test("atomic budget save and submission returns the final record", async () => {
+    const result = await asUser(db, ids.staff, () =>
+      db.query<{ result: { id: string; code: string; version: number } }>(
+        `select save_budget_request_transaction(
+          $1, 1, $2, $3, $4, 'Test staff', 'คำของบประมาณฉบับแก้ไข',
+          'ดำเนินงาน', 'โครงการทดสอบ',
+          'หลักการและเหตุผลสำหรับการทดสอบ transaction แบบครบถ้วน',
+          1000, null, '{}'::jsonb, true, 'ส่งคำขอเพื่อทดสอบ'
+        ) as result`,
+        [ids.budget, ids.year, "40000000-0000-4000-8000-000000000001", ids.org],
+      ),
+    );
+
+    expect(result.rows[0].result).toMatchObject({
+      id: ids.budget,
+      code: "TEST-BR1",
+      version: 3,
+    });
+    expect(
+      (await db.query("select status from budget_requests where id = $1", [ids.budget])).rows,
+    ).toEqual([{ status: "submitted" }]);
+    expect((await pendingTask(ids.budget)).required_role).toBe("user");
+  });
+  test("atomic budget save rolls the edit back when task creation fails", async () => {
+    await db.exec(`create function private.test_fail_atomic_task() returns trigger language plpgsql as $$ begin raise exception 'Injected atomic task failure'; end; $$;
+      create trigger test_fail_atomic_task before insert on approval_tasks for each row execute function private.test_fail_atomic_task();`);
+
+    await expect(
+      asUser(db, ids.staff, () =>
+        db.query(
+          `select save_budget_request_transaction(
+            $1, 1, $2, $3, $4, 'Test staff', 'ชื่อที่ต้องถูกย้อนกลับ',
+            'ดำเนินงาน', 'โครงการทดสอบ',
+            'หลักการและเหตุผลสำหรับการทดสอบ transaction แบบครบถ้วน',
+            1000, null, '{}'::jsonb, true, 'ส่งคำขอเพื่อทดสอบ'
+          )`,
+          [ids.budget, ids.year, "40000000-0000-4000-8000-000000000001", ids.org],
+        ),
+      ),
+    ).rejects.toThrow("Injected atomic task failure");
+
+    expect(
+      (
+        await db.query("select title_th, status, version from budget_requests where id = $1", [
+          ids.budget,
+        ])
+      ).rows,
+    ).toEqual([{ title_th: "คำของบประมาณทดสอบ", status: "draft", version: 1 }]);
+  });
+  test("database sequences generate unique codes for burst inserts", async () => {
+    const inserted = await asUser(db, ids.staff, () =>
+      db.query<{ code: string }>(
+        `insert into budget_requests (
+          code, fiscal_year_id, budget_cycle_id, organization_id, owner_id,
+          owner_name, coordinator_name, title_th, category, project_type,
+          rationale, requested_amount, created_by
+        )
+        select '', $1, $2, $3, $4, 'Test staff', 'Test staff',
+          'คำของบประมาณลำดับ ' || item, 'ดำเนินงาน', 'โครงการทดสอบ', '', 0, $4
+        from generate_series(1, 25) item
+        returning code`,
+        [ids.year, "40000000-0000-4000-8000-000000000001", ids.org, ids.staff],
+      ),
+    );
+
+    const codes = inserted.rows.map((row) => row.code);
+    expect(codes).toHaveLength(25);
+    expect(new Set(codes).size).toBe(25);
+    expect(codes.every((code) => /^BR70\d{8}$/.test(code))).toBe(true);
+  });
+  test("atomic project creation assigns a database code and creates its task", async () => {
+    const result = await asUser(db, ids.staff, () =>
+      db.query<{ result: { id: string; code: string; version: number } }>(
+        `select save_project_transaction(
+          null, 1, $1, $2, null, 'Test staff', 'Test coordinator',
+          'โครงการที่สร้างด้วย transaction', 'โครงการทดสอบ', 1000, 25,
+          '2026-10-01', '2027-09-30', '{}'::jsonb, true, 'ส่งโครงการเพื่อทดสอบ'
+        ) as result`,
+        [ids.org, ids.year],
+      ),
+    );
+    const saved = result.rows[0].result;
+
+    expect(saved.code).toMatch(/^PR70\d{8}$/);
+    expect(saved.version).toBe(1);
+    expect((await pendingTask(saved.id)).required_role).toBe("user");
+  });
+  test("atomic project creation rolls the new record back when task creation fails", async () => {
+    await db.exec(`create function private.test_fail_project_task() returns trigger language plpgsql as $$ begin raise exception 'Injected project task failure'; end; $$;
+      create trigger test_fail_project_task before insert on approval_tasks for each row execute function private.test_fail_project_task();`);
+
+    await expect(
+      asUser(db, ids.staff, () =>
+        db.query(
+          `select save_project_transaction(
+            null, 1, $1, $2, null, 'Test staff', 'Test coordinator',
+            'โครงการที่ต้องถูกย้อนกลับ', 'โครงการทดสอบ', 1000, 25,
+            '2026-10-01', '2027-09-30', '{}'::jsonb, true, 'ส่งโครงการเพื่อทดสอบ'
+          )`,
+          [ids.org, ids.year],
+        ),
+      ),
+    ).rejects.toThrow("Injected project task failure");
+    expect(
+      (await db.query("select id from projects where title_th = 'โครงการที่ต้องถูกย้อนกลับ'")).rows,
+    ).toHaveLength(0);
+  });
+  test("a burst of submitted requests receives unique database codes and tasks", async () => {
+    const submissions = await asUser(db, ids.staff, () =>
+      Promise.all(
+        Array.from({ length: 8 }, (_, index) =>
+          db.query<{ result: { id: string; code: string } }>(
+            `select save_budget_request_transaction(
+              null, 1, $1, $2, $3, 'Test staff', $4,
+              'ดำเนินงาน', 'โครงการทดสอบ',
+              'หลักการและเหตุผลสำหรับการทดสอบส่งคำขอพร้อมกันหลายรายการ',
+              1000, null, '{}'::jsonb, true, 'ส่งคำขอแบบกลุ่ม'
+            ) as result`,
+            [
+              ids.year,
+              "40000000-0000-4000-8000-000000000001",
+              ids.org,
+              `คำของบประมาณพร้อมกัน ${index + 1}`,
+            ],
+          ),
+        ),
+      ),
+    );
+    const records = submissions.map((result) => result.rows[0].result);
+
+    expect(new Set(records.map((record) => record.code)).size).toBe(8);
+    expect(
+      (
+        await db.query(
+          "select id from approval_tasks where entity_id = any($1::uuid[]) and status = 'pending'",
+          [records.map((record) => record.id)],
+        )
+      ).rows,
+    ).toHaveLength(8);
+  });
   test("project progresses from staff to user to executive with notifications", async () => {
     await submitProject();
     const first = await pendingTask(ids.project);

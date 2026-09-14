@@ -32,6 +32,6 @@ export type Viewer = {
   email: string;
   fullName: string;
   roles: AppRole[];
-  role: AppRole;
+  role: AppRole | null;
   unreadNotifications: number;
 };

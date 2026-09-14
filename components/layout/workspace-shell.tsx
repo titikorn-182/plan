@@ -29,7 +29,7 @@ export function WorkspaceShell({
   const title = getWorkspaceTitle(pathname);
   const visibleNavItems = getVisibleNavigation(viewer.roles);
   const currentHref = getCurrentNavigationHref(pathname, visibleNavItems);
-  const roleLabel = APP_ROLE_LABELS[viewer.role];
+  const roleLabel = viewer.role ? APP_ROLE_LABELS[viewer.role] : "ยังไม่มีสิทธิ์ใช้งาน";
 
   if (pathname === "/") return children;
 

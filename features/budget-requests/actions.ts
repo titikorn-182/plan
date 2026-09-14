@@ -260,58 +260,34 @@ export async function saveBudgetRequestAction(
     }
   }
 
-  const values = {
-    fiscal_year_id: parsed.data.fiscalYearId,
-    budget_cycle_id: parsed.data.budgetCycleId,
-    organization_id: parsed.data.organizationId,
-    owner_name: parsed.data.ownerName,
-    coordinator_name: parsed.data.ownerName,
-    title_th: parsed.data.title,
-    category: parsed.data.projectType.includes("ครุภัณฑ์")
+  const { data, error } = await supabase.rpc("save_budget_request_transaction", {
+    p_id: parsed.data.id || null,
+    p_version: parsed.data.version,
+    p_fiscal_year_id: parsed.data.fiscalYearId,
+    p_budget_cycle_id: parsed.data.budgetCycleId,
+    p_organization_id: parsed.data.organizationId,
+    p_owner_name: parsed.data.ownerName,
+    p_title_th: parsed.data.title,
+    p_category: parsed.data.projectType.includes("ครุภัณฑ์")
       ? "ครุภัณฑ์"
       : parsed.data.projectType.includes("ก่อสร้าง")
         ? "สิ่งก่อสร้าง"
         : "ดำเนินงาน",
-    project_type: parsed.data.projectType,
-    rationale: parsed.data.rationale,
-    requested_amount: parsed.data.amount,
-    expense_breakdown: expenseBreakdown.data,
-    proposal_details: proposalDetails.data,
-    status: "draft" as const,
-    submitted_at: null,
-    updated_by: userId,
-  };
-
-  const mutation = parsed.data.id
-    ? supabase
-        .from("budget_requests")
-        .update(values)
-        .eq("id", parsed.data.id)
-        .eq("version", parsed.data.version)
-        .in("status", ["draft", "revision_required"])
-        .select("id,code,version")
-        .maybeSingle()
-    : supabase
-        .from("budget_requests")
-        .insert({
-          ...values,
-          owner_id: userId,
-          coordinator_id: userId,
-          code: `BR${String(fiscalYear.buddhist_year).slice(-2)}${Date.now().toString().slice(-8)}`,
-          created_by: userId,
-        })
-        .select("id,code,version")
-        .single();
-
-  const { data, error } = await mutation;
+    p_project_type: parsed.data.projectType,
+    p_rationale: parsed.data.rationale,
+    p_requested_amount: parsed.data.amount,
+    p_expense_breakdown: expenseBreakdown.data,
+    p_proposal_details: proposalDetails.data,
+    p_submit: parsed.data.intent === "submit",
+    p_comment: parsed.data.intent === "submit" ? "ส่งคำของบประมาณเพื่อพิจารณา" : null,
+  });
   if (error) {
-    const conflict = error.code === "23505" ? "รหัสคำขอซ้ำ กรุณาลองบันทึกอีกครั้ง" : null;
     const denied =
       error.code === "42501" ? "คุณไม่มีสิทธิ์บันทึกคำขอสำหรับหน่วยงานหรือสถานะนี้" : null;
     return {
       ...previous,
       success: false,
-      message: conflict ?? denied ?? friendlyError(error, "budget_requests.save"),
+      message: denied ?? friendlyError(error, "budget_requests.save_transaction"),
       id: parsed.data.id || previous.id,
       version: parsed.data.version,
     };
@@ -322,25 +298,6 @@ export async function saveBudgetRequestAction(
       success: false,
       message: "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่น กรุณากลับไปเปิดรายการใหม่อีกครั้ง",
     };
-  }
-
-  if (parsed.data.intent === "submit") {
-    const { error: workflowError } = await supabase.rpc("submit_budget_request_for_approval", {
-      p_entity_id: data.id,
-      p_comment: "ส่งคำของบประมาณเพื่อพิจารณา",
-    });
-    if (workflowError) {
-      return {
-        success: false,
-        message: `บันทึก ${data.code} เป็นฉบับร่างแล้ว แต่ส่งอนุมัติไม่สำเร็จ: ${friendlyError(
-          workflowError,
-          "budget_requests.submit",
-        )}`,
-        id: data.id,
-        code: data.code,
-        version: data.version,
-      };
-    }
   }
 
   revalidateOperationPaths(

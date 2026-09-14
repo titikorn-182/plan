@@ -97,7 +97,7 @@ export function EvidenceView({
   rows: EvidenceRow[];
   entities: EvidenceEntityOption[];
   pagination: PaginationMeta;
-  role: AppRole;
+  role: AppRole | null;
   initialEntityId?: string;
   initialEntityType?: string;
 }) {

@@ -200,7 +200,7 @@ export function EvidenceInspector({
         <span className="cc-avatar">{viewer.fullName.slice(0, 1)}</span>
         <p>
           <strong>{viewer.fullName}</strong>
-          <small>ข้อมูลตามสิทธิ์ {viewer.role}</small>
+          <small>ข้อมูลตามสิทธิ์ {viewer.role ?? "ไม่มีบทบาทที่ใช้งานอยู่"}</small>
         </p>
         <Bell size={16} />
       </div>

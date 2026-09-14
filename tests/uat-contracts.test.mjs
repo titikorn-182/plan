@@ -80,13 +80,14 @@ test("operational migration includes workflow, budget guard, private storage, an
 });
 
 test("budget submission changes status and creates its approval task atomically", () => {
-  const sql = read("supabase/migrations/202609050001_correctness_and_type_safety.sql");
-  assert.match(sql, /submit_budget_request_for_approval/);
-  assert.match(sql, /for update;/);
-  assert.match(sql, /task_id := public\.submit_entity_for_approval/);
+  const sql = read("supabase/migrations/202609140002_phase1_workflow_integrity.sql");
+  assert.match(sql, /save_budget_request_transaction/);
+  assert.match(sql, /perform public\.submit_budget_request_for_approval/);
+  assert.match(sql, /return jsonb_build_object/);
 
   const action = read("features/budget-requests/actions.ts");
-  assert.match(action, /rpc\("submit_budget_request_for_approval"/);
+  assert.match(action, /rpc\("save_budget_request_transaction"/);
+  assert.match(action, /p_submit: parsed\.data\.intent === "submit"/);
   assert.equal(
     action.includes('status: parsed.data.intent === "submit" ? "submitted" : "draft"'),
     false,
@@ -100,9 +101,13 @@ test("budget and storage guards serialize spending and bind uploads to the signe
 });
 
 test("editing a project does not silently reassign its owner identity", () => {
-  const source = read("features/projects/actions.ts");
-  assert.equal(source.match(/owner_id: userId/g)?.length, 1);
-  assert.equal(source.match(/coordinator_id: userId/g)?.length, 1);
+  const sql = read("supabase/migrations/202609140002_phase1_workflow_integrity.sql");
+  const updateStatement = sql.match(
+    /update public\.projects project[\s\S]*?where project\.id = p_id/,
+  )?.[0];
+  assert.ok(updateStatement, "project update statement exists");
+  assert.equal(updateStatement.includes("owner_id ="), false);
+  assert.equal(updateStatement.includes("coordinator_id ="), false);
 });
 
 test("service role is server-only and absent from public variable names", () => {
