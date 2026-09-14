@@ -5,7 +5,7 @@ import { LoaderCircle, MailPlus } from "lucide-react";
 import { inviteUserAction } from "@/features/admin/actions";
 import type { OperationState } from "@/features/shared/action-state";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";
-import { APP_ROLE_LABELS, APP_ROLE_NAMES, APP_ROLES } from "@/features/auth/types";
+import { APP_ROLE_LABELS, APP_ROLE_NAMES, APP_ROLES } from "@/lib/auth/types";
 
 export function AdminInvitePanel() {
   const [state, action, pending] = useActionState(inviteUserAction, {} satisfies OperationState);

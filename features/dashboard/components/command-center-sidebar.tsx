@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentNavigationHref, getVisibleNavigation } from "@/components/layout/navigation";
-import type { Viewer } from "@/features/auth/types";
+import type { Viewer } from "@/lib/auth/types";
 import {
   COMMAND_CENTER_STATUSES,
   COMMAND_CENTER_STATUS_META,

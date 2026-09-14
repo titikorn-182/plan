@@ -5,7 +5,7 @@ import {
   getQuarterProgressTarget,
   isProjectPeriodValid,
   remainingBudget,
-} from "@/lib/operations/rules";
+} from "@/features/shared/operation-rules";
 import { calculateDashboardTotals, getKpiCommandStatus } from "@/features/dashboard/presentation";
 import type { CommandCenterRow } from "@/features/dashboard/types";
 

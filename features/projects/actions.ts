@@ -7,9 +7,10 @@ import {
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
-import { isProjectPeriodValid } from "@/lib/operations/rules";
+import { isProjectPeriodValid } from "@/features/shared/operation-rules";
 import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
 import { getFiscalYearMasterData } from "@/features/shared/master-data";
@@ -79,8 +80,7 @@ export async function saveProjectAction(
     }
   }
   const { supabase, userId } = await authenticated();
-  if (!userId)
-    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired(previous);
 
   const masterDataResult = await getFiscalYearMasterDataCatalogs([input.fiscalYearId]);
   if (masterDataResult.error) {

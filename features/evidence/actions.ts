@@ -7,6 +7,7 @@ import {
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
 } from "@/features/shared/server-actions";
 import { INPUT_LIMITS } from "@/lib/config/limits";
 
@@ -26,7 +27,7 @@ export async function reviewEvidenceAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ" };
+  if (!userId) return sessionExpired(previous);
   const { error } = await supabase.rpc("review_evidence", {
     p_attachment_id: parsed.data.id,
     p_verified: parsed.data.decision === "verify",

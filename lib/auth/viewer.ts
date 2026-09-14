@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AppRole, Viewer } from "@/features/auth/types";
+import type { AppRole, Viewer } from "@/lib/auth/types";
 import { isRoleAssignmentActive } from "@/lib/auth/role-validity";
 
 const priority: AppRole[] = ["admin", "executive", "user", "staff"];

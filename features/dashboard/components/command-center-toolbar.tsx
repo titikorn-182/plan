@@ -2,7 +2,7 @@ import { Download, Filter, LogOut, Megaphone, Printer } from "lucide-react";
 import Link from "next/link";
 import { PeriodSelector } from "@/components/layout/period-selector";
 import { WorkspaceMenu } from "@/components/layout/workspace-menu";
-import type { Viewer } from "@/features/auth/types";
+import type { Viewer } from "@/lib/auth/types";
 import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
 
 export function CommandCenterToolbar({

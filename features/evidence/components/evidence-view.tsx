@@ -24,7 +24,7 @@ import type { OperationState } from "@/features/shared/action-state";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import type { AppRole } from "@/features/auth/types";
+import type { AppRole } from "@/lib/auth/types";
 import type { EvidenceEntityOption, EvidenceRow } from "@/features/evidence/types";
 import { formatThaiNumber } from "@/features/shared/formatters";
 import type { PaginationMeta } from "@/features/shared/pagination";

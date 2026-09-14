@@ -7,8 +7,9 @@ import {
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
 } from "@/features/shared/server-actions";
-import { remainingBudget } from "@/lib/operations/rules";
+import { remainingBudget } from "@/features/shared/operation-rules";
 import { formatThaiInteger } from "@/features/shared/formatters";
 import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
@@ -34,8 +35,7 @@ export async function saveDisbursementAction(
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
   const { supabase, userId } = await authenticated();
-  if (!userId)
-    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired(previous);
 
   const { data: project, error: projectError } = await supabase
     .from("projects")

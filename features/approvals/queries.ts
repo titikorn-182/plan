@@ -3,7 +3,7 @@ import "server-only";
 import type { WorkflowTask } from "@/features/approvals/types";
 import type { ApprovalView } from "@/features/approvals/types";
 import { isWorkflowStatus } from "@/features/approvals/types";
-import { isAppRole } from "@/features/auth/types";
+import { isAppRole } from "@/lib/auth/types";
 import { isWorkflowEntityType } from "@/features/shared/workflow-entity-types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {

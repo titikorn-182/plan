@@ -1,9 +1,13 @@
 "use server";
 
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { INPUT_LIMITS, MONEY_LIMITS } from "@/lib/config/limits";
-import { friendlyError, revalidateOperationPaths } from "@/features/shared/server-actions";
+import {
+  authenticated,
+  friendlyError,
+  revalidateOperationPaths,
+  sessionExpired,
+} from "@/features/shared/server-actions";
 import {
   getBudgetExpenseTotal,
   parseBudgetExpenseBreakdown,
@@ -173,12 +177,8 @@ export async function saveBudgetRequestAction(
     }
   }
 
-  const supabase = await createClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
-  if (claimsError || !userId) {
-    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
-  }
+  const { supabase, userId } = await authenticated();
+  if (!userId) return sessionExpired(previous);
 
   const masterDataResult = await getFiscalYearMasterDataCatalogs([parsed.data.fiscalYearId]);
   if (masterDataResult.error) {

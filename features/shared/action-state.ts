@@ -3,6 +3,9 @@ export interface OperationState {
   message?: string;
   id?: string;
   version?: number;
-  status?: string;
   errors?: Record<string, string[]>;
 }
+
+export type OperationStateWithStatus<TStatus extends string> = OperationState & {
+  status?: TStatus;
+};

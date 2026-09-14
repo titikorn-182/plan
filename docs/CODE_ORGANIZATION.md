@@ -33,6 +33,9 @@ tests/                       unit, integration, database, E2E และ UAT cont
 6. ไฟล์ฝั่ง server ที่ติดต่อฐานข้อมูลหรืออ่าน secret ต้องใช้ `import "server-only"`
 7. ข้อมูลอ้างอิงที่เปลี่ยนตามปีงบประมาณ เช่น โครงสร้างแผนและหมวดรายจ่าย ต้องเก็บในฐานข้อมูลเป็น Master Data ไม่ประกาศรายการซ้ำในไฟล์ TypeScript
 8. ค่าจำกัดร่วม เช่น ความยาวข้อความ จำนวนรายการ และวงเงินสูงสุด ต้องอ้างจาก `lib/config/limits.ts`
+9. Type ของการยืนยันตัวตนที่ใช้ร่วมกันอยู่ใน `lib/auth/types.ts` เพื่อไม่ให้ infrastructure import ย้อนกลับเข้า feature
+10. Business rule ที่หลาย feature ใช้ร่วมกันอยู่ใน `features/shared/` เช่น `operation-rules.ts` ส่วน parser ของรูปแบบไฟล์ทั่วไปอยู่ใน `lib/files/`
+11. Server Action ที่คืนสถานะทางธุรกิจต้องใช้ `OperationStateWithStatus<สถานะที่อนุญาต>` ห้ามใช้ `string` กว้าง ๆ
 
 ## Master Data และ Database Type
 
@@ -53,6 +56,7 @@ app → features → shared/lib → generated types
 - การ import ข้าม feature ทำได้เมื่อเป็นความสัมพันธ์ทางธุรกิจจริง เช่น รายงานเบิกจ่ายต้องเลือกโครงการ
 - ห้ามให้ `components/ui` import component หรือ business rule ของ feature
 - ห้ามให้ `lib` importกลับไปหา UI หรือ feature
+- UAT contract จะตรวจทิศทาง `lib → features` และการใช้ `any` แบบระบุชัด เพื่อป้องกันโครงสร้างถอยหลัง
 
 ## ก่อนเพิ่มไฟล์ใหม่
 

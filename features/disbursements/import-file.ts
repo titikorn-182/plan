@@ -8,6 +8,7 @@ import {
   type ImportedDisbursement,
   type ImportIssue,
 } from "@/features/disbursements/import-types";
+import { parseCsvRows } from "@/lib/files/csv";
 
 const EXPECTED_HEADERS = [
   "project_code",
@@ -19,34 +20,6 @@ const EXPECTED_HEADERS = [
 ] as const;
 
 type RawCell = string | number | Date | null;
-
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let value = "";
-  let quoted = false;
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    if (character === '"') {
-      if (quoted && text[index + 1] === '"') {
-        value += '"';
-        index += 1;
-      } else quoted = !quoted;
-    } else if (character === "," && !quoted) {
-      row.push(value);
-      value = "";
-    } else if ((character === "\n" || character === "\r") && !quoted) {
-      if (character === "\r" && text[index + 1] === "\n") index += 1;
-      row.push(value);
-      if (row.some((cell) => cell.trim())) rows.push(row);
-      row = [];
-      value = "";
-    } else value += character;
-  }
-  row.push(value);
-  if (row.some((cell) => cell.trim())) rows.push(row);
-  return rows;
-}
 
 function cellText(value: RawCell): string {
   if (value instanceof Date) return value.toISOString().slice(0, 10);
@@ -162,7 +135,7 @@ export async function parseDisbursementImportFile(file: File): Promise<{
   }
   const extension = file.name.split(".").pop()?.toLowerCase();
   if (extension === "csv") {
-    return normalizeRows(parseCsv(await file.text()));
+    return normalizeRows(parseCsvRows(await file.text()));
   }
   if (extension !== "xlsx") {
     return {

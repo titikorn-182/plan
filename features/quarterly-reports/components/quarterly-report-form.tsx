@@ -3,7 +3,6 @@
 import { useActionState, useMemo, useState } from "react";
 import { AlertTriangle, CalendarClock, FileCheck2, Gauge } from "lucide-react";
 import { saveQuarterlyReportAction } from "@/features/quarterly-reports/actions";
-import type { OperationState } from "@/features/shared/action-state";
 import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
   FormActions,
@@ -15,11 +14,14 @@ import {
   fieldClass,
 } from "@/components/ui/operation-form";
 import { ProgressBar, RegisterSection } from "@/components/ui/module-primitives";
-import type { QuarterlyReportFormOptions } from "@/features/quarterly-reports/types";
+import type {
+  QuarterlyReportActionState,
+  QuarterlyReportFormOptions,
+} from "@/features/quarterly-reports/types";
 
 export function QuarterlyReportForm({ options }: { options: QuarterlyReportFormOptions }) {
   const record = options.record;
-  const initial: OperationState = { id: record?.id, version: record?.version };
+  const initial: QuarterlyReportActionState = { id: record?.id, version: record?.version };
   const [state, action, pending] = useActionState(saveQuarterlyReportAction, initial);
   const [projectId, setProjectId] = useState(record?.projectId ?? options.projects[0]?.id ?? "");
   const selectedProject = useMemo(

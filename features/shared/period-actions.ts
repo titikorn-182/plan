@@ -4,7 +4,12 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { OperationState } from "@/features/shared/action-state";
-import { authenticated, friendlyError, invalid } from "@/features/shared/server-actions";
+import {
+  authenticated,
+  friendlyError,
+  invalid,
+  sessionExpired,
+} from "@/features/shared/server-actions";
 import { REPORTING_PERIOD_COOKIE } from "@/features/shared/period-preference";
 import { VALIDATION_LIMITS } from "@/lib/config/limits";
 
@@ -25,7 +30,7 @@ export async function selectReportingPeriodAction(
   if (!parsed.success) return invalid(previous, parsed.error);
 
   const { supabase, userId } = await authenticated();
-  if (!userId) return { success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired(previous);
 
   const { data, error } = await supabase
     .from("fiscal_years")

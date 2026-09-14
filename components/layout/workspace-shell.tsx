@@ -11,7 +11,7 @@ import {
 } from "@/components/layout/navigation";
 import { WorkspaceMenu } from "@/components/layout/workspace-menu";
 import { PeriodSelector } from "@/components/layout/period-selector";
-import { APP_ROLE_LABELS, type Viewer } from "@/features/auth/types";
+import { APP_ROLE_LABELS, type Viewer } from "@/lib/auth/types";
 import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
 
 export function WorkspaceShell({

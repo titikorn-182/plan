@@ -1,4 +1,4 @@
-import type { AppRole } from "@/features/auth/types";
+import type { AppRole } from "@/lib/auth/types";
 import type { PaginationMeta } from "@/features/shared/pagination";
 
 export const ADMIN_SECTIONS = [

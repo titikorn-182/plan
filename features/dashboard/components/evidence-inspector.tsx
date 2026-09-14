@@ -1,6 +1,6 @@
 import { Bell, Check, CircleCheck, ExternalLink, FileText, TriangleAlert, X } from "lucide-react";
 import Link from "next/link";
-import type { Viewer } from "@/features/auth/types";
+import type { Viewer } from "@/lib/auth/types";
 import { StatusDot } from "@/features/dashboard/components/status-metric";
 import { COMMAND_CENTER_STATUS_META } from "@/features/dashboard/presentation";
 import type { CommandCenterRow, DecisionRecord } from "@/features/dashboard/types";

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { OperationState } from "@/features/shared/action-state";
-import { authenticated, friendlyError } from "@/features/shared/server-actions";
+import { authenticated, friendlyError, sessionExpired } from "@/features/shared/server-actions";
 
 export async function markNotificationAction(
   previous: OperationState,
@@ -12,7 +12,7 @@ export async function markNotificationAction(
   const id = String(formData.get("id") ?? "");
   const all = formData.get("all") === "true";
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ" };
+  if (!userId) return sessionExpired(previous);
 
   let query = supabase
     .from("notifications")

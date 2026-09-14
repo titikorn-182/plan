@@ -21,7 +21,7 @@ import {
   calculateKpiAttainmentPercent,
   COMMAND_CENTER_THRESHOLDS,
   getQuarterProgressTarget,
-} from "@/lib/operations/rules";
+} from "@/features/shared/operation-rules";
 import { createClient } from "@/lib/supabase/server";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";

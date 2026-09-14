@@ -4,7 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { getCurrentNavigationHref, getVisibleNavigation } from "@/components/layout/navigation";
-import type { AppRole } from "@/features/auth/types";
+import type { AppRole } from "@/lib/auth/types";
 
 export function WorkspaceMenu({
   pathname,

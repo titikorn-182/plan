@@ -1,5 +1,5 @@
 import type { CommandCenterRow, CommandCenterStatus } from "@/features/dashboard/types";
-import { COMMAND_CENTER_THRESHOLDS } from "@/lib/operations/rules";
+import { COMMAND_CENTER_THRESHOLDS } from "@/features/shared/operation-rules";
 
 export interface CommandCenterStatusMeta {
   label: string;

@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const uuidOrEmpty = z.string().uuid().optional().or(z.literal(""));
 export const moneySchema = z.coerce.number().finite().min(0).max(MONEY_LIMITS.maximumBaht);
+export const SESSION_EXPIRED_MESSAGE = "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่";
 
 export function invalid(previous: OperationState, error: z.ZodError): OperationState {
   return {
@@ -44,6 +45,16 @@ export async function authenticated() {
 
   if (error || !userId) return { supabase, userId: null };
   return { supabase, userId };
+}
+
+export function sessionExpired<TState extends OperationState>(
+  previous: TState,
+): TState & { message: string } {
+  return {
+    ...previous,
+    success: false,
+    message: SESSION_EXPIRED_MESSAGE,
+  };
 }
 
 export function revalidateOperationPaths(...paths: string[]): void {

@@ -3,7 +3,6 @@
 import { useActionState, useMemo, useState } from "react";
 import { Calculator, FileCheck2, Flag, ShieldCheck } from "lucide-react";
 import { saveKpiResultAction } from "@/features/kpi/actions";
-import type { OperationState } from "@/features/shared/action-state";
 import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
   FormActions,
@@ -15,14 +14,14 @@ import {
   fieldClass,
 } from "@/components/ui/operation-form";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
-import type { KpiResultFormRecord } from "@/features/kpi/types";
+import type { KpiResultActionState, KpiResultFormRecord } from "@/features/kpi/types";
 import { formatThaiNumber } from "@/features/shared/formatters";
 
 export function KpiResultForm({ record }: { record: KpiResultFormRecord }) {
   const [state, action, pending] = useActionState(saveKpiResultAction, {
     id: record.id,
     version: record.version,
-  } satisfies OperationState);
+  } satisfies KpiResultActionState);
   const [actual, setActual] = useState(record.actual === null ? "" : String(record.actual));
   const ratio = useMemo(() => {
     if (actual === "" || record.target === 0) return 0;

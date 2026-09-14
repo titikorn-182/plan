@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { LoaderCircle, Save } from "lucide-react";
 import { updateUserAccessAction } from "@/features/admin/actions";
 import type { AdminUser } from "@/features/admin/types";
-import { APP_ROLE_LABELS, APP_ROLE_NAMES, APP_ROLES } from "@/features/auth/types";
+import { APP_ROLE_LABELS, APP_ROLE_NAMES, APP_ROLES } from "@/lib/auth/types";
 import type { OperationState } from "@/features/shared/action-state";
 import type { OrganizationOption } from "@/features/shared/types";
 import { FieldLabel, FormNotice, fieldClass } from "@/components/ui/operation-form";

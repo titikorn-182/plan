@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { AdminUsersData } from "@/features/admin/types";
-import { isAppRole } from "@/features/auth/types";
+import { isAppRole } from "@/lib/auth/types";
 import { createPagination, getPaginationRange } from "@/features/shared/pagination";
 import { result } from "@/features/shared/query-utils";
 import type { DataResult, OrganizationOption } from "@/features/shared/types";

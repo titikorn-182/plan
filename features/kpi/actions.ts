@@ -1,15 +1,15 @@
 "use server";
 
 import { z } from "zod";
-import { isKpiDirection } from "@/features/kpi/types";
-import type { OperationState } from "@/features/shared/action-state";
+import { isKpiDirection, type KpiResultActionState } from "@/features/kpi/types";
 import {
   authenticated,
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
 } from "@/features/shared/server-actions";
-import { evaluateKpiResult } from "@/lib/operations/rules";
+import { evaluateKpiResult } from "@/features/shared/operation-rules";
 import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 const kpiSchema = z.object({
@@ -29,9 +29,9 @@ const kpiSchema = z.object({
 });
 
 export async function saveKpiResultAction(
-  previous: OperationState,
+  previous: KpiResultActionState,
   formData: FormData,
-): Promise<OperationState> {
+): Promise<KpiResultActionState> {
   const parsed = kpiSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
@@ -45,8 +45,7 @@ export async function saveKpiResultAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId)
-    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired(previous);
   const { data: current, error: currentError } = await supabase
     .from("kpi_results")
     .select("kpi_definitions!inner(target,direction)")

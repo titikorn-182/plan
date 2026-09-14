@@ -2,12 +2,13 @@
 
 import { z } from "zod";
 import { projectCompletionDueDate } from "@/features/project-completion-reports/deadline";
-import type { OperationState } from "@/features/shared/action-state";
+import type { ProjectCompletionReportActionState } from "@/features/project-completion-reports/types";
 import {
   authenticated,
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
 import { INPUT_LIMITS } from "@/lib/config/limits";
@@ -36,9 +37,9 @@ const REQUIRED_SUBMISSION_FIELDS = [
 ] as const;
 
 export async function saveProjectCompletionReportAction(
-  previous: OperationState,
+  previous: ProjectCompletionReportActionState,
   formData: FormData,
-): Promise<OperationState> {
+): Promise<ProjectCompletionReportActionState> {
   const parsed = reportSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
@@ -53,9 +54,7 @@ export async function saveProjectCompletionReportAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId) {
-    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
-  }
+  if (!userId) return sessionExpired(previous);
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .select("organization_id,fiscal_year_id,ends_on,status")

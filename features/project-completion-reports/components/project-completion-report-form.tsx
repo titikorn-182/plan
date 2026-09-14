@@ -5,8 +5,10 @@ import Link from "next/link";
 import { CalendarCheck2, CalendarClock, FileCheck2, ShieldCheck } from "lucide-react";
 import { saveProjectCompletionReportAction } from "@/features/project-completion-reports/actions";
 import { daysUntil } from "@/features/project-completion-reports/deadline";
-import type { ProjectCompletionReportFormOptions } from "@/features/project-completion-reports/types";
-import type { OperationState } from "@/features/shared/action-state";
+import type {
+  ProjectCompletionReportActionState,
+  ProjectCompletionReportFormOptions,
+} from "@/features/project-completion-reports/types";
 import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
   areaClass,
@@ -79,7 +81,7 @@ export function ProjectCompletionReportForm({
   options: ProjectCompletionReportFormOptions;
 }) {
   const record = options.record;
-  const initial: OperationState = {
+  const initial: ProjectCompletionReportActionState = {
     id: record?.id,
     version: record?.version,
     status: record?.status,

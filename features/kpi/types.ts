@@ -1,11 +1,12 @@
 import type { Enums } from "@/types/database.generated";
-import type { KpiDirection } from "@/features/shared/kpi-contracts";
+import type { KpiDirection, KpiResultState } from "@/features/shared/kpi-contracts";
+import type { OperationStateWithStatus } from "@/features/shared/action-state";
 
 export { KPI_DIRECTIONS, isKpiDirection } from "@/features/shared/kpi-contracts";
-export type { KpiDirection } from "@/features/shared/kpi-contracts";
+export type { KpiDirection, KpiResultState } from "@/features/shared/kpi-contracts";
 
 export type KpiResultStatus = Enums<"kpi_result_status">;
-export type KpiResultState = Enums<"result_state">;
+export type KpiResultActionState = OperationStateWithStatus<KpiResultStatus>;
 
 export const KPI_RESULT_STATUSES = [
   "not_started",

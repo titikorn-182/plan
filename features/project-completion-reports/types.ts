@@ -1,6 +1,9 @@
 import type { Enums } from "@/types/database.generated";
+import type { OperationStateWithStatus } from "@/features/shared/action-state";
 
 export type ProjectCompletionReportStatus = Enums<"report_status">;
+export type ProjectCompletionReportActionState =
+  OperationStateWithStatus<ProjectCompletionReportStatus>;
 export type ProjectCompletionStatus = ProjectCompletionReportStatus | "not_started";
 export type ProjectCompletionStatusLabel =
   | "ยังไม่เริ่ม"

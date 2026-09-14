@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { OperationState } from "@/features/shared/action-state";
-import { authenticated, friendlyError, invalid } from "@/features/shared/server-actions";
+import {
+  authenticated,
+  friendlyError,
+  invalid,
+  sessionExpired,
+} from "@/features/shared/server-actions";
 
 const scheduleSchema = z
   .object({
@@ -31,7 +36,7 @@ export async function createReportScheduleAction(
   const parsed = scheduleSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);
   const { supabase, userId } = await authenticated();
-  if (!userId) return { success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired(previous);
   const input = parsed.data;
   const { error } = await supabase.from("report_schedules").insert({
     owner_id: userId,

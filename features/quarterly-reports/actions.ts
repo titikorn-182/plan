@@ -1,12 +1,13 @@
 "use server";
 
 import { z } from "zod";
-import type { OperationState } from "@/features/shared/action-state";
+import type { QuarterlyReportActionState } from "@/features/quarterly-reports/types";
 import {
   authenticated,
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
 import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
@@ -33,9 +34,9 @@ const reportSchema = z.object({
 });
 
 export async function saveQuarterlyReportAction(
-  previous: OperationState,
+  previous: QuarterlyReportActionState,
   formData: FormData,
-): Promise<OperationState> {
+): Promise<QuarterlyReportActionState> {
   const parsed = reportSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
@@ -49,8 +50,7 @@ export async function saveQuarterlyReportAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId)
-    return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired(previous);
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .select("organization_id,fiscal_year_id")

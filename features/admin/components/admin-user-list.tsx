@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import type { AdminUser, AdminUsersData } from "@/features/admin/types";
-import { APP_ROLE_LABELS } from "@/features/auth/types";
+import { APP_ROLE_LABELS } from "@/lib/auth/types";
 
 const permissionRows = [
   ["Dashboard ส่วนบุคคล", true, true, true, true],

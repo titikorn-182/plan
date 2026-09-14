@@ -15,6 +15,8 @@ import {
   authenticated,
   friendlyError,
   revalidateOperationPaths,
+  SESSION_EXPIRED_MESSAGE,
+  sessionExpired,
 } from "@/features/shared/server-actions";
 
 const rowsSchema = z.array(importedDisbursementSchema).min(1).max(DISBURSEMENT_IMPORT_MAX_ROWS);
@@ -38,7 +40,7 @@ async function validateAgainstDatabase(rows: ImportedDisbursement[]): Promise<{
   if (!userId || !period.fiscalYearId) {
     return {
       payload: [],
-      errors: [{ rowNumber: 1, field: "session", message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" }],
+      errors: [{ rowNumber: 1, field: "session", message: SESSION_EXPIRED_MESSAGE }],
     };
   }
   const codes = [...new Set(rows.map((row) => row.projectCode))];
@@ -170,8 +172,7 @@ export async function confirmDisbursementImport(
     };
   }
   const { supabase, userId } = await authenticated();
-  if (!userId)
-    return { success: false, inserted: 0, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  if (!userId) return sessionExpired({ success: false, inserted: 0 });
   const { error } = await supabase.from("disbursements").insert(payload);
   if (error)
     return {

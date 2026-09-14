@@ -7,6 +7,7 @@ import {
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  sessionExpired,
 } from "@/features/shared/server-actions";
 import { INPUT_LIMITS } from "@/lib/config/limits";
 
@@ -39,7 +40,7 @@ export async function actOnApprovalAction(
   }
 
   const { supabase, userId } = await authenticated();
-  if (!userId) return { ...previous, success: false, message: "เซสชันหมดอายุ" };
+  if (!userId) return sessionExpired(previous);
   const { data: task, error: taskError } = await supabase
     .from("approval_tasks")
     .select("entity_type")

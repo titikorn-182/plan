@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { COLLECTION_LIMITS, IMPORT_LIMITS, INPUT_LIMITS } from "@/lib/config/limits";
 import {
   getBudgetRequestExpenseItemsTotal,
@@ -29,7 +28,12 @@ import {
   normalizeBudgetRequestSourceOption,
 } from "@/features/budget-requests/source-options";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
-import { friendlyError, revalidateOperationPaths } from "@/features/shared/server-actions";
+import {
+  authenticated,
+  friendlyError,
+  revalidateOperationPaths,
+  sessionExpired,
+} from "@/features/shared/server-actions";
 import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
 import { getFiscalYearMasterData } from "@/features/shared/master-data";
 
@@ -224,12 +228,8 @@ export async function saveBudgetRequestBatchAction(
     };
   }
 
-  const supabase = await createClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
-  if (claimsError || !userId) {
-    return { success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
-  }
+  const { supabase, userId } = await authenticated();
+  if (!userId) return sessionExpired({ success: false });
 
   const organizationIds = [...new Set(normalizedGroups.map((group) => group.organizationId))];
   const [fiscalYearResult, budgetCycleResult, organizationsResult, existingResult] =

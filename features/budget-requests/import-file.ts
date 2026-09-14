@@ -19,6 +19,7 @@ import { isBudgetRequestExpenseCombination } from "@/features/budget-requests/ex
 import type { BudgetRequestImportResult } from "@/features/budget-requests/import-types";
 import type { BudgetExpenseOption } from "@/features/shared/master-data";
 import { IMPORT_LIMITS, INPUT_LIMITS, MONEY_LIMITS } from "@/lib/config/limits";
+import { parseCsvRows } from "@/lib/files/csv";
 
 type RawCell = string | number | boolean | Date | null;
 
@@ -59,34 +60,6 @@ function isIsoDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
-}
-
-function parseCsv(text: string): RawCell[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let value = "";
-  let quoted = false;
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    if (character === '"') {
-      if (quoted && text[index + 1] === '"') {
-        value += '"';
-        index += 1;
-      } else quoted = !quoted;
-    } else if (character === "," && !quoted) {
-      row.push(value);
-      value = "";
-    } else if ((character === "\n" || character === "\r") && !quoted) {
-      if (character === "\r" && text[index + 1] === "\n") index += 1;
-      row.push(value);
-      if (row.some((cell) => cell.trim())) rows.push(row);
-      row = [];
-      value = "";
-    } else value += character;
-  }
-  row.push(value);
-  if (row.some((cell) => cell.trim())) rows.push(row);
-  return rows;
 }
 
 function normalizeRows(
@@ -230,7 +203,7 @@ export async function parseBudgetRequestImportFile(
   }
   const extension = file.name.split(".").pop()?.toLowerCase();
   if (extension === "csv") {
-    return normalizeRows(parseCsv(await file.text()), sourceOptions, expenseOptions);
+    return normalizeRows(parseCsvRows(await file.text()), sourceOptions, expenseOptions);
   }
   if (extension !== "xlsx") {
     return { records: [], errors: ["รองรับเฉพาะไฟล์ .xlsx และ .csv"] };

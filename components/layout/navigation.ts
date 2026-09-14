@@ -13,7 +13,7 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
-import type { AppRole } from "@/features/auth/types";
+import type { AppRole } from "@/lib/auth/types";
 
 export type NavigationItem = {
   label: string;

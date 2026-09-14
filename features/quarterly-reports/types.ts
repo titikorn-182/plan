@@ -1,7 +1,9 @@
 import type { Enums } from "@/types/database.generated";
+import type { OperationStateWithStatus } from "@/features/shared/action-state";
 import type { FiscalYearOption, ProjectOption } from "@/features/shared/types";
 
 export type ReportStatus = Enums<"report_status">;
+export type QuarterlyReportActionState = OperationStateWithStatus<ReportStatus>;
 export type QuarterlyReportStatusLabel =
   "ฉบับร่าง" | "รอตรวจ" | "เกินกำหนด" | "อนุมัติแล้ว" | "ต้องแก้ไข";
 

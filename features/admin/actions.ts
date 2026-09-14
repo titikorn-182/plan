@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { APP_ROLES, isAppRole } from "@/features/auth/types";
+import { APP_ROLES, isAppRole } from "@/lib/auth/types";
 import type { OperationState } from "@/features/shared/action-state";
 import { friendlyError, invalid, uuidOrEmpty } from "@/features/shared/server-actions";
 import { requireAdmin } from "@/lib/auth/viewer";

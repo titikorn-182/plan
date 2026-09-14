@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
-import type { Viewer } from "@/features/auth/types";
+import type { Viewer } from "@/lib/auth/types";
 import { CommandCenterFilters } from "@/features/dashboard/components/command-center-filters";
 import { CommandCenterMatrix } from "@/features/dashboard/components/command-center-matrix";
 import { CommandCenterSidebar } from "@/features/dashboard/components/command-center-sidebar";
@@ -24,7 +24,7 @@ import type {
 } from "@/features/dashboard/types";
 import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
 import { downloadCsv } from "@/lib/browser/download";
-import { getQuarterProgressTarget } from "@/lib/operations/rules";
+import { getQuarterProgressTarget } from "@/features/shared/operation-rules";
 
 export function ExecutiveDashboard({
   records,

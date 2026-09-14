@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -66,6 +66,7 @@ test("every mutating action performs an authenticated session check", () => {
     "features/admin/actions.ts",
     "features/approvals/actions.ts",
     "features/budget-requests/actions.ts",
+    "features/budget-requests/batch-actions.ts",
     "features/disbursements/actions.ts",
     "features/disbursements/import-actions.ts",
     "features/evidence/actions.ts",
@@ -81,7 +82,6 @@ test("every mutating action performs an authenticated session check", () => {
   const actions = source.match(/export async function \w+Action/g) ?? [];
   assert.equal(actions.length >= 9, true);
   assert.match(read("features/shared/server-actions.ts"), /auth\.getClaims\(\)/);
-  assert.match(read("features/budget-requests/actions.ts"), /auth\.getClaims\(\)/);
   assert.equal(
     actionFiles
       .slice(1)
@@ -89,6 +89,32 @@ test("every mutating action performs an authenticated session check", () => {
     true,
   );
   assert.match(source, /requireAdmin\(\)/);
+});
+
+test("infrastructure dependencies point inward and source types avoid explicit any", () => {
+  const sourcePaths = ["app", "components", "features", "lib"].flatMap((directory) =>
+    readdirSync(resolve(root, directory), { recursive: true })
+      .map(String)
+      .filter((path) => /\.(?:ts|tsx)$/.test(path))
+      .map((path) => `${directory}/${path.replaceAll("\\", "/")}`),
+  );
+  const libPaths = sourcePaths.filter((path) => path.startsWith("lib/"));
+
+  libPaths.forEach((path) => {
+    assert.doesNotMatch(read(path), /from ["']@\/features\//, `${path} imports a feature`);
+  });
+  sourcePaths.forEach((path) => {
+    assert.doesNotMatch(
+      read(path),
+      /(?:\bas\s+any\b|:\s*any\b|<any>|Array<any>)/,
+      `${path} uses an explicit any type`,
+    );
+  });
+
+  assert.equal(existsSync(resolve(root, "features/auth/types.ts")), false);
+  assert.equal(existsSync(resolve(root, "lib/auth/types.ts")), true);
+  assert.equal(existsSync(resolve(root, "lib/operations/rules.ts")), false);
+  assert.equal(existsSync(resolve(root, "features/shared/operation-rules.ts")), true);
 });
 
 test("reporting tools use authenticated data, period filters, validation, and RLS", () => {

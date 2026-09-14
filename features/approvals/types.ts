@@ -1,4 +1,4 @@
-import type { AppRole } from "@/features/auth/types";
+import type { AppRole } from "@/lib/auth/types";
 import type { WorkflowEntityType } from "@/features/shared/workflow-entity-types";
 
 export const WORKFLOW_STATUSES = [

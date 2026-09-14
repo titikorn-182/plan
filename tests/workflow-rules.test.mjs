@@ -5,7 +5,7 @@ import {
   getQuarterProgressTarget,
   isProjectPeriodValid,
   remainingBudget,
-} from "../lib/operations/rules.ts";
+} from "../features/shared/operation-rules.ts";
 import {
   formatMillionBaht,
   formatPercent,

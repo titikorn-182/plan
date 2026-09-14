@@ -6,7 +6,7 @@ import { AdminAccessEditor } from "@/features/admin/components/admin-access-edit
 import { AdminInvitePanel } from "@/features/admin/components/admin-invite-panel";
 import { AdminUserList } from "@/features/admin/components/admin-user-list";
 import type { AdminUsersData } from "@/features/admin/types";
-import { APP_ROLE_LABELS, APP_ROLES } from "@/features/auth/types";
+import { APP_ROLE_LABELS, APP_ROLES } from "@/lib/auth/types";
 import type { OrganizationOption } from "@/features/shared/types";
 
 export function AdminView({
