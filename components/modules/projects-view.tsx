@@ -8,6 +8,7 @@ import {
   Check,
   ChevronRight,
   CircleDollarSign,
+  Download,
   FileCheck2,
   ListFilter,
   Plus,
@@ -261,7 +262,7 @@ export function ProjectsView({
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
         <RegisterSection title="ทะเบียนโครงการ" aside={filterToggle}>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-xs">
+            <table className="w-full min-w-[980px] text-left text-xs">
               <thead className="bg-stone-50 text-stone-600">
                 <tr className="border-b border-stone-200">
                   <th className="px-4 py-3">โครงการ / เจ้าของ</th>
@@ -270,6 +271,7 @@ export function ProjectsView({
                   <th className="px-3 py-3">ความก้าวหน้า</th>
                   <th className="px-3 py-3">สุขภาพโครงการ</th>
                   <th className="px-3 py-3">สิ้นสุด</th>
+                  <th className="px-3 py-3 text-center">ข้อเสนอ</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,6 +311,17 @@ export function ProjectsView({
                       <StatusPill tone={healthTone(project.health)}>{project.health}</StatusPill>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">{project.due}</td>
+                    <td className="px-3 py-3 text-center">
+                      <Link
+                        aria-label={`ดาวน์โหลด PDF ข้อเสนอโครงการ ${project.id}`}
+                        className="inline-flex min-h-10 items-center gap-1.5 border border-orange-300 bg-white px-3 font-semibold text-[#b53807] hover:border-orange-500 hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                        download
+                        href={`/api/projects/${project.uuid}/proposal`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <Download aria-hidden="true" size={15} /> PDF
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -400,13 +413,25 @@ export function ProjectsView({
               </li>
             </ul>
           </section>
-          <Link
-            className="flex w-full items-center justify-between px-5 py-4 text-sm font-bold text-[#b53807] hover:bg-orange-50"
-            href={selected.editable ? `/projects/${selected.uuid}/edit` : "/evidence"}
-          >
-            {selected.editable ? "แก้ไขข้อเสนอโครงการ" : "เปิดแฟ้มหลักฐาน"}{" "}
-            <ChevronRight size={17} />
-          </Link>
+          <div className="grid gap-px bg-stone-200">
+            <Link
+              className="flex min-h-12 w-full items-center justify-between bg-[#cf430c] px-5 py-3 text-sm font-bold text-white hover:bg-[#ad3507] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-white"
+              download
+              href={`/api/projects/${selected.uuid}/proposal`}
+            >
+              <span className="inline-flex items-center gap-2">
+                <Download aria-hidden="true" size={17} /> ดาวน์โหลด PDF ข้อเสนอโครงการ
+              </span>
+              <ChevronRight aria-hidden="true" size={17} />
+            </Link>
+            <Link
+              className="flex min-h-12 w-full items-center justify-between bg-white px-5 py-3 text-sm font-bold text-[#b53807] hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-orange-600"
+              href={selected.editable ? `/projects/${selected.uuid}/edit` : "/evidence"}
+            >
+              {selected.editable ? "แก้ไขข้อเสนอโครงการ" : "เปิดแฟ้มหลักฐาน"}{" "}
+              <ChevronRight aria-hidden="true" size={17} />
+            </Link>
+          </div>
         </aside>
       </div>
 

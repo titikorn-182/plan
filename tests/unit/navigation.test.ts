@@ -149,5 +149,7 @@ describe("project entry points", () => {
     );
     expect(html.match(/href="\/projects\/new"/g)).toHaveLength(1);
     expect(html).toContain('href="/projects/test-project/edit"');
+    expect(html.match(/href="\/api\/projects\/test-project\/proposal"/g)).toHaveLength(2);
+    expect(html).toContain("ดาวน์โหลด PDF ข้อเสนอโครงการ");
   });
 });
