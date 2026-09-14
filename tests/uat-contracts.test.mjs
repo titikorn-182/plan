@@ -118,7 +118,8 @@ test("service role is server-only and absent from public variable names", () => 
 
 test("large operational registers use server-side pagination", () => {
   const queryFiles = [
-    "features/admin/queries.ts",
+    "features/admin/queries/users.ts",
+    "features/admin/queries/audit.ts",
     "features/approvals/queries.ts",
     "features/budget-requests/queries.ts",
     "features/disbursements/queries.ts",

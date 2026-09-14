@@ -1,4 +1,5 @@
 import { createProjectProposalPdf } from "@/features/projects/project-proposal-pdf";
+import { resolveProjectProposalPdfData } from "@/features/projects/project-proposal-pdf-data";
 import { getProjectFormOptions } from "@/features/projects/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,30 +21,10 @@ export async function GET(_request: Request, context: RouteContext<"/api/project
   if (result.error || !options || !record)
     return new Response("Project not found", { status: 404 });
 
-  const organizationName =
-    options.organizations.find((item) => item.id === record.organizationId)?.label ?? "-";
-  const fiscalYearLabel =
-    options.fiscalYears.find((item) => item.id === record.fiscalYearId)?.label ?? "-";
-  const budgetRequestLabel = record.budgetRequestId
-    ? (options.budgetRequests.find((item) => item.id === record.budgetRequestId)?.label ?? "-")
-    : "ไม่ได้อ้างอิงคำของบ";
+  const pdfData = resolveProjectProposalPdfData(options);
+  if (!pdfData) return new Response("Project not found", { status: 404 });
 
-  const pdf = await createProjectProposalPdf({
-    code: record.code,
-    title: record.title,
-    organizationName,
-    fiscalYearLabel,
-    budgetRequestLabel,
-    projectType: record.projectType,
-    ownerName: record.ownerName,
-    coordinatorName: record.coordinatorName,
-    approvedBudget: record.approvedBudget,
-    disbursementTarget: record.disbursementTarget,
-    startsOn: record.startsOn,
-    endsOn: record.endsOn,
-    status: record.status,
-    proposalDetails: record.proposalDetails,
-  });
+  const pdf = await createProjectProposalPdf(pdfData);
   const filename = `project-proposal-${safeFileName(record.code)}.pdf`;
   return new Response(Uint8Array.from(pdf).buffer, {
     headers: {
