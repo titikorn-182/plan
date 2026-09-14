@@ -11,6 +11,10 @@ import {
   sumProjectExpenses,
   validateProjectProposalForSubmission,
 } from "@/features/projects/proposal-details";
+import {
+  applyProjectPlanStructureSelection,
+  getProjectPlanStructureOptions,
+} from "@/features/projects/plan-structure";
 import { SDG_OPTIONS } from "@/features/shared/sdgs";
 
 describe("project proposal details", () => {
@@ -21,7 +25,32 @@ describe("project proposal details", () => {
       expect(parsed.data.actionPlan).toEqual([]);
       expect(parsed.data.sdgs).toEqual([]);
       expect(parsed.data.sdgAlignmentDescription).toBe("");
+      expect(parsed.data.outputCode).toBe("");
+      expect(parsed.data.activityCode).toBe("");
     }
+  });
+
+  it("keeps plan codes and names in the same hierarchy", () => {
+    const details = createEmptyProjectProposalDetails();
+    const selected = applyProjectPlanStructureSelection(
+      details,
+      "activity",
+      "code",
+      "100210230001",
+    );
+    expect(selected).toMatchObject({
+      outputCode: "1002",
+      outputName: "ผู้สำเร็จการศึกษาด้านสังคมศาสตร์",
+      operationalPlanCode: "10021023",
+      operationalPlanName: "แผนการผลิตบัณฑิตสาขาวิชารัฐประศาสนศาสตร์",
+      activityCode: "100210230001",
+      projectActivityName: "โครงการผลิตบัณฑิตระดับปริญญาตรี คณะรัฐศาสตร์",
+    });
+    expect(
+      getProjectPlanStructureOptions(selected, "activity").every((option) =>
+        option.code.startsWith("10021023"),
+      ),
+    ).toBe(true);
   });
 
   it("totals expense rows and derives the register project type", () => {
@@ -119,6 +148,9 @@ describe("project proposal details", () => {
       }),
     );
     expect(html).toContain("อัตรา");
+    expect(html).toContain("โครงสร้างแผนและกิจกรรม");
+    expect(html).toContain("รหัสผลผลิต/โครงการ = งาน/โครงการ (4 หลัก)");
+    expect(html).toContain("ชื่อโครงการกิจกรรม = กิจกรรม/โครงการ (12 หลัก)");
     expect(html).toContain("หน่วย");
     expect(html).toContain("จำนวนเงินรวม");
     expect(html).toContain("3,000.00");

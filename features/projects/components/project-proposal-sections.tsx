@@ -16,6 +16,13 @@ import {
   PROJECT_CHARACTERISTICS,
   type ProjectProposalDetails,
 } from "@/features/projects/proposal-details";
+import {
+  applyProjectPlanStructureSelection,
+  getProjectPlanStructureOptions,
+  type ProjectPlanStructureLevel,
+  type ProjectPlanStructureValue,
+} from "@/features/projects/plan-structure";
+import type { BudgetRequestCodedOption } from "@/features/budget-requests/plan-structure-options";
 
 type Props = {
   details: ProjectProposalDetails;
@@ -27,6 +34,53 @@ type Props = {
 const removeAt = <T,>(items: readonly T[], index: number) => items.filter((_, i) => i !== index);
 const replaceAt = <T,>(items: readonly T[], index: number, value: T) =>
   items.map((item, i) => (i === index ? value : item));
+
+function PlanStructureSelect({
+  label,
+  level,
+  valueType,
+  value,
+  options,
+  disabled,
+  errors,
+  onChange,
+}: {
+  label: string;
+  level: ProjectPlanStructureLevel;
+  valueType: ProjectPlanStructureValue;
+  value: string;
+  options: readonly BudgetRequestCodedOption[];
+  disabled: boolean;
+  errors?: string[];
+  onChange: (value: string) => void;
+}) {
+  const hasUnlistedValue =
+    value.length > 0 && !options.some((option) => option[valueType] === value);
+  const id = `project-plan-${level}-${valueType}`;
+  return (
+    <label htmlFor={id}>
+      <FieldLabel>{label}</FieldLabel>
+      <select
+        className={fieldClass}
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        aria-invalid={Boolean(errors?.length)}
+        aria-describedby={errors?.length ? `${id}-error` : undefined}
+      >
+        <option value="">เลือก{label}</option>
+        {hasUnlistedValue ? <option value={value}>ข้อมูลเดิม — {value}</option> : null}
+        {options.map((option) => (
+          <option key={option.code} value={option[valueType]}>
+            {option[valueType]}
+          </option>
+        ))}
+      </select>
+      <FieldError errors={errors} id={`${id}-error`} />
+    </label>
+  );
+}
 
 export function ProposalBasics({
   options,
@@ -726,6 +780,14 @@ export function ProposalBudget({
       }),
     });
   };
+  const outputOptions = getProjectPlanStructureOptions(details, "output");
+  const operationalPlanOptions = getProjectPlanStructureOptions(details, "operationalPlan");
+  const activityOptions = getProjectPlanStructureOptions(details, "activity");
+  const updatePlanStructure = (
+    level: ProjectPlanStructureLevel,
+    valueType: ProjectPlanStructureValue,
+    value: string,
+  ) => setDetails(applyProjectPlanStructureSelection(details, level, valueType, value));
   return (
     <RegisterSection
       title="รายละเอียดงบประมาณ"
@@ -736,6 +798,79 @@ export function ProposalBudget({
       }
     >
       <fieldset className="space-y-4 p-5 sm:p-6" disabled={disabled}>
+        <section className="border-b border-stone-200 pb-5" aria-labelledby="project-plan-title">
+          <div>
+            <h3 id="project-plan-title" className="text-sm font-bold text-stone-950">
+              โครงสร้างแผนและกิจกรรม
+            </h3>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-stone-600">
+              เชื่อมรหัสและชื่อจากระดับผลผลิตลงมาถึงกิจกรรม ระบบจะจำกัดรายการตามสายแผนที่เลือก
+              และเติมข้อมูลระดับบนให้สอดคล้องกันอัตโนมัติ
+            </p>
+          </div>
+          <div className="mt-4 grid gap-x-5 gap-y-4 md:grid-cols-2">
+            <PlanStructureSelect
+              label="รหัสผลผลิต/โครงการ = งาน/โครงการ (4 หลัก)"
+              level="output"
+              valueType="code"
+              value={details.outputCode}
+              options={outputOptions}
+              disabled={disabled}
+              errors={errors?.["proposalDetails.outputCode"]}
+              onChange={(value) => updatePlanStructure("output", "code", value)}
+            />
+            <PlanStructureSelect
+              label="ชื่อผลผลิต = งาน/โครงการ (4 หลัก)"
+              level="output"
+              valueType="name"
+              value={details.outputName}
+              options={outputOptions}
+              disabled={disabled}
+              errors={errors?.["proposalDetails.outputName"]}
+              onChange={(value) => updatePlanStructure("output", "name", value)}
+            />
+            <PlanStructureSelect
+              label="รหัสแผนปฏิบัติการ = โครงการย่อย (8 หลัก)"
+              level="operationalPlan"
+              valueType="code"
+              value={details.operationalPlanCode}
+              options={operationalPlanOptions}
+              disabled={disabled}
+              errors={errors?.["proposalDetails.operationalPlanCode"]}
+              onChange={(value) => updatePlanStructure("operationalPlan", "code", value)}
+            />
+            <PlanStructureSelect
+              label="ชื่อแผนปฏิบัติการ = โครงการย่อย (8 หลัก)"
+              level="operationalPlan"
+              valueType="name"
+              value={details.operationalPlanName}
+              options={operationalPlanOptions}
+              disabled={disabled}
+              errors={errors?.["proposalDetails.operationalPlanName"]}
+              onChange={(value) => updatePlanStructure("operationalPlan", "name", value)}
+            />
+            <PlanStructureSelect
+              label="รหัสโครงการ/กิจกรรม = กิจกรรม (12 หลัก)"
+              level="activity"
+              valueType="code"
+              value={details.activityCode}
+              options={activityOptions}
+              disabled={disabled}
+              errors={errors?.["proposalDetails.activityCode"]}
+              onChange={(value) => updatePlanStructure("activity", "code", value)}
+            />
+            <PlanStructureSelect
+              label="ชื่อโครงการกิจกรรม = กิจกรรม/โครงการ (12 หลัก)"
+              level="activity"
+              valueType="name"
+              value={details.projectActivityName}
+              options={activityOptions}
+              disabled={disabled}
+              errors={errors?.["proposalDetails.projectActivityName"]}
+              onChange={(value) => updatePlanStructure("activity", "name", value)}
+            />
+          </div>
+        </section>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <p className="max-w-2xl text-xs leading-5 text-stone-600">
             ระบุอัตรา หน่วย จำนวน และจำนวนครั้งของแต่ละรายการ ระบบจะคำนวณจำนวนเงินรวมและ

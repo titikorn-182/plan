@@ -94,6 +94,18 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.getByLabel("วันสิ้นสุด").fill("2027-09-30");
     await staff.page.getByLabel("สัปดาห์สิ้นสุด").selectOption("4");
     await staff.page.getByLabel("สถานที่ดำเนินการ").fill("คณะรัฐศาสตร์");
+    await staff.page
+      .getByLabel("รหัสโครงการ/กิจกรรม = กิจกรรม (12 หลัก)")
+      .selectOption("100210230001");
+    await expect(staff.page.getByLabel("รหัสผลผลิต/โครงการ = งาน/โครงการ (4 หลัก)")).toHaveValue(
+      "1002",
+    );
+    await expect(staff.page.getByLabel("รหัสแผนปฏิบัติการ = โครงการย่อย (8 หลัก)")).toHaveValue(
+      "10021023",
+    );
+    await expect(
+      staff.page.getByLabel("ชื่อโครงการกิจกรรม = กิจกรรม/โครงการ (12 หลัก)"),
+    ).toHaveValue("โครงการผลิตบัณฑิตระดับปริญญาตรี คณะรัฐศาสตร์");
     await staff.page.getByPlaceholder("รายละเอียดรายการค่าใช้จ่าย").fill("ค่าตอบแทนวิทยากร");
     await staff.page.getByLabel("อัตรา", { exact: true }).fill("1000");
     await staff.page.getByLabel("หน่วย", { exact: true }).fill("1");
@@ -134,6 +146,9 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     expect(notifications?.some((item) => item.title.startsWith("อนุมัติแล้ว"))).toBe(true);
     await staff.page.goto(`/projects/${project!.id}/edit`);
     await expect(staff.page.getByLabel("ชื่อโครงการ", { exact: false }).first()).toBeDisabled();
+    await expect(staff.page.getByLabel("รหัสโครงการ/กิจกรรม = กิจกรรม (12 หลัก)")).toHaveValue(
+      "100210230001",
+    );
     await client.auth.signOut();
   } finally {
     await Promise.all([staff.context.close(), user.context.close(), executive.context.close()]);
