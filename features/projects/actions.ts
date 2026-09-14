@@ -119,11 +119,13 @@ export async function saveProjectAction(
   if (!fiscal) return { ...previous, success: false, message: "ไม่พบปีงบประมาณที่เลือก" };
 
   const { data, error } = await supabase.rpc("save_project_transaction", {
-    p_id: input.id || null,
+    // PostgreSQL accepts NULL for these optional UUIDs, but generated RPC
+    // argument types cannot express nullable SQL function parameters.
+    p_id: (input.id || null) as string,
     p_version: input.version,
     p_organization_id: input.organizationId,
     p_fiscal_year_id: input.fiscalYearId,
-    p_budget_request_id: input.budgetRequestId || null,
+    p_budget_request_id: (input.budgetRequestId || null) as string,
     p_owner_name: input.ownerName,
     p_coordinator_name: input.coordinatorName,
     p_title_th: input.title,
@@ -134,7 +136,7 @@ export async function saveProjectAction(
     p_ends_on: input.endsOn,
     p_proposal_details: proposal.data as Json,
     p_submit: input.intent === "submit",
-    p_comment: input.intent === "submit" ? "ส่งข้อเสนอโครงการเพื่อพิจารณา" : null,
+    ...(input.intent === "submit" ? { p_comment: "ส่งข้อเสนอโครงการเพื่อพิจารณา" } : {}),
   });
   if (error) {
     return {

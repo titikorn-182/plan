@@ -305,7 +305,9 @@ export async function saveBudgetRequestAction(
   }
 
   const { data, error } = await supabase.rpc("save_budget_request_transaction", {
-    p_id: parsed.data.id || null,
+    // PostgreSQL accepts NULL here to create a row, but generated RPC argument
+    // types cannot express nullable SQL function parameters.
+    p_id: (parsed.data.id || null) as string,
     p_version: parsed.data.version,
     p_fiscal_year_id: parsed.data.fiscalYearId,
     p_budget_cycle_id: parsed.data.budgetCycleId,
@@ -323,7 +325,7 @@ export async function saveBudgetRequestAction(
     p_expense_breakdown: expenseBreakdown.data,
     p_proposal_details: proposalDetails.data,
     p_submit: parsed.data.intent === "submit",
-    p_comment: parsed.data.intent === "submit" ? "ส่งคำของบประมาณเพื่อพิจารณา" : null,
+    ...(parsed.data.intent === "submit" ? { p_comment: "ส่งคำของบประมาณเพื่อพิจารณา" } : {}),
   });
   if (error) {
     const denied =

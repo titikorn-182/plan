@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       approval_tasks: {
@@ -235,9 +230,9 @@ export type Database = {
       budget_expense_master_data: {
         Row: {
           created_at: string
+          expenditure_budget: string
           expense_category: string
           expense_subcategory: string
-          expenditure_budget: string
           fiscal_year_id: string
           id: string
           is_active: boolean
@@ -246,9 +241,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expenditure_budget: string
           expense_category: string
           expense_subcategory: string
-          expenditure_budget: string
           fiscal_year_id: string
           id?: string
           is_active?: boolean
@@ -257,9 +252,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expenditure_budget?: string
           expense_category?: string
           expense_subcategory?: string
-          expenditure_budget?: string
           fiscal_year_id?: string
           id?: string
           is_active?: boolean
@@ -384,8 +379,8 @@ export type Database = {
           owner_name: string
           priority: Database["public"]["Enums"]["priority_level"]
           progress: number
-          proposal_details: Json
           project_type: string
+          proposal_details: Json
           rationale: string
           requested_amount: number
           status: Database["public"]["Enums"]["document_status"]
@@ -414,8 +409,8 @@ export type Database = {
           owner_name: string
           priority?: Database["public"]["Enums"]["priority_level"]
           progress?: number
-          proposal_details?: Json
           project_type: string
+          proposal_details?: Json
           rationale?: string
           requested_amount?: number
           status?: Database["public"]["Enums"]["document_status"]
@@ -444,8 +439,8 @@ export type Database = {
           owner_name?: string
           priority?: Database["public"]["Enums"]["priority_level"]
           progress?: number
-          proposal_details?: Json
           project_type?: string
+          proposal_details?: Json
           rationale?: string
           requested_amount?: number
           status?: Database["public"]["Enums"]["document_status"]
@@ -652,6 +647,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "disbursement_register"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "disbursements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_completion_report_register"
             referencedColumns: ["project_id"]
           },
           {
@@ -1096,56 +1098,6 @@ export type Database = {
         }
         Relationships: []
       }
-      project_members: {
-        Row: {
-          created_at: string
-          member_role: string
-          profile_id: string
-          project_id: string
-        }
-        Insert: {
-          created_at?: string
-          member_role: string
-          profile_id: string
-          project_id: string
-        }
-        Update: {
-          created_at?: string
-          member_role?: string
-          profile_id?: string
-          project_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_members_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "disbursement_register"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "project_register"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       project_completion_reports: {
         Row: {
           actual_results: string | null
@@ -1248,6 +1200,27 @@ export type Database = {
             foreignKeyName: "project_completion_reports_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: true
+            referencedRelation: "disbursement_register"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_completion_report_register"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_register"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_completion_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -1263,6 +1236,63 @@ export type Database = {
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          member_role: string
+          profile_id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_role: string
+          profile_id: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          member_role?: string
+          profile_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "disbursement_register"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_completion_report_register"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_register"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1288,9 +1318,9 @@ export type Database = {
           organization_id: string
           owner_id: string | null
           owner_name: string
-          proposal_details: Json
           progress: number
           project_type: string
+          proposal_details: Json
           starts_on: string | null
           status: Database["public"]["Enums"]["project_status"]
           title_th: string
@@ -1318,9 +1348,9 @@ export type Database = {
           organization_id: string
           owner_id?: string | null
           owner_name: string
-          proposal_details?: Json
           progress?: number
           project_type: string
+          proposal_details?: Json
           starts_on?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           title_th: string
@@ -1348,9 +1378,9 @@ export type Database = {
           organization_id?: string
           owner_id?: string | null
           owner_name?: string
-          proposal_details?: Json
           progress?: number
           project_type?: string
+          proposal_details?: Json
           starts_on?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           title_th?: string
@@ -1514,6 +1544,13 @@ export type Database = {
             foreignKeyName: "quarterly_reports_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_completion_report_register"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "quarterly_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "project_register"
             referencedColumns: ["id"]
           },
@@ -1534,6 +1571,113 @@ export type Database = {
           {
             foreignKeyName: "quarterly_reports_verified_by_fkey"
             columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_schedules: {
+        Row: {
+          cadence: string
+          created_at: string
+          day_of_month: number | null
+          day_of_week: number | null
+          format: string
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          name: string
+          owner_id: string
+          report_kind: string
+          send_time: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          cadence: string
+          created_at?: string
+          day_of_month?: number | null
+          day_of_week?: number | null
+          format: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name: string
+          owner_id: string
+          report_kind: string
+          send_time: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          cadence?: string
+          created_at?: string
+          day_of_month?: number | null
+          day_of_week?: number | null
+          format?: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name?: string
+          owner_id?: string
+          report_kind?: string
+          send_time?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_schedules_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_settings: {
+        Row: {
+          allowed_email_domain: string
+          default_fiscal_year_id: string | null
+          default_quarter: number
+          id: string
+          reminder_days_before: number
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed_email_domain?: string
+          default_fiscal_year_id?: string | null
+          default_quarter?: number
+          id?: string
+          reminder_days_before?: number
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed_email_domain?: string
+          default_fiscal_year_id?: string | null
+          default_quarter?: number
+          id?: string
+          reminder_days_before?: number
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_default_fiscal_year_id_fkey"
+            columns: ["default_fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_settings_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1698,6 +1842,8 @@ export type Database = {
       disbursement_register: {
         Row: {
           approved: number | null
+          buddhist_year: number | null
+          fiscal_year_id: string | null
           id: string | null
           organization_id: string | null
           project: string | null
@@ -1711,6 +1857,13 @@ export type Database = {
           unit: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_organization_id_fkey"
             columns: ["organization_id"]
@@ -1757,13 +1910,16 @@ export type Database = {
       kpi_register: {
         Row: {
           actual: number | null
+          buddhist_year: number | null
           code: string | null
           evidence_count: number | null
+          fiscal_year_id: string | null
           framework: string | null
           id: string | null
           name: string | null
           organization_id: string | null
           owner: string | null
+          quarter: number | null
           status: string | null
           target: number | null
           unit: string | null
@@ -1772,35 +1928,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "kpi_results_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "kpi_results_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "fiscal_years"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      project_register: {
-        Row: {
-          budget: number | null
-          code: string | null
-          due: string | null
-          has_pending_approval: boolean | null
-          health: string | null
-          id: string | null
-          organization_id: string | null
-          owner: string | null
-          progress: number | null
-          spent: number | null
-          status: string | null
-          title: string | null
-          unit: string | null
-          updated_at: string | null
-          version: number | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "projects_organization_id_fkey"
+            foreignKeyName: "kpi_results_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1821,6 +1956,43 @@ export type Database = {
           project_id: string | null
           status: string | null
           submitted_at: string | null
+          title: string | null
+          unit: string | null
+          updated_at: string | null
+          version: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_register: {
+        Row: {
+          buddhist_year: number | null
+          budget: number | null
+          code: string | null
+          due: string | null
+          fiscal_year_id: string | null
+          has_pending_approval: boolean | null
+          health: string | null
+          id: string | null
+          organization_id: string | null
+          owner: string | null
+          progress: number | null
+          spent: number | null
+          status: string | null
           title: string | null
           unit: string | null
           updated_at: string | null
@@ -1908,6 +2080,10 @@ export type Database = {
         Args: { p_comment?: string; p_decision: string; p_task_id: string }
         Returns: boolean
       }
+      admin_restore_record: {
+        Args: { p_entity_id: string; p_entity_type: string }
+        Returns: boolean
+      }
       admin_update_user_access: {
         Args: {
           p_full_name: string
@@ -1918,6 +2094,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_user_access_quality: {
+        Args: never
+        Returns: {
+          active_users: number
+          users_without_roles: number
+          users_without_scopes: number
+        }[]
+      }
       review_evidence: {
         Args: {
           p_attachment_id: string
@@ -1925,6 +2109,51 @@ export type Database = {
           p_verified: boolean
         }
         Returns: boolean
+      }
+      save_budget_request_transaction: {
+        Args: {
+          p_budget_cycle_id: string
+          p_category: string
+          p_comment?: string
+          p_expense_breakdown: Json
+          p_fiscal_year_id: string
+          p_id: string
+          p_organization_id: string
+          p_owner_name: string
+          p_project_type: string
+          p_proposal_details: Json
+          p_rationale: string
+          p_requested_amount: number
+          p_submit?: boolean
+          p_title_th: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      save_project_transaction: {
+        Args: {
+          p_approved_budget: number
+          p_budget_request_id: string
+          p_comment?: string
+          p_coordinator_name: string
+          p_disbursement_target: number
+          p_ends_on: string
+          p_fiscal_year_id: string
+          p_id: string
+          p_organization_id: string
+          p_owner_name: string
+          p_project_type: string
+          p_proposal_details: Json
+          p_starts_on: string
+          p_submit?: boolean
+          p_title_th: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      submit_budget_request_for_approval: {
+        Args: { p_comment?: string; p_entity_id: string }
+        Returns: string
       }
       submit_entity_for_approval: {
         Args: { p_comment?: string; p_entity_id: string; p_entity_type: string }
@@ -1994,12 +2223,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2023,11 +2252,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2048,11 +2277,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2073,11 +2302,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2090,11 +2319,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
