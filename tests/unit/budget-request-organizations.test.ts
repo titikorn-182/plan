@@ -8,10 +8,11 @@ import {
 } from "@/features/budget-requests/organization-options";
 
 describe("budget request organization options", () => {
-  it("contains the 15 organizations in the supplied order", () => {
-    expect(BUDGET_REQUEST_ORGANIZATIONS).toHaveLength(15);
+  it("contains the 16 organizations in the supplied order", () => {
+    expect(BUDGET_REQUEST_ORGANIZATIONS).toHaveLength(16);
     expect(BUDGET_REQUEST_ORGANIZATIONS[0]?.name).toBe("สำนักงานเลขานุการ-งานสารบรรณและธุรการ");
-    expect(BUDGET_REQUEST_ORGANIZATIONS[3]?.name).toBe("สำนักงานเลขานุการ-งานกิจการนานาชาติ");
+    expect(BUDGET_REQUEST_ORGANIZATIONS[3]?.name).toBe("สำนักงานเลขานุการ-งานโสตทัศนศึกษา");
+    expect(BUDGET_REQUEST_ORGANIZATIONS[4]?.name).toBe("สำนักงานเลขานุการ-งานกิจการนานาชาติ");
     expect(BUDGET_REQUEST_ORGANIZATIONS.at(-1)?.name).toBe("ภาควิชารัฐประศาสนศาสตร์");
   });
 
@@ -20,12 +21,15 @@ describe("budget request organization options", () => {
       BUDGET_REQUEST_ORGANIZATION_NAMES.length,
     );
     expect(getBudgetRequestOrganizationOrder("สำนักงานเลขานุการ-งานสารบรรณและธุรการ")).toBe(0);
-    expect(getBudgetRequestOrganizationOrder("ภาควิชารัฐประศาสนศาสตร์")).toBe(14);
+    expect(getBudgetRequestOrganizationOrder("ภาควิชารัฐประศาสนศาสตร์")).toBe(15);
     expect(getBudgetRequestOrganizationOrder("UNKNOWN")).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   it("maps every dropdown organization to its source organization code", () => {
     expect(getBudgetRequestOrganizationSourceCode("สำนักงานเลขานุการ-งานบัญชี")).toBe("2301");
+    expect(getBudgetRequestOrganizationSourceCode("สำนักงานเลขานุการ-งานโสตทัศนศึกษา")).toBe(
+      "2301",
+    );
     expect(
       getBudgetRequestOrganizationSourceCode("ภาควิชาการเมืองและความสัมพันธ์ระหว่างประเทศ"),
     ).toBe("2302");

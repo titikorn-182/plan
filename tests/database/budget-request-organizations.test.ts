@@ -23,7 +23,7 @@ async function getConfiguredOrganizations() {
 }
 
 describe("budget request organization migration", () => {
-  test("creates all 15 active organizations from the supplied list", async () => {
+  test("creates every active organization from the supplied list", async () => {
     const organizations = await getConfiguredOrganizations();
     expect(organizations.rows).toHaveLength(BUDGET_REQUEST_ORGANIZATIONS.length);
     expect(organizations.rows.every(({ is_active }) => is_active)).toBe(true);
