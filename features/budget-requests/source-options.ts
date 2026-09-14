@@ -5,7 +5,7 @@ import {
   BUDGET_REQUEST_OPERATIONAL_PLAN_NAME_OPTIONS,
   BUDGET_REQUEST_OUTPUT_CODE_OPTIONS,
   BUDGET_REQUEST_OUTPUT_NAME_OPTIONS,
-} from "@/features/budget-requests/plan-structure-options";
+} from "@/features/shared/plan-structure-options";
 import {
   BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS,
   BUDGET_REQUEST_EXPENSE_CATEGORY_OPTIONS,

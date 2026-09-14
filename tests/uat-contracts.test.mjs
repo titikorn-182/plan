@@ -22,6 +22,45 @@ test("all operational surfaces are present", () => {
   routes.forEach((route) => assert.equal(existsSync(resolve(root, route)), true, route));
 });
 
+test("domain components are colocated with their features", () => {
+  const featureComponents = [
+    "features/admin/components/admin-view.tsx",
+    "features/approvals/components/approvals-view.tsx",
+    "features/budget-requests/components/budget-requests-view.tsx",
+    "features/disbursements/components/disbursements-view.tsx",
+    "features/evidence/components/evidence-view.tsx",
+    "features/kpi/components/kpi-dashboard.tsx",
+    "features/notifications/components/notifications-view.tsx",
+    "features/project-completion-reports/components/project-completion-reports-view.tsx",
+    "features/projects/components/projects-view.tsx",
+    "features/quarterly-reports/components/quarterly-reports-view.tsx",
+    "features/reports/components/reports-portal.tsx",
+  ];
+  featureComponents.forEach((path) => assert.equal(existsSync(resolve(root, path)), true, path));
+
+  const retiredModuleFiles = [
+    "components/modules/admin-view.tsx",
+    "components/modules/projects-view.tsx",
+    "components/modules/evidence-view.tsx",
+  ];
+  retiredModuleFiles.forEach((path) => assert.equal(existsSync(resolve(root, path)), false, path));
+
+  const sharedUiFiles = [
+    "components/ui/data-state.tsx",
+    "components/ui/module-primitives.tsx",
+    "components/ui/operation-form.tsx",
+    "components/ui/pagination-nav.tsx",
+  ];
+  sharedUiFiles.forEach((path) => {
+    assert.doesNotMatch(
+      read(path),
+      /@\/features\/(?!shared\/)/,
+      `${path} imports a business feature`,
+    );
+  });
+  assert.equal(existsSync(resolve(root, "features/shared/components/sdg-selector.tsx")), true);
+});
+
 test("every mutating action performs an authenticated session check", () => {
   const actionFiles = [
     "features/admin/actions.ts",
@@ -139,7 +178,7 @@ test("large operational registers use server-side pagination", () => {
 });
 
 test("evidence files bypass Server Actions and are registered by an authenticated route", () => {
-  const component = read("components/modules/evidence-view.tsx");
+  const component = read("features/evidence/components/evidence-view.tsx");
   const actions = read("features/evidence/actions.ts");
   const route = read("app/api/evidence/route.ts");
   const nextConfig = read("next.config.ts");

@@ -1,4 +1,4 @@
-import { ProjectsView } from "@/components/modules/projects-view";
+import { ProjectsView } from "@/features/projects/components/projects-view";
 import { DataError } from "@/components/ui/data-state";
 import { getProjects } from "@/features/projects/queries";
 import { parseProjectFilters } from "@/features/projects/filters";

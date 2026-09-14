@@ -1,4 +1,4 @@
-import { NotificationsView } from "@/components/modules/notifications-view";
+import { NotificationsView } from "@/features/notifications/components/notifications-view";
 import { DataError } from "@/components/ui/data-state";
 import { getNotifications } from "@/features/notifications/queries";
 import { parsePage } from "@/features/shared/pagination";

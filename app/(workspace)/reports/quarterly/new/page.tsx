@@ -1,4 +1,4 @@
-import { QuarterlyReportForm } from "@/components/modules/quarterly-report-form";
+import { QuarterlyReportForm } from "@/features/quarterly-reports/components/quarterly-report-form";
 import { DataError } from "@/components/ui/data-state";
 import { getQuarterlyReportFormOptions } from "@/features/quarterly-reports/queries";
 

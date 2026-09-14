@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { AdminView } from "@/components/modules/admin-view";
-import { AdminAuditSection } from "@/components/modules/admin/admin-audit-section";
-import { AdminCenterShell } from "@/components/modules/admin/admin-center-shell";
-import { AdminQualitySection } from "@/components/modules/admin/admin-quality-section";
-import { AdminReferenceSection } from "@/components/modules/admin/admin-reference-section";
-import { AdminSettingsSection } from "@/components/modules/admin/admin-settings-section";
-import { AdminTrashSection } from "@/components/modules/admin/admin-trash-section";
+import { AdminView } from "@/features/admin/components/admin-view";
+import { AdminAuditSection } from "@/features/admin/components/admin-audit-section";
+import { AdminCenterShell } from "@/features/admin/components/admin-center-shell";
+import { AdminQualitySection } from "@/features/admin/components/admin-quality-section";
+import { AdminReferenceSection } from "@/features/admin/components/admin-reference-section";
+import { AdminSettingsSection } from "@/features/admin/components/admin-settings-section";
+import { AdminTrashSection } from "@/features/admin/components/admin-trash-section";
 import { DataError } from "@/components/ui/data-state";
 import {
   getAdminAudit,

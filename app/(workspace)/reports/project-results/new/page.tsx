@@ -1,4 +1,4 @@
-import { ProjectCompletionReportForm } from "@/components/modules/project-completion-report-form";
+import { ProjectCompletionReportForm } from "@/features/project-completion-reports/components/project-completion-report-form";
 import { DataError } from "@/components/ui/data-state";
 import { getProjectCompletionReportFormOptions } from "@/features/project-completion-reports/queries";
 

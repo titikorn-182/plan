@@ -13,7 +13,7 @@ import {
   BUDGET_REQUEST_ACTIVITY_OPTIONS,
   BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS,
   BUDGET_REQUEST_OUTPUT_OPTIONS,
-} from "@/features/budget-requests/plan-structure-options";
+} from "@/features/shared/plan-structure-options";
 import {
   BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS,
   BUDGET_REQUEST_EXPENSE_CATEGORY_OPTIONS,

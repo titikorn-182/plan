@@ -1,4 +1,4 @@
-import { DisbursementsView } from "@/components/modules/disbursements-view";
+import { DisbursementsView } from "@/features/disbursements/components/disbursements-view";
 import { DataError } from "@/components/ui/data-state";
 import { getDisbursements } from "@/features/disbursements/queries";
 import { parsePage } from "@/features/shared/pagination";

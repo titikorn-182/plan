@@ -1,18 +1,15 @@
 import type { SelectOption } from "@/features/shared/types";
+import {
+  WORKFLOW_ENTITY_TYPES,
+  isWorkflowEntityType,
+  type WorkflowEntityType,
+} from "@/features/shared/workflow-entity-types";
 
-export const EVIDENCE_ENTITY_TYPES = [
-  "budget_request",
-  "project",
-  "quarterly_report",
-  "project_completion_report",
-  "kpi_result",
-] as const;
-export type EvidenceEntityType = (typeof EVIDENCE_ENTITY_TYPES)[number];
+export const EVIDENCE_ENTITY_TYPES = WORKFLOW_ENTITY_TYPES;
+export type EvidenceEntityType = WorkflowEntityType;
 
 export function isEvidenceEntityType(value: unknown): value is EvidenceEntityType {
-  return (
-    typeof value === "string" && EVIDENCE_ENTITY_TYPES.some((entityType) => entityType === value)
-  );
+  return isWorkflowEntityType(value);
 }
 
 export type EvidenceEntityOption = SelectOption & {

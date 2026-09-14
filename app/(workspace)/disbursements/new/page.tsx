@@ -1,4 +1,4 @@
-import { DisbursementForm } from "@/components/modules/disbursement-form";
+import { DisbursementForm } from "@/features/disbursements/components/disbursement-form";
 import { DataError } from "@/components/ui/data-state";
 import { getDisbursementFormOptions } from "@/features/disbursements/queries";
 

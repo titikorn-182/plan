@@ -4,7 +4,7 @@ import type { WorkflowTask } from "@/features/approvals/types";
 import type { ApprovalView } from "@/features/approvals/types";
 import { isWorkflowStatus } from "@/features/approvals/types";
 import { isAppRole } from "@/features/auth/types";
-import { isEvidenceEntityType } from "@/features/evidence/types";
+import { isWorkflowEntityType } from "@/features/shared/workflow-entity-types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
   createPagination,
@@ -50,7 +50,7 @@ export async function getWorkflowInbox(
       return [];
     }
     if (
-      !isEvidenceEntityType(row.entity_type) ||
+      !isWorkflowEntityType(row.entity_type) ||
       !isAppRole(row.required_role) ||
       !isWorkflowStatus(row.status)
     ) {

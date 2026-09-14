@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { KpiResultForm } from "@/components/modules/kpi-result-form";
+import { KpiResultForm } from "@/features/kpi/components/kpi-result-form";
 import { DataError } from "@/components/ui/data-state";
 import { getKpiResultFormRecord } from "@/features/kpi/queries";
 

@@ -1,4 +1,4 @@
-import { EvidenceView } from "@/components/modules/evidence-view";
+import { EvidenceView } from "@/features/evidence/components/evidence-view";
 import { DataError } from "@/components/ui/data-state";
 import { getViewer } from "@/lib/auth/viewer";
 import { getEvidenceWorkspace } from "@/features/evidence/queries";

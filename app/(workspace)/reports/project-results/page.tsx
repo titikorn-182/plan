@@ -1,4 +1,4 @@
-import { ProjectCompletionReportsView } from "@/components/modules/project-completion-reports-view";
+import { ProjectCompletionReportsView } from "@/features/project-completion-reports/components/project-completion-reports-view";
 import { DataError } from "@/components/ui/data-state";
 import { getProjectCompletionReports } from "@/features/project-completion-reports/queries";
 import { parsePage } from "@/features/shared/pagination";

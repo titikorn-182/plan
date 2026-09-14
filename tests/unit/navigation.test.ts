@@ -9,7 +9,7 @@ import {
   primaryNavigation,
 } from "@/components/layout/navigation";
 import { WorkspaceMenu } from "@/components/layout/workspace-menu";
-import { ProjectsView } from "@/components/modules/projects-view";
+import { ProjectsView } from "@/features/projects/components/projects-view";
 import { createPagination } from "@/features/shared/pagination";
 import type { ProjectRow } from "@/features/projects/types";
 import type { ProjectFilters } from "@/features/projects/filters";

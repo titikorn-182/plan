@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { BudgetRequestsView } from "@/components/modules/budget-requests-view";
+import { BudgetRequestsView } from "@/features/budget-requests/components/budget-requests-view";
 import { createPagination } from "@/features/shared/pagination";
 
 vi.mock("next/link", () => ({

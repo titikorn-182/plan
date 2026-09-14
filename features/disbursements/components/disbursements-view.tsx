@@ -10,7 +10,7 @@ import type { PaginationMeta } from "@/features/shared/pagination";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatters";
 import type { ReportingPeriod } from "@/features/shared/types";
-import { DisbursementImportPanel } from "@/components/modules/disbursement-import-panel";
+import { DisbursementImportPanel } from "@/features/disbursements/components/disbursement-import-panel";
 
 function tone(status: string): "green" | "orange" | "red" {
   if (status === "ตามแผน") return "green";

@@ -1,5 +1,5 @@
-import { ReportsHub } from "@/components/modules/reports-hub";
-import { ReportsPortal } from "@/components/modules/reports-portal";
+import { ReportsHub } from "@/features/reports/components/reports-hub";
+import { ReportsPortal } from "@/features/reports/components/reports-portal";
 import { getReportSchedules } from "@/features/reports/queries";
 import { getReportingPeriod } from "@/features/shared/queries";
 

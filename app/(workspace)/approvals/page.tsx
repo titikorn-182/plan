@@ -1,4 +1,4 @@
-import { ApprovalsView } from "@/components/modules/approvals-view";
+import { ApprovalsView } from "@/features/approvals/components/approvals-view";
 import { DataError } from "@/components/ui/data-state";
 import { getWorkflowInbox, parseApprovalView } from "@/features/approvals/queries";
 import { parsePage } from "@/features/shared/pagination";

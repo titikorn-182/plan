@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ProjectForm } from "@/components/modules/project-form";
+import { ProjectForm } from "@/features/projects/components/project-form";
 import { DataError } from "@/components/ui/data-state";
 import { getProjectFormOptions } from "@/features/projects/queries";
 

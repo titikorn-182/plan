@@ -1,5 +1,5 @@
 import type { AppRole } from "@/features/auth/types";
-import type { EvidenceEntityType } from "@/features/evidence/types";
+import type { WorkflowEntityType } from "@/features/shared/workflow-entity-types";
 
 export const WORKFLOW_STATUSES = [
   "pending",
@@ -32,7 +32,7 @@ export function isWorkflowStatus(value: unknown): value is WorkflowStatus {
 
 export type WorkflowTask = {
   id: string;
-  entityType: EvidenceEntityType;
+  entityType: WorkflowEntityType;
   entityId: string;
   businessId: string;
   title: string;

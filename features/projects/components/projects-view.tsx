@@ -6,14 +6,14 @@ import { Plus } from "lucide-react";
 import { EmptyData } from "@/components/ui/data-state";
 import { RegisterSection } from "@/components/ui/module-primitives";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import { ProjectFilterPanel } from "@/components/modules/projects/project-filter-panel";
-import { ProjectFilterToggle } from "@/components/modules/projects/project-filter-toggle";
-import { ProjectInspector } from "@/components/modules/projects/project-inspector";
-import { ProjectsTable } from "@/components/modules/projects/projects-table";
+import { ProjectFilterPanel } from "@/features/projects/components/project-filter-panel";
+import { ProjectFilterToggle } from "@/features/projects/components/project-filter-toggle";
+import { ProjectInspector } from "@/features/projects/components/project-inspector";
+import { ProjectsTable } from "@/features/projects/components/projects-table";
 import {
   ProjectHealthBudgetSummary,
   ProjectsSummary,
-} from "@/components/modules/projects/projects-summary";
+} from "@/features/projects/components/projects-summary";
 import {
   hasProjectFilters,
   projectFilterQuery,

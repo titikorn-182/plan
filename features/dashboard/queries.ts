@@ -8,7 +8,11 @@ import {
   type LifecycleItem,
   SEVERITY_LABELS,
 } from "@/features/dashboard/types";
-import { isKpiDirection, type KpiDirection, type KpiResultState } from "@/features/kpi/types";
+import {
+  isKpiDirection,
+  type KpiDirection,
+  type KpiResultState,
+} from "@/features/shared/kpi-contracts";
 import { formatDate, hasValues, isRecord, result } from "@/features/shared/query-utils";
 import { formatThaiInteger, formatThaiMoney } from "@/features/shared/formatters";
 import { getReportingPeriod } from "@/features/shared/queries";

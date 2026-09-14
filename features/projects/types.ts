@@ -46,10 +46,3 @@ export type ProjectFormOptions = {
   defaultOwnerName: string;
   record: ProjectFormRecord | null;
 };
-
-export type ProjectOption = SelectOption & {
-  organizationId: string;
-  fiscalYearId: string;
-  approvedBudget: number;
-  disbursedAmount: number;
-};

@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { MailPlus, Search } from "lucide-react";
-import { AdminAccessEditor } from "@/components/modules/admin/admin-access-editor";
-import { AdminInvitePanel } from "@/components/modules/admin/admin-invite-panel";
-import { AdminUserList } from "@/components/modules/admin/admin-user-list";
+import { AdminAccessEditor } from "@/features/admin/components/admin-access-editor";
+import { AdminInvitePanel } from "@/features/admin/components/admin-invite-panel";
+import { AdminUserList } from "@/features/admin/components/admin-user-list";
 import type { AdminUsersData } from "@/features/admin/types";
 import { APP_ROLE_LABELS, APP_ROLES } from "@/features/auth/types";
 import type { OrganizationOption } from "@/features/shared/types";

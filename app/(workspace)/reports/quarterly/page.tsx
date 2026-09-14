@@ -1,4 +1,4 @@
-import { QuarterlyReportsView } from "@/components/modules/quarterly-reports-view";
+import { QuarterlyReportsView } from "@/features/quarterly-reports/components/quarterly-reports-view";
 import { DataError } from "@/components/ui/data-state";
 import { getQuarterlyReports } from "@/features/quarterly-reports/queries";
 import { parsePage } from "@/features/shared/pagination";

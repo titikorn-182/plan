@@ -1,7 +1,7 @@
 "use client";
 
 import { FieldError, FieldLabel, fieldClass } from "@/components/ui/operation-form";
-import type { BudgetRequestCodedOption } from "@/features/budget-requests/plan-structure-options";
+import type { BudgetRequestCodedOption } from "@/features/shared/plan-structure-options";
 import type {
   ProjectPlanStructureLevel,
   ProjectPlanStructureValue,

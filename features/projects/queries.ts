@@ -1,8 +1,8 @@
 import "server-only";
 
-import type { ProjectFormOptions, ProjectOption, ProjectRow } from "@/features/projects/types";
+import type { ProjectFormOptions, ProjectRow } from "@/features/projects/types";
 import { isProjectStatus, type ProjectFilters } from "@/features/projects/filters";
-import type { DataResult } from "@/features/shared/types";
+import type { DataResult, ProjectOption } from "@/features/shared/types";
 import { formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
   createPagination,

@@ -3,7 +3,7 @@ import {
   BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS,
   BUDGET_REQUEST_OUTPUT_OPTIONS,
   type BudgetRequestCodedOption,
-} from "@/features/budget-requests/plan-structure-options";
+} from "@/features/shared/plan-structure-options";
 import type { ProjectProposalDetails } from "@/features/projects/proposal-details";
 
 export type ProjectPlanStructureLevel = "output" | "operationalPlan" | "activity";

@@ -1,4 +1,4 @@
-import { ProjectForm } from "@/components/modules/project-form";
+import { ProjectForm } from "@/features/projects/components/project-form";
 import { DataError } from "@/components/ui/data-state";
 import { sortProjectFiscalYears } from "@/features/projects/fiscal-years";
 import { getProjectFormOptions } from "@/features/projects/queries";

@@ -1,6 +1,5 @@
 import type { Enums } from "@/types/database.generated";
-import type { ProjectOption } from "@/features/projects/types";
-import type { FiscalYearOption } from "@/features/shared/types";
+import type { FiscalYearOption, ProjectOption } from "@/features/shared/types";
 
 export type ReportStatus = Enums<"report_status">;
 export type QuarterlyReportStatusLabel =

@@ -1,5 +1,5 @@
 import { FieldError, FieldLabel, areaClass } from "@/components/ui/operation-form";
-import { SdgSelector } from "@/components/ui/sdg-selector";
+import { SdgSelector } from "@/features/shared/components/sdg-selector";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type { SdgOption } from "@/features/shared/sdgs";
 

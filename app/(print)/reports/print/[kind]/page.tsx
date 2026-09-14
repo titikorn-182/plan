@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ReportPrintButton } from "@/components/modules/report-print-button";
+import { ReportPrintButton } from "@/features/reports/components/report-print-button";
 import { getReportData } from "@/features/reports/queries";
 import { isReportKind } from "@/features/reports/types";
 import { formatThaiNumber } from "@/features/shared/formatters";

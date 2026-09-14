@@ -3,7 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { FieldError, FieldLabel, areaClass, fieldClass } from "@/components/ui/operation-form";
 import { RegisterSection } from "@/components/ui/module-primitives";
-import { SdgSelector } from "@/components/ui/sdg-selector";
+import { SdgSelector } from "@/features/shared/components/sdg-selector";
 import { FISCAL_MONTHS } from "@/features/projects/proposal-details";
 import type { ProjectProposalSectionProps as Props } from "./project-proposal-section-types";
 import { removeAt, replaceAt } from "./project-proposal-section-utils";

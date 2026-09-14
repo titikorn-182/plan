@@ -16,3 +16,9 @@ export type ReportingContext = {
 export type SelectOption = { id: string; label: string };
 export type OrganizationOption = SelectOption & { code: string };
 export type FiscalYearOption = SelectOption & { buddhistYear: number };
+export type ProjectOption = SelectOption & {
+  organizationId: string;
+  fiscalYearId: string;
+  approvedBudget: number;
+  disbursedAmount: number;
+};

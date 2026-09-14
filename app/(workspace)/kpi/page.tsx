@@ -1,4 +1,4 @@
-import { KpiDashboard } from "@/components/modules/kpi-dashboard";
+import { KpiDashboard } from "@/features/kpi/components/kpi-dashboard";
 import { DataError } from "@/components/ui/data-state";
 import { getKpis } from "@/features/kpi/queries";
 import { parsePage } from "@/features/shared/pagination";

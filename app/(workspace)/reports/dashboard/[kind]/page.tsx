@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ReportDashboard } from "@/components/modules/report-dashboard";
+import { ReportDashboard } from "@/features/reports/components/report-dashboard";
 import { getDashboardRecords } from "@/features/reports/dashboard-queries";
 import { isReportKind } from "@/features/reports/types";
 import { getReportingPeriod } from "@/features/shared/queries";

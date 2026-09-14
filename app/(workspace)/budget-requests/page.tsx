@@ -1,4 +1,4 @@
-import { BudgetRequestsView } from "@/components/modules/budget-requests-view";
+import { BudgetRequestsView } from "@/features/budget-requests/components/budget-requests-view";
 import { DataError } from "@/components/ui/data-state";
 import { getBudgetRequests } from "@/features/budget-requests/queries";
 import { parsePage } from "@/features/shared/pagination";
