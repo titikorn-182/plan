@@ -1,7 +1,11 @@
 import { Plus, Trash2 } from "lucide-react";
 import { FieldError, FieldLabel, fieldClass } from "@/components/ui/operation-form";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
-import { BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS } from "@/features/budget-requests/expense-source-options";
+import { INPUT_LIMITS } from "@/lib/config/limits";
+import {
+  getExpenditureBudgetOptions,
+  type BudgetExpenseOption,
+} from "@/features/shared/master-data";
 import {
   MAX_BUDGET_REQUEST_EXPENSE_ITEMS,
   getBudgetRequestExpenseItemsTotal,
@@ -17,18 +21,21 @@ const currency = new Intl.NumberFormat("th-TH", {
 
 export function BudgetRequestExpenseItems({
   errors,
+  expenseOptions,
   items,
   onAdd,
   onChange,
   onRemove,
 }: {
   errors: BudgetRequestState["errors"];
+  expenseOptions: readonly BudgetExpenseOption[];
   items: readonly BudgetRequestExpenseItemDraft[];
   onAdd: () => void;
   onChange: (id: number, changes: Partial<BudgetRequestExpenseItemDraft>) => void;
   onRemove: (id: number) => void;
 }) {
   const total = getBudgetRequestExpenseItemsTotal(items);
+  const expenditureBudgetOptions = getExpenditureBudgetOptions(expenseOptions);
 
   return (
     <div className="md:col-span-2">
@@ -52,8 +59,9 @@ export function BudgetRequestExpenseItems({
 
       <div className="space-y-4">
         {items.map((item, index) => {
-          const categories = getExpenseCategoryOptions(item.expenditureBudget);
+          const categories = getExpenseCategoryOptions(expenseOptions, item.expenditureBudget);
           const subcategories = getExpenseSubcategoryOptions(
+            expenseOptions,
             item.expenditureBudget,
             item.expenseCategory,
           );
@@ -79,7 +87,7 @@ export function BudgetRequestExpenseItems({
                     required
                   >
                     <option value="">เลือกงบรายจ่าย</option>
-                    {BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS.map((option) => (
+                    {expenditureBudgetOptions.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -137,7 +145,7 @@ export function BudgetRequestExpenseItems({
                     className={fieldClass}
                     value={item.subActivityName ?? ""}
                     onChange={(event) => onChange(item.id, { subActivityName: event.target.value })}
-                    maxLength={300}
+                    maxLength={INPUT_LIMITS.title}
                     placeholder="ชื่อกิจกรรมย่อยของรายการนี้"
                     aria-invalid={Boolean(errors?.[`${prefix}.subActivityName`]?.length)}
                   />
@@ -149,7 +157,7 @@ export function BudgetRequestExpenseItems({
                     className={fieldClass}
                     value={item.description}
                     onChange={(event) => onChange(item.id, { description: event.target.value })}
-                    maxLength={5_000}
+                    maxLength={INPUT_LIMITS.longText}
                     placeholder="เช่น ค่าจ้างเหมาจัดทำเอกสารประกอบกิจกรรม"
                   />
                 </label>

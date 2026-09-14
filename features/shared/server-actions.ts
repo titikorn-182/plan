@@ -2,12 +2,13 @@ import "server-only";
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { MONEY_LIMITS } from "@/lib/config/limits";
 import type { OperationState } from "@/features/shared/action-state";
 import { publicFailureMessage, reportServerError } from "@/lib/observability/server-logger";
 import { createClient } from "@/lib/supabase/server";
 
 export const uuidOrEmpty = z.string().uuid().optional().or(z.literal(""));
-export const moneySchema = z.coerce.number().finite().min(0).max(999_999_999_999);
+export const moneySchema = z.coerce.number().finite().min(0).max(MONEY_LIMITS.maximumBaht);
 
 export function invalid(previous: OperationState, error: z.ZodError): OperationState {
   return {

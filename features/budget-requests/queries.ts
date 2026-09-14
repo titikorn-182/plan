@@ -1,6 +1,6 @@
 import "server-only";
 
-import { BUDGET_STATUS_LABELS } from "@/features/budget-requests/types";
+import { BUDGET_STATUS_LABELS, isDocumentStatus } from "@/features/budget-requests/types";
 import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-requests/types";
 import { parseBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
@@ -23,6 +23,7 @@ import {
   BUDGET_REQUEST_FISCAL_YEARS,
 } from "@/features/budget-requests/fiscal-year-options";
 import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
+import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
 
 export async function getBudgetRequests(
   page = 1,
@@ -48,7 +49,7 @@ export async function getBudgetRequests(
           unit: row.unit,
           category: row.category,
           amount: Number(row.amount),
-          status: BUDGET_STATUS_LABELS[row.status] ?? "ฉบับร่าง",
+          status: isDocumentStatus(row.status) ? BUDGET_STATUS_LABELS[row.status] : "ฉบับร่าง",
           updated: formatDate(row.updated_at),
           editable: ["draft", "revision_required"].includes(row.status),
         })),
@@ -178,9 +179,25 @@ export async function getBudgetFormOptions(
     });
   }
 
+  const masterDataResult = await getFiscalYearMasterDataCatalogs(
+    fiscalYears.map((fiscalYear) => fiscalYear.id),
+  );
+  if (masterDataResult.error) return expectedResultError(null, masterDataResult.error);
+  const missingMasterData = masterDataResult.data.find(
+    (catalog) => catalog.planStructures.length === 0 || catalog.expenseOptions.length === 0,
+  );
+  if (missingMasterData) {
+    const fiscalYear = fiscalYears.find((item) => item.id === missingMasterData.fiscalYearId);
+    return expectedResultError(
+      null,
+      `ยังไม่ได้กำหนด Master Data สำหรับ${fiscalYear?.label ?? "ปีงบประมาณที่เลือก"}`,
+    );
+  }
+
   return result({
     organizations: organizationOptions,
     fiscalYears,
+    masterData: masterDataResult.data,
     record: recordRow
       ? {
           id: recordRow.id,

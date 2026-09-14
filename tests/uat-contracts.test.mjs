@@ -177,12 +177,30 @@ test("large operational registers use server-side pagination", () => {
   assert.equal(existsSync(resolve(root, "components/ui/pagination-nav.tsx")), true);
 });
 
+test("fiscal-year plan and expense choices come from database master data", () => {
+  const migration = read("supabase/migrations/202609140003_phase4_master_data.sql");
+  const queries = read("features/shared/master-data-queries.ts");
+
+  assert.match(migration, /create table public\.plan_structure_master_data/);
+  assert.match(migration, /create table public\.budget_expense_master_data/);
+  assert.match(migration, /validate_plan_structure_reference/);
+  assert.match(migration, /validate_budget_expense_reference/);
+  assert.match(queries, /\.from\("plan_structure_master_data"\)/);
+  assert.match(queries, /\.from\("budget_expense_master_data"\)/);
+  assert.equal(existsSync(resolve(root, "features/shared/plan-structure-options.ts")), false);
+  assert.equal(
+    existsSync(resolve(root, "features/budget-requests/expense-source-options.ts")),
+    false,
+  );
+});
+
 test("evidence files bypass Server Actions and are registered by an authenticated route", () => {
   const component = read("features/evidence/components/evidence-view.tsx");
   const actions = read("features/evidence/actions.ts");
   const route = read("app/api/evidence/route.ts");
   const nextConfig = read("next.config.ts");
   const importConfig = read("features/disbursements/import-types.ts");
+  const limits = read("lib/config/limits.ts");
 
   assert.match(component, /\.storage\s*\.from\(EVIDENCE_BUCKET\)\s*\.upload\(/s);
   assert.equal(actions.includes("uploadEvidenceAction"), false);
@@ -190,7 +208,11 @@ test("evidence files bypass Server Actions and are registered by an authenticate
   assert.match(route, /isExpectedEvidenceStoragePath/);
   assert.match(route, /\.from\("attachments"\)/);
   assert.match(nextConfig, /bodySizeLimit:\s*"2100kb"/);
-  assert.match(importConfig, /DISBURSEMENT_IMPORT_MAX_BYTES\s*=\s*2\s*\*\s*1024\s*\*\s*1024/);
+  assert.match(
+    importConfig,
+    /DISBURSEMENT_IMPORT_MAX_BYTES\s*=\s*IMPORT_LIMITS\.disbursementBytes/,
+  );
+  assert.match(limits, /disbursementBytes:\s*2\s*\*\s*1024\s*\*\s*1024/);
   assert.equal(component.includes("uploadError.message"), false);
 });
 

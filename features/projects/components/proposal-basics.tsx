@@ -5,6 +5,7 @@ import { FieldError, FieldLabel, fieldClass } from "@/components/ui/operation-fo
 import { RegisterSection } from "@/components/ui/module-primitives";
 import type { ProjectFormOptions } from "@/features/projects/types";
 import { PROJECT_CHARACTERISTICS } from "@/features/projects/proposal-details";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 import type { ProjectProposalSectionProps as Props } from "./project-proposal-section-types";
 import { removeAt, replaceAt } from "./project-proposal-section-utils";
 
@@ -55,7 +56,7 @@ export function ProposalBasics({
             name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            maxLength={300}
+            maxLength={INPUT_LIMITS.title}
             required
           />
           <FieldError errors={errors?.title} />
@@ -131,7 +132,7 @@ export function ProposalBasics({
             value={details.otherCharacteristic}
             onChange={(e) => setDetails({ ...details, otherCharacteristic: e.target.value })}
             placeholder="อื่น ๆ โปรดระบุ (ถ้ามี)"
-            maxLength={300}
+            maxLength={INPUT_LIMITS.title}
           />
           <FieldError errors={errors?.["proposalDetails.characteristics"]} />
         </div>
@@ -142,7 +143,7 @@ export function ProposalBasics({
             name="ownerName"
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
-            maxLength={180}
+            maxLength={INPUT_LIMITS.personName}
             required
           />
           <FieldError errors={errors?.ownerName} />
@@ -153,7 +154,7 @@ export function ProposalBasics({
             className={fieldClass}
             value={details.projectHeadPosition}
             onChange={(e) => setDetails({ ...details, projectHeadPosition: e.target.value })}
-            maxLength={300}
+            maxLength={INPUT_LIMITS.title}
           />
         </label>
         <div className="border-t border-stone-200 pt-5 md:col-span-2">

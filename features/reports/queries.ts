@@ -7,8 +7,7 @@ import { result } from "@/features/shared/query-utils";
 import type { DataResult } from "@/features/shared/types";
 import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { createClient } from "@/lib/supabase/server";
-
-const EXPORT_LIMIT = 5_000;
+import { QUERY_LIMITS } from "@/lib/config/limits";
 
 export async function getReportData(kind: ReportKind): Promise<DataResult<ReportData>> {
   const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
@@ -22,7 +21,7 @@ export async function getReportData(kind: ReportKind): Promise<DataResult<Report
       .eq("buddhist_year", period.buddhistYear)
       .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
       .order("code")
-      .limit(EXPORT_LIMIT);
+      .limit(QUERY_LIMITS.reportExportRows);
     return result(
       {
         ...base,
@@ -56,7 +55,7 @@ export async function getReportData(kind: ReportKind): Promise<DataResult<Report
       .eq("fiscal_year_id", period.fiscalYearId ?? "00000000-0000-0000-0000-000000000000")
       .not("id", "in", RETIRED_DEMO_FILTERS.projects)
       .order("code")
-      .limit(EXPORT_LIMIT);
+      .limit(QUERY_LIMITS.reportExportRows);
     return result(
       {
         ...base,
@@ -99,7 +98,7 @@ export async function getReportData(kind: ReportKind): Promise<DataResult<Report
       .eq("quarter", period.quarter)
       .not("id", "in", RETIRED_DEMO_FILTERS.disbursements)
       .order("disbursed_on")
-      .limit(EXPORT_LIMIT);
+      .limit(QUERY_LIMITS.reportExportRows);
     return result(
       {
         ...base,
@@ -143,7 +142,7 @@ export async function getReportData(kind: ReportKind): Promise<DataResult<Report
     .or(`quarter.is.null,quarter.eq.${period.quarter}`)
     .not("id", "in", RETIRED_DEMO_FILTERS.kpiResults)
     .order("code")
-    .limit(EXPORT_LIMIT);
+    .limit(QUERY_LIMITS.reportExportRows);
   return result(
     {
       ...base,

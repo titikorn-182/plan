@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAccessibleProjects } from "@/features/projects/queries";
-import { REPORT_STATUS_LABELS } from "@/features/quarterly-reports/types";
+import { isReportStatus, REPORT_STATUS_LABELS } from "@/features/quarterly-reports/types";
 import type {
   QuarterlyReportFormOptions,
   QuarterlyReportRow,
@@ -43,7 +43,7 @@ export async function getQuarterlyReports(
           unit: row.unit,
           quarter: `Q${row.quarter}/${row.buddhist_year}`,
           due: formatDate(row.due_at),
-          status: REPORT_STATUS_LABELS[row.status] ?? "ฉบับร่าง",
+          status: isReportStatus(row.status) ? REPORT_STATUS_LABELS[row.status] : "ฉบับร่าง",
           progress: Number(row.progress),
           evidence: Number(row.evidence),
         })),

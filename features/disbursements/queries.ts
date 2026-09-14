@@ -1,6 +1,6 @@
 import "server-only";
 
-import { DISBURSEMENT_STATUS_LABELS } from "@/features/disbursements/types";
+import { DISBURSEMENT_STATUS_LABELS, isDisbursementStatus } from "@/features/disbursements/types";
 import type { DisbursementFormOptions, DisbursementRow } from "@/features/disbursements/types";
 import { getAccessibleProjects } from "@/features/projects/queries";
 import { hasValues, result } from "@/features/shared/query-utils";
@@ -43,7 +43,9 @@ export async function getDisbursements(
           q3: Number(row.q3),
           q4: Number(row.q4),
           target: Number(row.target),
-          status: DISBURSEMENT_STATUS_LABELS[row.status] ?? "เฝ้าระวัง",
+          status: isDisbursementStatus(row.status)
+            ? DISBURSEMENT_STATUS_LABELS[row.status]
+            : "เฝ้าระวัง",
         })),
       pagination: createPagination(count, page, pageSize),
     },

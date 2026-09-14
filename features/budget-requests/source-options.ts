@@ -1,16 +1,7 @@
 import {
-  BUDGET_REQUEST_ACTIVITY_CODE_OPTIONS,
-  BUDGET_REQUEST_ACTIVITY_NAME_OPTIONS,
-  BUDGET_REQUEST_OPERATIONAL_PLAN_CODE_OPTIONS,
-  BUDGET_REQUEST_OPERATIONAL_PLAN_NAME_OPTIONS,
-  BUDGET_REQUEST_OUTPUT_CODE_OPTIONS,
-  BUDGET_REQUEST_OUTPUT_NAME_OPTIONS,
-} from "@/features/shared/plan-structure-options";
-import {
-  BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS,
-  BUDGET_REQUEST_EXPENSE_CATEGORY_OPTIONS,
-  BUDGET_REQUEST_EXPENSE_SUBCATEGORY_OPTIONS,
-} from "@/features/budget-requests/expense-source-options";
+  getExpenditureBudgetOptions,
+  type FiscalYearMasterData,
+} from "@/features/shared/master-data";
 
 export const BUDGET_REQUEST_FUNDING_SOURCE_OPTIONS = [
   "งบประมาณเงินรายได้",
@@ -45,53 +36,72 @@ export const BUDGET_REQUEST_STRATEGY_OPTIONS = [
   "ยุทธศาสตร์ที่ 5 : พัฒนาระบบบริหารจัดการที่มีประสิทธิผลเพื่อมุ่งสู่องค์กรสมรรถนะสูง",
 ] as const;
 
-export const BUDGET_REQUEST_SOURCE_SELECT_OPTIONS = {
-  fundingSource: BUDGET_REQUEST_FUNDING_SOURCE_OPTIONS,
-  fundingSourceDetail: BUDGET_REQUEST_FUNDING_SOURCE_DETAIL_OPTIONS,
-  projectType: BUDGET_REQUEST_PROJECT_TYPE_OPTIONS,
-  missionName: BUDGET_REQUEST_MISSION_OPTIONS,
-  strategyName: BUDGET_REQUEST_STRATEGY_OPTIONS,
-  outputCode: BUDGET_REQUEST_OUTPUT_CODE_OPTIONS,
-  outputName: BUDGET_REQUEST_OUTPUT_NAME_OPTIONS,
-  operationalPlanCode: BUDGET_REQUEST_OPERATIONAL_PLAN_CODE_OPTIONS,
-  operationalPlanName: BUDGET_REQUEST_OPERATIONAL_PLAN_NAME_OPTIONS,
-  activityCode: BUDGET_REQUEST_ACTIVITY_CODE_OPTIONS,
-  projectActivityName: BUDGET_REQUEST_ACTIVITY_NAME_OPTIONS,
-  expenditureBudget: BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS,
-  expenseCategory: BUDGET_REQUEST_EXPENSE_CATEGORY_OPTIONS,
-  expenseSubcategory: BUDGET_REQUEST_EXPENSE_SUBCATEGORY_OPTIONS,
-} as const;
+export const BUDGET_REQUEST_SOURCE_SELECT_KEYS = [
+  "fundingSource",
+  "fundingSourceDetail",
+  "projectType",
+  "missionName",
+  "strategyName",
+  "outputCode",
+  "outputName",
+  "operationalPlanCode",
+  "operationalPlanName",
+  "activityCode",
+  "projectActivityName",
+  "expenditureBudget",
+  "expenseCategory",
+  "expenseSubcategory",
+] as const;
 
-export type BudgetRequestSourceSelectKey = keyof typeof BUDGET_REQUEST_SOURCE_SELECT_OPTIONS;
+export type BudgetRequestSourceSelectKey = (typeof BUDGET_REQUEST_SOURCE_SELECT_KEYS)[number];
+export type BudgetRequestSourceOptions = Readonly<
+  Record<BudgetRequestSourceSelectKey, readonly string[]>
+>;
 
-const optionSets: Record<BudgetRequestSourceSelectKey, ReadonlySet<string>> = {
-  fundingSource: new Set(BUDGET_REQUEST_FUNDING_SOURCE_OPTIONS),
-  fundingSourceDetail: new Set(BUDGET_REQUEST_FUNDING_SOURCE_DETAIL_OPTIONS),
-  projectType: new Set(BUDGET_REQUEST_PROJECT_TYPE_OPTIONS),
-  missionName: new Set(BUDGET_REQUEST_MISSION_OPTIONS),
-  strategyName: new Set(BUDGET_REQUEST_STRATEGY_OPTIONS),
-  outputCode: new Set(BUDGET_REQUEST_OUTPUT_CODE_OPTIONS),
-  outputName: new Set(BUDGET_REQUEST_OUTPUT_NAME_OPTIONS),
-  operationalPlanCode: new Set(BUDGET_REQUEST_OPERATIONAL_PLAN_CODE_OPTIONS),
-  operationalPlanName: new Set(BUDGET_REQUEST_OPERATIONAL_PLAN_NAME_OPTIONS),
-  activityCode: new Set(BUDGET_REQUEST_ACTIVITY_CODE_OPTIONS),
-  projectActivityName: new Set(BUDGET_REQUEST_ACTIVITY_NAME_OPTIONS),
-  expenditureBudget: new Set(BUDGET_REQUEST_EXPENDITURE_BUDGET_OPTIONS),
-  expenseCategory: new Set(BUDGET_REQUEST_EXPENSE_CATEGORY_OPTIONS),
-  expenseSubcategory: new Set(BUDGET_REQUEST_EXPENSE_SUBCATEGORY_OPTIONS),
-};
+export function createBudgetRequestSourceOptions(
+  catalog: FiscalYearMasterData,
+): BudgetRequestSourceOptions {
+  const planOptions = (level: FiscalYearMasterData["planStructures"][number]["level"]) =>
+    catalog.planStructures.filter((option) => option.level === level);
+  const outputOptions = planOptions("output");
+  const operationalPlanOptions = planOptions("operational_plan");
+  const activityOptions = planOptions("activity");
 
+  return {
+    fundingSource: BUDGET_REQUEST_FUNDING_SOURCE_OPTIONS,
+    fundingSourceDetail: BUDGET_REQUEST_FUNDING_SOURCE_DETAIL_OPTIONS,
+    projectType: BUDGET_REQUEST_PROJECT_TYPE_OPTIONS,
+    missionName: BUDGET_REQUEST_MISSION_OPTIONS,
+    strategyName: BUDGET_REQUEST_STRATEGY_OPTIONS,
+    outputCode: outputOptions.map((option) => option.code),
+    outputName: outputOptions.map((option) => option.name),
+    operationalPlanCode: operationalPlanOptions.map((option) => option.code),
+    operationalPlanName: operationalPlanOptions.map((option) => option.name),
+    activityCode: activityOptions.map((option) => option.code),
+    projectActivityName: activityOptions.map((option) => option.name),
+    expenditureBudget: getExpenditureBudgetOptions(catalog.expenseOptions),
+    expenseCategory: [...new Set(catalog.expenseOptions.map((option) => option.expenseCategory))],
+    expenseSubcategory: [
+      ...new Set(catalog.expenseOptions.map((option) => option.expenseSubcategory)),
+    ],
+  };
+}
+
+const sourceSelectKeySet: ReadonlySet<string> = new Set(BUDGET_REQUEST_SOURCE_SELECT_KEYS);
 const fundingSourceAliases: Readonly<Record<string, string>> = {
   เงินรายได้: "งบประมาณเงินรายได้",
   เงินงบประมาณแผ่นดิน: "งบประมาณแผ่นดิน",
 };
 
 export function isBudgetRequestSourceSelectKey(key: string): key is BudgetRequestSourceSelectKey {
-  return Object.prototype.hasOwnProperty.call(BUDGET_REQUEST_SOURCE_SELECT_OPTIONS, key);
+  return sourceSelectKeySet.has(key);
 }
 
-export function getBudgetRequestSourceOptions(key: string): readonly string[] {
-  return isBudgetRequestSourceSelectKey(key) ? BUDGET_REQUEST_SOURCE_SELECT_OPTIONS[key] : [];
+export function getBudgetRequestSourceOptions(
+  options: BudgetRequestSourceOptions,
+  key: string,
+): readonly string[] {
+  return isBudgetRequestSourceSelectKey(key) ? options[key] : [];
 }
 
 export function normalizeBudgetRequestSourceOption(
@@ -103,8 +113,9 @@ export function normalizeBudgetRequestSourceOption(
 }
 
 export function isBudgetRequestSourceOption(
+  options: BudgetRequestSourceOptions,
   key: BudgetRequestSourceSelectKey,
   value: string,
 ): boolean {
-  return optionSets[key].has(normalizeBudgetRequestSourceOption(key, value));
+  return options[key].includes(normalizeBudgetRequestSourceOption(key, value));
 }

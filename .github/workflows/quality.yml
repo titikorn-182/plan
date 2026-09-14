@@ -47,6 +47,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Start disposable Supabase and apply migrations plus test fixtures
         run: npx supabase start -x studio,postgres-meta,logflare,vector,edge-runtime,imgproxy,realtime,supavisor
+      - name: Verify generated database types match the migrated schema
+        run: npm run types:generate:local && git diff --exit-code -- types/database.generated.ts
       - run: npm run test:e2e:workflow
       - name: Browser report (test data only)
         if: always()

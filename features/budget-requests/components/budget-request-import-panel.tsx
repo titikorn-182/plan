@@ -9,6 +9,8 @@ import { groupBudgetRequestImportedRecords } from "@/features/budget-requests/ba
 import { BudgetRequestBatchImportPreview } from "@/features/budget-requests/components/budget-request-batch-import-preview";
 import type { BudgetRequestSourceValues } from "@/features/budget-requests/source-fields";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import type { BudgetRequestSourceOptions } from "@/features/budget-requests/source-options";
+import type { BudgetExpenseOption } from "@/features/shared/master-data";
 
 function recordLabel(record: BudgetRequestImportedRecord): string {
   const values = record.values;
@@ -21,11 +23,15 @@ export function BudgetRequestImportPanel({
   locked,
   onApplyRecord,
   options,
+  expenseOptions,
+  sourceOptions,
 }: {
   hasExistingValues: boolean;
   locked: boolean;
   onApplyRecord: (record: BudgetRequestSourceValues) => void;
   options: BudgetFormOptions;
+  expenseOptions: readonly BudgetExpenseOption[];
+  sourceOptions: BudgetRequestSourceOptions;
 }) {
   const [records, setRecords] = useState<BudgetRequestImportedRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState(0);
@@ -44,7 +50,7 @@ export function BudgetRequestImportPanel({
     setImporting(true);
     setErrors([]);
     setMessage("กำลังตรวจสอบหัวตารางและอ่านข้อมูล…");
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(file, sourceOptions, expenseOptions);
     setImporting(false);
     if (result.errors.length > 0) {
       setErrors(result.errors);

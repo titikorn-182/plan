@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { Calculator, FileCheck2, Flag, ShieldCheck } from "lucide-react";
 import { saveKpiResultAction } from "@/features/kpi/actions";
 import type { OperationState } from "@/features/shared/action-state";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
   FormActions,
   FieldError,
@@ -125,7 +126,7 @@ export function KpiResultForm({ record }: { record: KpiResultFormRecord }) {
                 name="explanation"
                 defaultValue={record.explanation}
                 disabled={!editable}
-                maxLength={5000}
+                maxLength={INPUT_LIMITS.longText}
                 placeholder="อธิบายผลจริง วิธีได้มาของข้อมูล และสาเหตุของช่องว่างจากเป้าหมาย"
                 aria-invalid={Boolean(state.errors?.explanation?.length)}
                 aria-describedby={

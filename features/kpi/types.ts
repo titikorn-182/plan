@@ -2,9 +2,10 @@ import type { Enums } from "@/types/database.generated";
 import type { KpiDirection } from "@/features/shared/kpi-contracts";
 
 export { KPI_DIRECTIONS, isKpiDirection } from "@/features/shared/kpi-contracts";
-export type { KpiDirection, KpiResultState } from "@/features/shared/kpi-contracts";
+export type { KpiDirection } from "@/features/shared/kpi-contracts";
 
 export type KpiResultStatus = Enums<"kpi_result_status">;
+export type KpiResultState = Enums<"result_state">;
 
 export const KPI_RESULT_STATUSES = [
   "not_started",
@@ -19,13 +20,17 @@ export const KPI_FRAMEWORKS = ["EdPEx", "AUN-QA", "Internal"] as const;
 export type KpiFramework = (typeof KPI_FRAMEWORKS)[number];
 export type KpiStatusLabel = "บรรลุ" | "เฝ้าระวัง" | "ต่ำกว่าเป้า" | "ไม่มีข้อมูล";
 
-export const KPI_STATUS_LABELS: Readonly<Record<string, KpiStatusLabel>> = {
+export const KPI_STATUS_LABELS: Readonly<Record<KpiResultState, KpiStatusLabel>> = {
   achieved: "บรรลุ",
   on_track: "เฝ้าระวัง",
   at_risk: "ต่ำกว่าเป้า",
   not_achieved: "ต่ำกว่าเป้า",
   no_data: "ไม่มีข้อมูล",
 };
+
+export function isKpiResultState(value: unknown): value is KpiResultState {
+  return typeof value === "string" && value in KPI_STATUS_LABELS;
+}
 
 export function isKpiResultStatus(value: unknown): value is KpiResultStatus {
   return typeof value === "string" && KPI_RESULT_STATUSES.some((status) => status === value);

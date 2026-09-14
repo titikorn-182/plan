@@ -22,6 +22,7 @@ import {
 import { ProgressBar, RegisterSection } from "@/components/ui/module-primitives";
 import type { DisbursementFormOptions } from "@/features/disbursements/types";
 import { formatThaiNumber } from "@/features/shared/formatters";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export function DisbursementForm({ options }: { options: DisbursementFormOptions }) {
   const [state, action, pending] = useActionState(
@@ -115,7 +116,7 @@ export function DisbursementForm({ options }: { options: DisbursementFormOptions
               <input
                 className={fieldClass}
                 name="referenceNo"
-                maxLength={120}
+                maxLength={INPUT_LIMITS.shortText}
                 placeholder="เช่น PV-70-001"
               />
             </label>

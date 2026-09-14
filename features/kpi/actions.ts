@@ -10,14 +10,21 @@ import {
   revalidateOperationPaths,
 } from "@/features/shared/server-actions";
 import { evaluateKpiResult } from "@/lib/operations/rules";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 const kpiSchema = z.object({
   id: z.string().uuid(),
   version: z.coerce.number().int().positive(),
   intent: z.enum(["save", "submit"]),
   actual: z.coerce.number().finite(),
-  quarter: z.union([z.coerce.number().int().min(1).max(4), z.literal("")]),
+  quarter: z.union([
+    z.coerce
+      .number()
+      .int()
+      .min(VALIDATION_LIMITS.quarterMinimum)
+      .max(VALIDATION_LIMITS.quarterMaximum),
+    z.literal(""),
+  ]),
   explanation: z.string().trim().max(INPUT_LIMITS.longText),
 });
 

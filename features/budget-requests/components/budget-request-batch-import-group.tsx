@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { FieldLabel, fieldClass } from "@/components/ui/operation-form";
 import type { BudgetRequestBatchGroup } from "@/features/budget-requests/batch-import";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const currency = new Intl.NumberFormat("th-TH", {
   minimumFractionDigits: 2,
@@ -80,7 +81,7 @@ export function BudgetRequestBatchImportGroup({
               className={fieldClass}
               value={group.values.ownerName}
               onChange={(event) => onValueChange("ownerName", event.target.value)}
-              maxLength={180}
+              maxLength={INPUT_LIMITS.personName}
               disabled={disabled}
               placeholder="กรอกชื่อ-นามสกุล"
             />
@@ -113,7 +114,7 @@ export function BudgetRequestBatchImportGroup({
               className={`${fieldClass} min-h-24 py-3`}
               value={group.values.rationale}
               onChange={(event) => onValueChange("rationale", event.target.value)}
-              maxLength={5_000}
+              maxLength={INPUT_LIMITS.longText}
               disabled={disabled}
             />
           </label>

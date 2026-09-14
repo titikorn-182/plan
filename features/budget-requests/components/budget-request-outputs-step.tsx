@@ -4,6 +4,7 @@ import {
   getProposalFieldErrors,
   type BudgetProposalStepProps,
 } from "@/features/budget-requests/components/budget-request-step-types";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export function BudgetRequestOutputsStep({
   details,
@@ -25,7 +26,7 @@ export function BudgetRequestOutputsStep({
               onChange={(event) => onDetailChange("outputCode", event.target.value)}
               placeholder="รหัส 4 หลัก"
               inputMode="numeric"
-              maxLength={120}
+              maxLength={INPUT_LIMITS.shortText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "outputCode")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "outputCode")} />
@@ -37,7 +38,7 @@ export function BudgetRequestOutputsStep({
               value={details.outputName}
               onChange={(event) => onDetailChange("outputName", event.target.value)}
               placeholder="ระบุชื่อผลผลิตหรือโครงการตามแผน"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "outputName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "outputName")} />
@@ -49,7 +50,7 @@ export function BudgetRequestOutputsStep({
               value={details.subActivityName}
               onChange={(event) => onDetailChange("subActivityName", event.target.value)}
               placeholder="ระบุกิจกรรมย่อยที่ใช้งบประมาณรายการนี้"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "subActivityName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "subActivityName")} />
@@ -69,7 +70,7 @@ export function BudgetRequestOutputsStep({
               value={details.objectives}
               onChange={(event) => onDetailChange("objectives", event.target.value)}
               placeholder="ระบุวัตถุประสงค์เป็นข้อ ๆ"
-              maxLength={5000}
+              maxLength={INPUT_LIMITS.longText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "objectives")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "objectives")} />
@@ -81,7 +82,7 @@ export function BudgetRequestOutputsStep({
               value={details.targetGroup}
               onChange={(event) => onDetailChange("targetGroup", event.target.value)}
               placeholder="ระบุกลุ่มและจำนวนผู้ได้รับประโยชน์"
-              maxLength={5000}
+              maxLength={INPUT_LIMITS.longText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "targetGroup")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "targetGroup")} />
@@ -93,7 +94,7 @@ export function BudgetRequestOutputsStep({
               value={details.expectedBenefits}
               onChange={(event) => onDetailChange("expectedBenefits", event.target.value)}
               placeholder="ระบุผลที่ผู้รับบริการหรือหน่วยงานจะได้รับ"
-              maxLength={5000}
+              maxLength={INPUT_LIMITS.longText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "expectedBenefits")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "expectedBenefits")} />
@@ -105,7 +106,7 @@ export function BudgetRequestOutputsStep({
               value={details.successIndicators}
               onChange={(event) => onDetailChange("successIndicators", event.target.value)}
               placeholder="ระบุตัวชี้วัด ค่าเป้าหมาย และหน่วยนับ"
-              maxLength={5000}
+              maxLength={INPUT_LIMITS.longText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "successIndicators")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "successIndicators")} />
@@ -125,7 +126,7 @@ export function BudgetRequestOutputsStep({
               value={details.reviewerName}
               onChange={(event) => onDetailChange("reviewerName", event.target.value)}
               placeholder="ชื่อ-นามสกุล"
-              maxLength={180}
+              maxLength={INPUT_LIMITS.personName}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "reviewerName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "reviewerName")} />
@@ -136,7 +137,7 @@ export function BudgetRequestOutputsStep({
               className={fieldClass}
               value={details.reviewerPosition}
               onChange={(event) => onDetailChange("reviewerPosition", event.target.value)}
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "reviewerPosition")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "reviewerPosition")} />
@@ -148,7 +149,7 @@ export function BudgetRequestOutputsStep({
               value={details.approverName}
               onChange={(event) => onDetailChange("approverName", event.target.value)}
               placeholder="ชื่อ-นามสกุล"
-              maxLength={180}
+              maxLength={INPUT_LIMITS.personName}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "approverName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "approverName")} />
@@ -159,7 +160,7 @@ export function BudgetRequestOutputsStep({
               className={fieldClass}
               value={details.approverPosition}
               onChange={(event) => onDetailChange("approverPosition", event.target.value)}
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "approverPosition")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "approverPosition")} />

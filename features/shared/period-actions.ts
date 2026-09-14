@@ -6,10 +6,15 @@ import { z } from "zod";
 import type { OperationState } from "@/features/shared/action-state";
 import { authenticated, friendlyError, invalid } from "@/features/shared/server-actions";
 import { REPORTING_PERIOD_COOKIE } from "@/features/shared/period-preference";
+import { VALIDATION_LIMITS } from "@/lib/config/limits";
 
 const periodSchema = z.object({
   fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
-  quarter: z.coerce.number().int().min(1).max(4),
+  quarter: z.coerce
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.quarterMinimum)
+    .max(VALIDATION_LIMITS.quarterMaximum),
 });
 
 export async function selectReportingPeriodAction(

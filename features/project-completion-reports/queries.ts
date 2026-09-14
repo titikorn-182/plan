@@ -8,6 +8,7 @@ import {
 } from "@/features/project-completion-reports/deadline";
 import {
   PROJECT_COMPLETION_STATUS_LABELS,
+  isProjectCompletionStatus,
   type ProjectCompletionReportFormOptions,
   type ProjectCompletionReportRow,
   type ProjectCompletionReportSummary,
@@ -85,20 +86,25 @@ export async function getProjectCompletionReports(
             "status",
           ]),
         )
-        .map((row) => ({
-          projectId: row.project_id,
-          reportId: row.id,
-          projectCode: row.project_code,
-          title: row.title,
-          unit: row.unit,
-          fiscalYear: row.buddhist_year,
-          endsOn: row.ends_on,
-          dueAt: row.due_at,
-          status: row.status,
-          statusLabel: PROJECT_COMPLETION_STATUS_LABELS[row.status] ?? row.status,
-          evidenceCount: Number(row.evidence_count),
-          daysRemaining: daysUntil(row.due_at),
-        })),
+        .flatMap((row) => {
+          if (!isProjectCompletionStatus(row.status)) return [];
+          return [
+            {
+              projectId: row.project_id,
+              reportId: row.id,
+              projectCode: row.project_code,
+              title: row.title,
+              unit: row.unit,
+              fiscalYear: row.buddhist_year,
+              endsOn: row.ends_on,
+              dueAt: row.due_at,
+              status: row.status,
+              statusLabel: PROJECT_COMPLETION_STATUS_LABELS[row.status],
+              evidenceCount: Number(row.evidence_count),
+              daysRemaining: daysUntil(row.due_at),
+            },
+          ];
+        }),
       pagination: createPagination(rows.count, page, pageSize),
       summary: {
         dueSoon: dueSoon.count ?? 0,

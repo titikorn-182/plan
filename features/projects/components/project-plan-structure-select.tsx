@@ -1,7 +1,7 @@
 "use client";
 
 import { FieldError, FieldLabel, fieldClass } from "@/components/ui/operation-form";
-import type { BudgetRequestCodedOption } from "@/features/shared/plan-structure-options";
+import type { PlanStructureOption } from "@/features/shared/master-data";
 import type {
   ProjectPlanStructureLevel,
   ProjectPlanStructureValue,
@@ -21,7 +21,7 @@ export function ProjectPlanStructureSelect({
   level: ProjectPlanStructureLevel;
   valueType: ProjectPlanStructureValue;
   value: string;
-  options: readonly BudgetRequestCodedOption[];
+  options: readonly PlanStructureOption[];
   disabled: boolean;
   errors?: string[];
   onChange: (value: string) => void;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search, X } from "lucide-react";
 import type { ProjectFilters } from "@/features/projects/filters";
 import type { OrganizationOption } from "@/features/shared/types";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export function ProjectFilterPanel({
   filters,
@@ -24,7 +25,7 @@ export function ProjectFilterPanel({
             <input
               className="min-h-10 w-full border-0 bg-transparent px-2 text-sm outline-none"
               defaultValue={filters.search}
-              maxLength={100}
+              maxLength={INPUT_LIMITS.searchText}
               name="search"
               placeholder="รหัส ชื่อโครงการ หรือเจ้าของ"
             />

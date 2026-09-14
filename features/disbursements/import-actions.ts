@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { parseDisbursementImportFile } from "@/features/disbursements/import-file";
 import {
+  DISBURSEMENT_IMPORT_MAX_ROWS,
   importedDisbursementSchema,
   type DisbursementImportPreview,
   type DisbursementImportResult,
@@ -16,7 +17,7 @@ import {
   revalidateOperationPaths,
 } from "@/features/shared/server-actions";
 
-const rowsSchema = z.array(importedDisbursementSchema).min(1).max(500);
+const rowsSchema = z.array(importedDisbursementSchema).min(1).max(DISBURSEMENT_IMPORT_MAX_ROWS);
 
 async function validateAgainstDatabase(rows: ImportedDisbursement[]): Promise<{
   errors: ImportIssue[];

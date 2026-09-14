@@ -1,11 +1,18 @@
 import type { ReportKind } from "./types";
+import type { Enums } from "@/types/database.generated";
+
+export type DashboardStatus =
+  | Enums<"document_status">
+  | Enums<"project_status">
+  | Enums<"disbursement_status">
+  | Enums<"result_state">;
 
 export type DashboardRecord = {
   id: string;
   code: string;
   title: string;
   group: string;
-  status: string;
+  status: DashboardStatus;
   amount: number | null;
   progress: number | null;
   quarter: number | null;
@@ -15,7 +22,7 @@ export type DashboardRecord = {
   verified: boolean;
 };
 
-export const DASHBOARD_STATUS_LABELS: Readonly<Record<string, string>> = {
+export const DASHBOARD_STATUS_LABELS: Readonly<Record<DashboardStatus, string>> = {
   draft: "ฉบับร่าง",
   submitted: "ส่งแล้ว",
   under_review: "กำลังตรวจสอบ",
@@ -40,13 +47,17 @@ export const DASHBOARD_STATUS_LABELS: Readonly<Record<string, string>> = {
   no_data: "ไม่มีผลประเมิน",
 };
 
+export function isDashboardStatus(value: unknown): value is DashboardStatus {
+  return typeof value === "string" && value in DASHBOARD_STATUS_LABELS;
+}
+
 export function summarizeDashboard(kind: ReportKind, rows: DashboardRecord[]) {
   const totalAmount = rows.reduce((sum, row) => sum + (row.amount ?? 0), 0);
   const measured = rows.filter((row) => row.progress !== null);
   const averageProgress = measured.length
     ? measured.reduce((sum, row) => sum + (row.progress ?? 0), 0) / measured.length
     : null;
-  const statusCounts = new Map<string, number>();
+  const statusCounts = new Map<DashboardStatus, number>();
   const groups = new Map<string, number>();
   for (const row of rows) {
     const status = kind === "kpi" && row.actual === null ? "no_data" : row.status;

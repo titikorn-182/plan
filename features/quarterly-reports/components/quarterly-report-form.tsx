@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { AlertTriangle, CalendarClock, FileCheck2, Gauge } from "lucide-react";
 import { saveQuarterlyReportAction } from "@/features/quarterly-reports/actions";
 import type { OperationState } from "@/features/shared/action-state";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
   FormActions,
   FieldError,
@@ -137,7 +138,7 @@ export function QuarterlyReportForm({ options }: { options: QuarterlyReportFormO
                 className={areaClass}
                 name="summary"
                 defaultValue={record?.summary}
-                maxLength={5000}
+                maxLength={INPUT_LIMITS.longText}
                 placeholder="ระบุผลที่เกิดขึ้นจริง เทียบกับแผน และตัวเลขสำคัญ"
                 aria-invalid={Boolean(state.errors?.summary?.length)}
                 aria-describedby={
@@ -152,7 +153,7 @@ export function QuarterlyReportForm({ options }: { options: QuarterlyReportFormO
                 className={areaClass}
                 name="problems"
                 defaultValue={record?.problems}
-                maxLength={5000}
+                maxLength={INPUT_LIMITS.longText}
                 placeholder="หากไม่มี ให้เว้นว่างได้"
               />
             </label>

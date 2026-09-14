@@ -2,6 +2,7 @@ import { FieldError, FieldLabel, areaClass } from "@/components/ui/operation-for
 import { SdgSelector } from "@/features/shared/components/sdg-selector";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type { SdgOption } from "@/features/shared/sdgs";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export function BudgetRequestSdgSection({
   alignmentDescription,
@@ -31,7 +32,7 @@ export function BudgetRequestSdgSection({
           value={alignmentDescription}
           onChange={(event) => onAlignmentChange(event.target.value)}
           placeholder="อธิบายว่าโครงการหรือกิจกรรมสนับสนุน SDG ที่เลือกอย่างไร"
-          maxLength={5_000}
+          maxLength={INPUT_LIMITS.longText}
           aria-invalid={Boolean(errors?.["proposalDetails.alignmentDescription"]?.length)}
           aria-describedby="budget-sdg-alignment-error"
         />

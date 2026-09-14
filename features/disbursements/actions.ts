@@ -10,12 +10,16 @@ import {
 } from "@/features/shared/server-actions";
 import { remainingBudget } from "@/lib/operations/rules";
 import { formatThaiInteger } from "@/features/shared/formatters";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 const disbursementSchema = z.object({
   projectId: z.string().uuid("กรุณาเลือกโครงการ"),
   fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
-  quarter: z.coerce.number().int().min(1).max(4),
+  quarter: z.coerce
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.quarterMinimum)
+    .max(VALIDATION_LIMITS.quarterMaximum),
   amount: z.coerce.number().finite().positive("ยอดเบิกจ่ายต้องมากกว่า 0"),
   disbursedOn: z.string().date("กรุณาระบุวันที่เบิกจ่าย"),
   referenceNo: z.string().trim().max(INPUT_LIMITS.shortText),

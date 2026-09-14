@@ -3,7 +3,7 @@ import "server-only";
 import type { ProjectFormOptions, ProjectRow } from "@/features/projects/types";
 import { isProjectStatus, type ProjectFilters } from "@/features/projects/filters";
 import type { DataResult, ProjectOption } from "@/features/shared/types";
-import { formatDate, hasValues, result } from "@/features/shared/query-utils";
+import { expectedResultError, formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
   createPagination,
   getPaginationRange,
@@ -18,6 +18,7 @@ import {
   createEmptyProjectProposalDetails,
   parseProjectProposalDetails,
 } from "@/features/projects/proposal-details";
+import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
 
 const PROJECT_HEALTH_LABELS: Record<string, ProjectRow["health"]> = {
   normal: "ปกติ",
@@ -172,9 +173,27 @@ export async function getProjectFormOptions(
     : { count: 0, error: null };
   if (pendingApproval.error) return result(null, pendingApproval.error);
 
+  const masterDataResult = await getFiscalYearMasterDataCatalogs(
+    common.fiscalYears.map((fiscalYear) => fiscalYear.id),
+  );
+  if (masterDataResult.error) return expectedResultError(null, masterDataResult.error);
+  const missingMasterData = masterDataResult.data.find(
+    (catalog) => catalog.planStructures.length === 0,
+  );
+  if (missingMasterData) {
+    const fiscalYear = common.fiscalYears.find(
+      (item) => item.id === missingMasterData.fiscalYearId,
+    );
+    return expectedResultError(
+      null,
+      `ยังไม่ได้กำหนด Master Data สำหรับ${fiscalYear?.label ?? "ปีงบประมาณที่เลือก"}`,
+    );
+  }
+
   return result({
     organizations: common.organizations,
     fiscalYears: common.fiscalYears,
+    masterData: masterDataResult.data,
     budgetRequests: (budgets.data ?? []).map((item) => ({
       id: item.id,
       label: `${item.code} · ${item.title_th}`,

@@ -31,6 +31,16 @@ tests/                       unit, integration, database, E2E และ UAT cont
 4. Logic ที่ใช้ feature เดียวให้อยู่กับ feature นั้น หากมีผู้ใช้ตั้งแต่ 2 feature ขึ้นไปจึงย้ายไป `features/shared/` หรือ `lib/`
 5. Client Component ใช้ `"use client"` เฉพาะไฟล์ที่เป็นขอบเขตเริ่มต้นของ interaction ไม่ต้องใส่ซ้ำทุกไฟล์ลูก
 6. ไฟล์ฝั่ง server ที่ติดต่อฐานข้อมูลหรืออ่าน secret ต้องใช้ `import "server-only"`
+7. ข้อมูลอ้างอิงที่เปลี่ยนตามปีงบประมาณ เช่น โครงสร้างแผนและหมวดรายจ่าย ต้องเก็บในฐานข้อมูลเป็น Master Data ไม่ประกาศรายการซ้ำในไฟล์ TypeScript
+8. ค่าจำกัดร่วม เช่น ความยาวข้อความ จำนวนรายการ และวงเงินสูงสุด ต้องอ้างจาก `lib/config/limits.ts`
+
+## Master Data และ Database Type
+
+- `plan_structure_master_data` เก็บผลผลิต แผนปฏิบัติการ และกิจกรรม แยกตามปีงบประมาณ
+- `budget_expense_master_data` เก็บความสัมพันธ์งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อย แยกตามปีงบประมาณ
+- หน้าคำของบและข้อเสนอโครงการอ่านรายการผ่าน `features/shared/master-data-queries.ts` และใช้ type กลางใน `features/shared/master-data.ts`
+- หลังเพิ่มหรือแก้ migration ให้เปิด Supabase ภายในเครื่องแล้วรัน `npm run types:generate:local` จากนั้นตรวจ `npm run typecheck`
+- CI จะ generate `types/database.generated.ts` ใหม่จากฐานข้อมูลทดสอบและหยุดทันทีหากไฟล์ไม่ตรงกับ schema
 
 ## ทิศทาง dependency
 

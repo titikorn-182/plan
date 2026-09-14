@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { INPUT_LIMITS } from "@/lib/config/limits";
-import { MAX_BUDGET_REQUEST_BATCH_GROUPS } from "@/features/budget-requests/batch-import";
+import { COLLECTION_LIMITS, IMPORT_LIMITS, INPUT_LIMITS } from "@/lib/config/limits";
 import {
   getBudgetRequestExpenseItemsTotal,
   parseBudgetRequestExpenseItems,
@@ -24,13 +23,15 @@ import {
   type BudgetRequestSourceValues,
 } from "@/features/budget-requests/source-fields";
 import {
-  BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
+  BUDGET_REQUEST_SOURCE_SELECT_KEYS,
+  createBudgetRequestSourceOptions,
   isBudgetRequestSourceOption,
   normalizeBudgetRequestSourceOption,
-  type BudgetRequestSourceSelectKey,
 } from "@/features/budget-requests/source-options";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import { friendlyError, revalidateOperationPaths } from "@/features/shared/server-actions";
+import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
+import { getFiscalYearMasterData } from "@/features/shared/master-data";
 
 export type BudgetRequestBatchState = {
   createdCodes?: string[];
@@ -47,16 +48,19 @@ const envelopeSchema = z.object({
   groups: z
     .array(
       z.object({
-        expenseItems: z.array(z.unknown()).min(1).max(100),
+        expenseItems: z.array(z.unknown()).min(1).max(COLLECTION_LIMITS.budgetRequestExpenseItems),
         id: z.string().trim().min(1).max(120),
         organizationId: z.string().uuid(),
         projectMembers: z.array(z.unknown()).max(MAX_BUDGET_REQUEST_PROJECT_MEMBERS),
-        rowNumbers: z.array(z.number().int().min(2).max(10_000)).min(1).max(500),
+        rowNumbers: z
+          .array(z.number().int().min(2).max(IMPORT_LIMITS.maximumSourceRowNumber))
+          .min(1)
+          .max(IMPORT_LIMITS.budgetRequestRows),
         values: z.record(z.string(), z.unknown()),
       }),
     )
     .min(1)
-    .max(MAX_BUDGET_REQUEST_BATCH_GROUPS),
+    .max(IMPORT_LIMITS.budgetRequestGroups),
 });
 
 function parseSourceValues(
@@ -134,10 +138,26 @@ export async function saveBudgetRequestBatchAction(
   }> = [];
   const validationErrors: string[] = [];
   const usedRows = new Set<number>();
+  const masterDataResult = await getFiscalYearMasterDataCatalogs([parsed.data.fiscalYearId]);
+  if (masterDataResult.error) {
+    return { success: false, message: masterDataResult.error, errors: [] };
+  }
+  const masterData = getFiscalYearMasterData(masterDataResult.data, parsed.data.fiscalYearId);
+  if (masterData.planStructures.length === 0 || masterData.expenseOptions.length === 0) {
+    return {
+      success: false,
+      message: "ยังไม่ได้กำหนด Master Data สำหรับปีงบประมาณที่เลือก",
+      errors: [],
+    };
+  }
+  const sourceOptions = createBudgetRequestSourceOptions(masterData);
 
   for (const group of parsed.data.groups) {
     const sourceValues = parseSourceValues(group.values);
-    const expenseItems = parseBudgetRequestExpenseItems(group.expenseItems);
+    const expenseItems = parseBudgetRequestExpenseItems(
+      group.expenseItems,
+      masterData.expenseOptions,
+    );
     const projectMembers = parseBudgetRequestProjectMembers(group.projectMembers);
     if (!sourceValues.success) {
       validationErrors.push(`รหัส ${group.id}: ${sourceValues.error}`);
@@ -153,11 +173,9 @@ export async function saveBudgetRequestBatchAction(
     }
     const values = sourceValues.data;
     values.projectType = normalizeBudgetRequestSourceOption("projectType", values.projectType);
-    for (const key of Object.keys(
-      BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
-    ) as BudgetRequestSourceSelectKey[]) {
+    for (const key of BUDGET_REQUEST_SOURCE_SELECT_KEYS) {
       values[key] = normalizeBudgetRequestSourceOption(key, values[key]);
-      if (values[key] && !isBudgetRequestSourceOption(key, values[key])) {
+      if (values[key] && !isBudgetRequestSourceOption(sourceOptions, key, values[key])) {
         const label =
           BUDGET_REQUEST_IMPORT_COLUMNS.find((column) => column.key === key)?.header ?? key;
         validationErrors.push(`รหัส ${group.id}: ${label}ไม่อยู่ในรายการที่กำหนด`);
@@ -169,13 +187,16 @@ export async function saveBudgetRequestBatchAction(
     if (values.projectActivityName.length < 5) {
       validationErrors.push(`รหัส ${group.id}: กรุณาระบุชื่อโครงการ/กิจกรรม`);
     }
-    if (!isBudgetRequestSourceOption("projectType", values.projectType)) {
+    if (!isBudgetRequestSourceOption(sourceOptions, "projectType", values.projectType)) {
       validationErrors.push(`รหัส ${group.id}: กรุณาเลือกประเภทโครงการจากรายการที่กำหนด`);
     }
     if (values.ownerName.length < 2) {
       validationErrors.push(`รหัส ${group.id}: กรุณาระบุหัวหน้าโครงการ`);
     }
-    const expenseErrors = validateBudgetRequestExpenseItemsForSubmission(expenseItems.data);
+    const expenseErrors = validateBudgetRequestExpenseItemsForSubmission(
+      expenseItems.data,
+      masterData.expenseOptions,
+    );
     if (Object.keys(expenseErrors).length > 0) {
       validationErrors.push(`รหัส ${group.id}: รายละเอียดค่าใช้จ่ายยังไม่ครบ`);
     }
@@ -293,7 +314,7 @@ export async function saveBudgetRequestBatchAction(
       expenseItems: group.expenseItems,
       projectMembers: group.projectMembers,
     };
-    const checkedProposal = parseBudgetProposalDetails(proposal);
+    const checkedProposal = parseBudgetProposalDetails(proposal, masterData.expenseOptions);
     if (!checkedProposal.success) {
       validationErrors.push(`รหัส ${group.id}: รายละเอียดคำขอไม่ผ่านการตรวจสอบ`);
     }

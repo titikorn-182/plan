@@ -73,6 +73,7 @@ GitHub Actions เตรียมตรวจ PR/main และ Vercel ตรว
 - `lib` เก็บโครงสร้างพื้นฐานร่วม เช่น authentication, Supabase client ตัวช่วยฝั่ง browser และกติกาคำนวณที่ไม่มี UI
 - `app/styles` แยก CSS ตามหน้าที่ ได้แก่ design tokens, workspace shell, form และส่วนต่าง ๆ ของ Executive Command Center
 - `types/database.generated.ts` สร้างจาก schema ของ Supabase และไม่ควรแก้ด้วยมือ
+- Master Data โครงสร้างแผนและหมวดรายจ่ายแยกตามปีงบประมาณในฐานข้อมูล หน้าฟอร์มจึงไม่เก็บรายการดังกล่าวซ้ำแบบ hardcoded
 
 ## ขอบเขตที่เชื่อมแล้ว
 

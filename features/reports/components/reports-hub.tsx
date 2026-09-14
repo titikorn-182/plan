@@ -22,6 +22,7 @@ import {
 import { REPORT_DEFINITIONS } from "@/features/reports/definitions";
 import type { ReportCadence, ReportSchedule } from "@/features/reports/types";
 import type { ReportingPeriod } from "@/features/shared/types";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const reportIcons = {
   budget: FileSpreadsheet,
@@ -164,7 +165,7 @@ export function ReportsHub({
                 <input
                   className="min-h-10 w-full border border-stone-300 bg-white px-3 text-sm"
                   name="name"
-                  maxLength={120}
+                  maxLength={INPUT_LIMITS.shortText}
                   required
                   placeholder="เช่น สรุปผู้บริหารประจำสัปดาห์"
                 />

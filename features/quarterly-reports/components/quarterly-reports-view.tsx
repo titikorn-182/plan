@@ -15,7 +15,9 @@ import { PaginationNav } from "@/components/ui/pagination-nav";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiInteger } from "@/features/shared/formatters";
 
-function reportTone(status: string): "orange" | "red" | "green" | "gray" {
+function reportTone(
+  status: import("@/features/quarterly-reports/types").QuarterlyReportStatusLabel,
+): "orange" | "red" | "green" | "gray" {
   if (status === "อนุมัติแล้ว") return "green";
   if (status === "เกินกำหนด" || status === "ต้องแก้ไข") return "red";
   if (status === "รอตรวจ") return "orange";

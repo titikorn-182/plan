@@ -10,7 +10,10 @@ import {
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
 import { isProjectPeriodValid } from "@/lib/operations/rules";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
+import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
+import { getFiscalYearMasterData } from "@/features/shared/master-data";
+import { validateProjectPlanStructure } from "@/features/projects/plan-structure";
 import {
   deriveProjectType,
   parseProjectProposalDetails,
@@ -29,7 +32,10 @@ const projectSchema = z.object({
   title: z.string().trim().min(5, "ชื่อโครงการต้องมีอย่างน้อย 5 ตัวอักษร").max(INPUT_LIMITS.title),
   ownerName: z.string().trim().min(2, "กรุณาระบุเจ้าของโครงการ").max(INPUT_LIMITS.personName),
   coordinatorName: z.string().trim().min(2, "กรุณาระบุผู้ประสานงาน").max(INPUT_LIMITS.personName),
-  disbursementTarget: z.coerce.number().min(0).max(100),
+  disbursementTarget: z.coerce
+    .number()
+    .min(VALIDATION_LIMITS.percentageMinimum)
+    .max(VALIDATION_LIMITS.percentageMaximum),
   startsOn: z.string().date("กรุณาระบุวันเริ่มต้น"),
   endsOn: z.string().date("กรุณาระบุวันสิ้นสุด"),
   proposalDetails: z.string().min(2, "ไม่พบรายละเอียดแบบเสนอโครงการ"),
@@ -75,6 +81,28 @@ export async function saveProjectAction(
   const { supabase, userId } = await authenticated();
   if (!userId)
     return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+
+  const masterDataResult = await getFiscalYearMasterDataCatalogs([input.fiscalYearId]);
+  if (masterDataResult.error) {
+    return { ...previous, success: false, message: masterDataResult.error };
+  }
+  const masterData = getFiscalYearMasterData(masterDataResult.data, input.fiscalYearId);
+  if (masterData.planStructures.length === 0) {
+    return {
+      ...previous,
+      success: false,
+      message: "ยังไม่ได้กำหนด Master Data สำหรับปีงบประมาณที่เลือก",
+    };
+  }
+  const planStructureErrors = validateProjectPlanStructure(proposal.data, masterData);
+  if (Object.keys(planStructureErrors).length > 0) {
+    return {
+      ...previous,
+      success: false,
+      errors: planStructureErrors,
+      message: "โครงสร้างแผนไม่ตรงกับปีงบประมาณที่เลือก",
+    };
+  }
 
   const { data: fiscal, error: fiscalError } = await supabase
     .from("fiscal_years")

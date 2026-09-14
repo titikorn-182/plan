@@ -3,6 +3,7 @@ import "server-only";
 import {
   isKpiDirection,
   isKpiFramework,
+  isKpiResultState,
   isKpiResultStatus,
   KPI_STATUS_LABELS,
   type KpiResultFormRecord,
@@ -45,7 +46,7 @@ export async function getKpis(page = 1): Promise<DataResult<PaginatedData<KpiRow
           target: Number(row.target),
           actual: row.actual === null ? null : Number(row.actual),
           unit: row.unit,
-          status: KPI_STATUS_LABELS[row.status] ?? "ไม่มีข้อมูล",
+          status: isKpiResultState(row.status) ? KPI_STATUS_LABELS[row.status] : "ไม่มีข้อมูล",
           workflowStatus: isKpiResultStatus(row.workflow_status)
             ? row.workflow_status
             : "not_started",

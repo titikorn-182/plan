@@ -5,7 +5,7 @@ export type ReportStatus = Enums<"report_status">;
 export type QuarterlyReportStatusLabel =
   "ฉบับร่าง" | "รอตรวจ" | "เกินกำหนด" | "อนุมัติแล้ว" | "ต้องแก้ไข";
 
-export const REPORT_STATUS_LABELS: Readonly<Record<string, QuarterlyReportStatusLabel>> = {
+export const REPORT_STATUS_LABELS: Readonly<Record<ReportStatus, QuarterlyReportStatusLabel>> = {
   draft: "ฉบับร่าง",
   submitted: "รอตรวจ",
   under_review: "รอตรวจ",
@@ -13,6 +13,10 @@ export const REPORT_STATUS_LABELS: Readonly<Record<string, QuarterlyReportStatus
   approved: "อนุมัติแล้ว",
   overdue: "เกินกำหนด",
 };
+
+export function isReportStatus(value: unknown): value is ReportStatus {
+  return typeof value === "string" && value in REPORT_STATUS_LABELS;
+}
 
 export type QuarterlyReportRow = {
   uuid: string;

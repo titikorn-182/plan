@@ -1,12 +1,13 @@
 import type { Enums } from "@/types/database.generated";
 import type { BudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import type { BudgetProposalDetails } from "@/features/budget-requests/proposal-details";
+import type { FiscalYearMasterData } from "@/features/shared/master-data";
 
 export type DocumentStatus = Enums<"document_status">;
 export type BudgetStatus =
   "ฉบับร่าง" | "รอตรวจสอบ" | "รออนุมัติ" | "อนุมัติแล้ว" | "ส่งกลับแก้ไข" | "ยกเลิก";
 
-export const BUDGET_STATUS_LABELS: Readonly<Record<string, BudgetStatus>> = {
+export const BUDGET_STATUS_LABELS: Readonly<Record<DocumentStatus, BudgetStatus>> = {
   draft: "ฉบับร่าง",
   submitted: "รอตรวจสอบ",
   under_review: "รอตรวจสอบ",
@@ -17,6 +18,10 @@ export const BUDGET_STATUS_LABELS: Readonly<Record<string, BudgetStatus>> = {
   withdrawn: "ยกเลิก",
   cancelled: "ยกเลิก",
 };
+
+export function isDocumentStatus(value: unknown): value is DocumentStatus {
+  return typeof value === "string" && value in BUDGET_STATUS_LABELS;
+}
 
 export type BudgetRequest = {
   uuid: string;
@@ -33,6 +38,7 @@ export type BudgetRequest = {
 export type BudgetFormOptions = {
   organizations: { id: string; name: string }[];
   fiscalYears: BudgetFiscalYearOption[];
+  masterData: FiscalYearMasterData[];
   record: BudgetFormRecord | null;
 };
 

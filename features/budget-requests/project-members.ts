@@ -1,6 +1,6 @@
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { COLLECTION_LIMITS, INPUT_LIMITS } from "@/lib/config/limits";
 
-export const MAX_BUDGET_REQUEST_PROJECT_MEMBERS = 50;
+export const MAX_BUDGET_REQUEST_PROJECT_MEMBERS = COLLECTION_LIMITS.budgetRequestProjectMembers;
 
 export type BudgetRequestProjectMember = {
   name: string;

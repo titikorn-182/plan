@@ -18,6 +18,7 @@ import {
 import type { ProjectProposalSectionProps as Props } from "./project-proposal-section-types";
 import { removeAt, replaceAt } from "./project-proposal-section-utils";
 import { ProjectPlanStructureSelect as PlanStructureSelect } from "./project-plan-structure-select";
+import type { FiscalYearMasterData } from "@/features/shared/master-data";
 
 export function ProposalBudget({
   details,
@@ -26,7 +27,12 @@ export function ProposalBudget({
   disabled,
   target,
   setTarget,
-}: Props & { target: string; setTarget: (value: string) => void }) {
+  masterData,
+}: Props & {
+  target: string;
+  setTarget: (value: string) => void;
+  masterData: FiscalYearMasterData;
+}) {
   const total =
     details.expenseItems.reduce(
       (sum, item) => sum + Math.round(calculateProjectExpenseAmount(item) * 100),
@@ -45,14 +51,18 @@ export function ProposalBudget({
       }),
     });
   };
-  const outputOptions = getProjectPlanStructureOptions(details, "output");
-  const operationalPlanOptions = getProjectPlanStructureOptions(details, "operationalPlan");
-  const activityOptions = getProjectPlanStructureOptions(details, "activity");
+  const outputOptions = getProjectPlanStructureOptions(details, "output", masterData);
+  const operationalPlanOptions = getProjectPlanStructureOptions(
+    details,
+    "operationalPlan",
+    masterData,
+  );
+  const activityOptions = getProjectPlanStructureOptions(details, "activity", masterData);
   const updatePlanStructure = (
     level: ProjectPlanStructureLevel,
     valueType: ProjectPlanStructureValue,
     value: string,
-  ) => setDetails(applyProjectPlanStructureSelection(details, level, valueType, value));
+  ) => setDetails(applyProjectPlanStructureSelection(details, level, valueType, value, masterData));
   return (
     <RegisterSection
       title="รายละเอียดงบประมาณ"

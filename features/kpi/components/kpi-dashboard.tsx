@@ -10,7 +10,9 @@ import { PaginationNav } from "@/components/ui/pagination-nav";
 import { ProgressBar, RegisterSection, StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatters";
 
-function resultTone(status: string): "green" | "orange" | "red" {
+function resultTone(
+  status: import("@/features/kpi/types").KpiStatusLabel,
+): "green" | "orange" | "red" {
   if (status === "บรรลุ") return "green";
   if (status === "ต่ำกว่าเป้า") return "red";
   return "orange";

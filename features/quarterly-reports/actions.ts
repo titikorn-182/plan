@@ -9,7 +9,7 @@ import {
   revalidateOperationPaths,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 const reportSchema = z.object({
   id: uuidOrEmpty,
@@ -17,9 +17,17 @@ const reportSchema = z.object({
   intent: z.enum(["save", "submit"]),
   projectId: z.string().uuid("กรุณาเลือกโครงการ"),
   fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
-  quarter: z.coerce.number().int().min(1).max(4),
+  quarter: z.coerce
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.quarterMinimum)
+    .max(VALIDATION_LIMITS.quarterMaximum),
   dueAt: z.string().date("กรุณาระบุกำหนดส่ง"),
-  progress: z.coerce.number().int().min(0).max(100),
+  progress: z.coerce
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.percentageMinimum)
+    .max(VALIDATION_LIMITS.percentageMaximum),
   summary: z.string().trim().max(INPUT_LIMITS.longText),
   problems: z.string().trim().max(INPUT_LIMITS.longText),
 });

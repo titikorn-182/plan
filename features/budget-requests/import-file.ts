@@ -9,17 +9,16 @@ import {
   type BudgetRequestSourceKey,
 } from "@/features/budget-requests/source-fields";
 import {
-  BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
+  BUDGET_REQUEST_SOURCE_SELECT_KEYS,
   isBudgetRequestSourceSelectKey,
   isBudgetRequestSourceOption,
   normalizeBudgetRequestSourceOption,
-  type BudgetRequestSourceSelectKey,
+  type BudgetRequestSourceOptions,
 } from "@/features/budget-requests/source-options";
 import { isBudgetRequestExpenseCombination } from "@/features/budget-requests/expense-items";
 import type { BudgetRequestImportResult } from "@/features/budget-requests/import-types";
-
-const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
-const MAX_IMPORT_ROWS = 500;
+import type { BudgetExpenseOption } from "@/features/shared/master-data";
+import { IMPORT_LIMITS, INPUT_LIMITS, MONEY_LIMITS } from "@/lib/config/limits";
 
 type RawCell = string | number | boolean | Date | null;
 
@@ -90,7 +89,11 @@ function parseCsv(text: string): RawCell[][] {
   return rows;
 }
 
-function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
+function normalizeRows(
+  rows: RawCell[][],
+  sourceOptions: BudgetRequestSourceOptions,
+  expenseOptions: readonly BudgetExpenseOption[],
+): BudgetRequestImportResult {
   if (rows.length === 0) return { records: [], errors: ["ไฟล์ไม่มีข้อมูล"] };
   const headers = rows[0].map(normalizeHeader);
   const duplicateHeaders = [
@@ -116,10 +119,10 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
   }
   const dataRows = rows.slice(1).filter((row) => row.some((cell) => cellText(cell) !== ""));
   if (dataRows.length === 0) return { records: [], errors: ["ไม่พบแถวข้อมูลหลังหัวตาราง"] };
-  if (dataRows.length > MAX_IMPORT_ROWS) {
+  if (dataRows.length > IMPORT_LIMITS.budgetRequestRows) {
     return {
       records: [],
-      errors: [`ไฟล์มีข้อมูลเกิน ${MAX_IMPORT_ROWS.toLocaleString("th-TH")} แถว`],
+      errors: [`ไฟล์มีข้อมูลเกิน ${IMPORT_LIMITS.budgetRequestRows.toLocaleString("th-TH")} แถว`],
     };
   }
 
@@ -138,7 +141,10 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
     const warnings: string[] = [];
     for (const key of ["totalBudget", "spendingPlanTotal"] as const) {
       const amount = record[key];
-      if (amount && (!/^\d+(?:\.\d{1,2})?$/.test(amount) || Number(amount) > 999_999_999_999)) {
+      if (
+        amount &&
+        (!/^\d+(?:\.\d{1,2})?$/.test(amount) || Number(amount) > MONEY_LIMITS.maximumBaht)
+      ) {
         errors.push(
           `แถว ${rowNumber}: ${key === "totalBudget" ? "งบประมาณรวมทั้งหมด" : "ยอดรวมแผนค่าใช้จ่าย"}ไม่ถูกต้อง`,
         );
@@ -155,7 +161,7 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
     for (const column of BUDGET_REQUEST_IMPORT_COLUMNS) {
       const maxLength =
         BUDGET_REQUEST_SOURCE_FIELD_MAP.get(column.key)?.maxLength ??
-        (column.key === "expenseDescription" ? 5_000 : 300);
+        (column.key === "expenseDescription" ? INPUT_LIMITS.longText : INPUT_LIMITS.title);
       if (record[column.key].length > maxLength) {
         errors.push(
           `แถว ${rowNumber}: ${column.header}ยาวเกิน ${maxLength.toLocaleString("th-TH")} ตัวอักษร`,
@@ -166,14 +172,12 @@ function normalizeRows(rows: RawCell[][]): BudgetRequestImportResult {
       record.expenditureBudget &&
       record.expenseCategory &&
       record.expenseSubcategory &&
-      !isBudgetRequestExpenseCombination(record)
+      !isBudgetRequestExpenseCombination(expenseOptions, record)
     ) {
       errors.push(`แถว ${rowNumber}: งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยไม่สัมพันธ์กัน`);
     }
-    for (const key of Object.keys(
-      BUDGET_REQUEST_SOURCE_SELECT_OPTIONS,
-    ) as BudgetRequestSourceSelectKey[]) {
-      if (record[key] && !isBudgetRequestSourceOption(key, record[key])) {
+    for (const key of BUDGET_REQUEST_SOURCE_SELECT_KEYS) {
+      if (record[key] && !isBudgetRequestSourceOption(sourceOptions, key, record[key])) {
         const label =
           BUDGET_REQUEST_IMPORT_COLUMNS.find((column) => column.key === key)?.header ?? key;
         errors.push(`แถว ${rowNumber}: ${label}ไม่อยู่ในรายการที่กำหนด`);
@@ -216,12 +220,18 @@ function excelCellValue(value: CellValue, text: string): RawCell {
   return text;
 }
 
-export async function parseBudgetRequestImportFile(file: File): Promise<BudgetRequestImportResult> {
-  if (file.size > MAX_IMPORT_BYTES) {
+export async function parseBudgetRequestImportFile(
+  file: File,
+  sourceOptions: BudgetRequestSourceOptions,
+  expenseOptions: readonly BudgetExpenseOption[],
+): Promise<BudgetRequestImportResult> {
+  if (file.size > IMPORT_LIMITS.budgetRequestBytes) {
     return { records: [], errors: ["ไฟล์ต้องมีขนาดไม่เกิน 5 MB"] };
   }
   const extension = file.name.split(".").pop()?.toLowerCase();
-  if (extension === "csv") return normalizeRows(parseCsv(await file.text()));
+  if (extension === "csv") {
+    return normalizeRows(parseCsv(await file.text()), sourceOptions, expenseOptions);
+  }
   if (extension !== "xlsx") {
     return { records: [], errors: ["รองรับเฉพาะไฟล์ .xlsx และ .csv"] };
   }
@@ -242,7 +252,7 @@ export async function parseBudgetRequestImportFile(file: File): Promise<BudgetRe
       }
       rows.push(values);
     });
-    return normalizeRows(rows);
+    return normalizeRows(rows, sourceOptions, expenseOptions);
   } catch {
     return { records: [], errors: ["ไม่สามารถอ่านไฟล์ Excel นี้ได้ กรุณาตรวจสอบรูปแบบไฟล์"] };
   }

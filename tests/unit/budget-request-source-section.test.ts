@@ -6,6 +6,7 @@ import {
   BUDGET_REQUEST_SOURCE_SECTIONS,
   createEmptyBudgetRequestSourceValues,
 } from "@/features/budget-requests/source-fields";
+import { TEST_BUDGET_SOURCE_OPTIONS } from "@/tests/fixtures/master-data";
 
 describe("budget request source section", () => {
   it("renders fiscal-year content before the source fields", () => {
@@ -19,6 +20,7 @@ describe("budget request source section", () => {
           section: section!,
           errors: undefined,
           onChange: () => undefined,
+          sourceOptions: TEST_BUDGET_SOURCE_OPTIONS,
           values: createEmptyBudgetRequestSourceValues(),
         },
         createElement("select", { id: "budget-fiscal-year" }),
@@ -40,6 +42,7 @@ describe("budget request source section", () => {
         section: section!,
         errors: { organizationId: ["ไม่พบหน่วยงานที่เชื่อมโยงในระบบ"] },
         onChange: () => undefined,
+        sourceOptions: TEST_BUDGET_SOURCE_OPTIONS,
         values: createEmptyBudgetRequestSourceValues(),
       }),
     );
@@ -59,6 +62,7 @@ describe("budget request source section", () => {
         errors: undefined,
         footer: createElement("div", { id: "project-members" }, "รายชื่อผู้รับผิดชอบ"),
         onChange: () => undefined,
+        sourceOptions: TEST_BUDGET_SOURCE_OPTIONS,
         values: createEmptyBudgetRequestSourceValues(),
       }),
     );

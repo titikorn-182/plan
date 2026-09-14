@@ -16,6 +16,7 @@ import {
   getProjectPlanStructureOptions,
 } from "@/features/projects/plan-structure";
 import { SDG_OPTIONS } from "@/features/shared/sdgs";
+import { TEST_MASTER_DATA } from "@/tests/fixtures/master-data";
 
 describe("project proposal details", () => {
   it("upgrades an empty stored object to the current structure", () => {
@@ -37,6 +38,7 @@ describe("project proposal details", () => {
       "activity",
       "code",
       "100210230001",
+      TEST_MASTER_DATA,
     );
     expect(selected).toMatchObject({
       outputCode: "1002",
@@ -47,7 +49,7 @@ describe("project proposal details", () => {
       projectActivityName: "โครงการผลิตบัณฑิตระดับปริญญาตรี คณะรัฐศาสตร์",
     });
     expect(
-      getProjectPlanStructureOptions(selected, "activity").every((option) =>
+      getProjectPlanStructureOptions(selected, "activity", TEST_MASTER_DATA).every((option) =>
         option.code.startsWith("10021023"),
       ),
     ).toBe(true);
@@ -145,6 +147,7 @@ describe("project proposal details", () => {
         disabled: false,
         target: "25",
         setTarget: () => undefined,
+        masterData: TEST_MASTER_DATA,
       }),
     );
     expect(html).toContain("อัตรา");

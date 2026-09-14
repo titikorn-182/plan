@@ -51,7 +51,7 @@ function EvidenceReview({ row }: { row: EvidenceRow }) {
         className="min-h-16 w-full border border-stone-300 px-2 py-1.5 text-xs outline-none focus:border-orange-500"
         name="comment"
         placeholder="เหตุผลเมื่อส่งกลับแก้ไข"
-        maxLength={1000}
+        maxLength={INPUT_LIMITS.reviewComment}
       />
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <span

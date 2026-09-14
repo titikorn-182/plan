@@ -12,7 +12,9 @@ import { formatThaiInteger, formatThaiNumber } from "@/features/shared/formatter
 import type { ReportingPeriod } from "@/features/shared/types";
 import { DisbursementImportPanel } from "@/features/disbursements/components/disbursement-import-panel";
 
-function tone(status: string): "green" | "orange" | "red" {
+function tone(
+  status: import("@/features/disbursements/types").DisbursementStatusLabel,
+): "green" | "orange" | "red" {
   if (status === "ตามแผน") return "green";
   if (status === "เบิกจ่ายล่าช้า") return "red";
   return "orange";

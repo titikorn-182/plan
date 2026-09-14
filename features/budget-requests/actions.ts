@@ -2,11 +2,10 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { INPUT_LIMITS, MONEY_LIMITS } from "@/lib/config/limits";
 import { friendlyError, revalidateOperationPaths } from "@/features/shared/server-actions";
 import {
   getBudgetExpenseTotal,
-  MAX_BUDGET_REQUEST_AMOUNT,
   parseBudgetExpenseBreakdown,
 } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
@@ -15,12 +14,19 @@ import {
   validateBudgetRequestExpenseItemsForSubmission,
 } from "@/features/budget-requests/expense-items";
 import { validateBudgetRequestProjectMembersForSubmission } from "@/features/budget-requests/project-members";
-import { isBudgetRequestOrganizationCompatible } from "@/features/budget-requests/source-fields";
 import {
+  BUDGET_REQUEST_SOURCE_FIELD_MAP,
+  isBudgetRequestOrganizationCompatible,
+} from "@/features/budget-requests/source-fields";
+import {
+  BUDGET_REQUEST_SOURCE_SELECT_KEYS,
+  BUDGET_REQUEST_PROJECT_TYPE_OPTIONS,
+  createBudgetRequestSourceOptions,
   isBudgetRequestSourceOption,
   normalizeBudgetRequestSourceOption,
-  type BudgetRequestSourceSelectKey,
 } from "@/features/budget-requests/source-options";
+import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
+import { getFiscalYearMasterData } from "@/features/shared/master-data";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
@@ -37,7 +43,7 @@ const schema = z.object({
   projectType: z.string().trim().min(2, "กรุณาเลือกประเภทคำขอ").max(INPUT_LIMITS.shortText),
   ownerName: z.string().trim().min(2, "กรุณาระบุหัวหน้าโครงการ").max(INPUT_LIMITS.personName),
   rationale: z.string().trim().max(INPUT_LIMITS.longText),
-  amount: z.coerce.number().min(0).max(MAX_BUDGET_REQUEST_AMOUNT),
+  amount: z.coerce.number().min(0).max(MONEY_LIMITS.maximumBaht),
 });
 
 export interface BudgetRequestState {
@@ -107,7 +113,7 @@ export async function saveBudgetRequestAction(
     "fundingSourceDetail",
     "missionName",
     "strategyName",
-  ] as const satisfies readonly BudgetRequestSourceSelectKey[]) {
+  ] as const) {
     proposalDetails.data[key] = normalizeBudgetRequestSourceOption(key, proposalDetails.data[key]);
   }
   if (
@@ -133,28 +139,8 @@ export async function saveBudgetRequestAction(
         validateBudgetRequestExpenseItemsForSubmission(proposalDetails.data.expenseItems),
       );
     }
-    if (!isBudgetRequestSourceOption("projectType", parsed.data.projectType)) {
+    if (!BUDGET_REQUEST_PROJECT_TYPE_OPTIONS.some((option) => option === parsed.data.projectType)) {
       submitErrors.projectType = ["กรุณาเลือกประเภทโครงการจากรายการที่กำหนด"];
-    }
-    const sourceSelectionLabels = {
-      fundingSource: "แหล่งงบประมาณ",
-      fundingSourceDetail: "แหล่งงบประมาณย่อย",
-      missionName: "ชื่อพันธกิจ",
-      strategyName: "ชื่อกลยุทธ์",
-    } as const satisfies Partial<
-      Record<Exclude<BudgetRequestSourceSelectKey, "projectType">, string>
-    >;
-    for (const key of Object.keys(
-      sourceSelectionLabels,
-    ) as (keyof typeof sourceSelectionLabels)[]) {
-      if (
-        proposalDetails.data[key] &&
-        !isBudgetRequestSourceOption(key, proposalDetails.data[key])
-      ) {
-        submitErrors[`proposalDetails.${key}`] = [
-          `กรุณาเลือก${sourceSelectionLabels[key]}จากรายการที่กำหนด`,
-        ];
-      }
     }
     if (parsed.data.rationale.length < 20) {
       submitErrors.rationale = ["ก่อนส่งคำขอ กรุณาอธิบายหลักการและเหตุผลอย่างน้อย 20 ตัวอักษร"];
@@ -192,6 +178,64 @@ export async function saveBudgetRequestAction(
   const userId = claimsData?.claims?.sub;
   if (claimsError || !userId) {
     return { ...previous, success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  }
+
+  const masterDataResult = await getFiscalYearMasterDataCatalogs([parsed.data.fiscalYearId]);
+  if (masterDataResult.error) {
+    return { ...previous, success: false, message: masterDataResult.error };
+  }
+  const masterData = getFiscalYearMasterData(masterDataResult.data, parsed.data.fiscalYearId);
+  if (masterData.planStructures.length === 0 || masterData.expenseOptions.length === 0) {
+    return {
+      ...previous,
+      success: false,
+      message: "ยังไม่ได้กำหนด Master Data สำหรับปีงบประมาณที่เลือก",
+    };
+  }
+  const checkedProposalDetails = parseBudgetProposalDetails(
+    formData.get("proposalDetails"),
+    masterData.expenseOptions,
+  );
+  if (!checkedProposalDetails.success) {
+    return {
+      ...previous,
+      success: false,
+      errors: checkedProposalDetails.errors,
+      message: "รายละเอียดค่าใช้จ่ายไม่ตรงกับ Master Data ของปีงบประมาณที่เลือก",
+    };
+  }
+  const sourceOptions = createBudgetRequestSourceOptions(masterData);
+  if (parsed.data.intent === "submit") {
+    const masterErrors: Record<string, string[]> = {};
+    if (usesDetailedExpenseItems) {
+      Object.assign(
+        masterErrors,
+        validateBudgetRequestExpenseItemsForSubmission(
+          proposalDetails.data.expenseItems,
+          masterData.expenseOptions,
+        ),
+      );
+    }
+    for (const key of BUDGET_REQUEST_SOURCE_SELECT_KEYS) {
+      const value =
+        key === "projectType"
+          ? parsed.data.projectType
+          : key === "projectActivityName"
+            ? parsed.data.title
+            : proposalDetails.data[key];
+      if (value && !isBudgetRequestSourceOption(sourceOptions, key, value)) {
+        const label = BUDGET_REQUEST_SOURCE_FIELD_MAP.get(key)?.header ?? key;
+        masterErrors[`proposalDetails.${key}`] = [`กรุณาเลือก${label}จากรายการที่กำหนด`];
+      }
+    }
+    if (Object.keys(masterErrors).length > 0) {
+      return {
+        ...previous,
+        success: false,
+        errors: masterErrors,
+        message: "ข้อมูลอ้างอิงไม่ตรงกับปีงบประมาณที่เลือก",
+      };
+    }
   }
 
   const [fiscalYearResult, budgetCycleResult] = await Promise.all([

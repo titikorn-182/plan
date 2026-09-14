@@ -1,11 +1,12 @@
-import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
-  BUDGET_REQUEST_EXPENSE_OPTIONS,
-  type BudgetRequestExpenseOption,
-} from "@/features/budget-requests/expense-source-options";
-import { MAX_BUDGET_REQUEST_AMOUNT } from "@/features/budget-requests/expense-categories";
+  getExpenseCategoryOptions as getMasterExpenseCategoryOptions,
+  getExpenseSubcategoryOptions as getMasterExpenseSubcategoryOptions,
+  isBudgetExpenseOption,
+  type BudgetExpenseOption,
+} from "@/features/shared/master-data";
+import { COLLECTION_LIMITS, INPUT_LIMITS, MONEY_LIMITS } from "@/lib/config/limits";
 
-export const MAX_BUDGET_REQUEST_EXPENSE_ITEMS = 100;
+export const MAX_BUDGET_REQUEST_EXPENSE_ITEMS = COLLECTION_LIMITS.budgetRequestExpenseItems;
 
 export type BudgetRequestExpenseItem = {
   expenditureBudget: string;
@@ -29,43 +30,29 @@ type ExpenseItemsParseResult =
   | { success: true; data: BudgetRequestExpenseItem[] }
   | { success: false; errors: Record<string, string[]> };
 
-function unique(values: readonly string[]): string[] {
-  return [...new Set(values)];
-}
-
-export function getExpenseCategoryOptions(expenditureBudget: string): string[] {
-  return unique(
-    BUDGET_REQUEST_EXPENSE_OPTIONS.filter(
-      (option) => option.expenditureBudget === expenditureBudget,
-    ).map((option) => option.expenseCategory),
-  );
+export function getExpenseCategoryOptions(
+  options: readonly BudgetExpenseOption[],
+  expenditureBudget: string,
+): string[] {
+  return getMasterExpenseCategoryOptions(options, expenditureBudget);
 }
 
 export function getExpenseSubcategoryOptions(
+  options: readonly BudgetExpenseOption[],
   expenditureBudget: string,
   expenseCategory: string,
 ): string[] {
-  return unique(
-    BUDGET_REQUEST_EXPENSE_OPTIONS.filter(
-      (option) =>
-        option.expenditureBudget === expenditureBudget &&
-        option.expenseCategory === expenseCategory,
-    ).map((option) => option.expenseSubcategory),
-  );
+  return getMasterExpenseSubcategoryOptions(options, expenditureBudget, expenseCategory);
 }
 
 export function isBudgetRequestExpenseCombination(
+  options: readonly BudgetExpenseOption[],
   item: Pick<
     BudgetRequestExpenseItem,
     "expenditureBudget" | "expenseCategory" | "expenseSubcategory"
   >,
 ): boolean {
-  return BUDGET_REQUEST_EXPENSE_OPTIONS.some(
-    (option) =>
-      option.expenditureBudget === item.expenditureBudget &&
-      option.expenseCategory === item.expenseCategory &&
-      option.expenseSubcategory === item.expenseSubcategory,
-  );
+  return isBudgetExpenseOption(options, item);
 }
 
 export function createEmptyBudgetRequestExpenseItem(id: number): BudgetRequestExpenseItemDraft {
@@ -82,7 +69,7 @@ export function createEmptyBudgetRequestExpenseItem(id: number): BudgetRequestEx
 
 export function createBudgetRequestExpenseItemFromSource(
   source: Pick<
-    BudgetRequestExpenseOption,
+    BudgetExpenseOption,
     "expenditureBudget" | "expenseCategory" | "expenseSubcategory"
   > & { expenseDescription: string; totalBudget: string },
   id: number,
@@ -122,7 +109,10 @@ export function toBudgetRequestExpenseItems(
   }));
 }
 
-export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsParseResult {
+export function parseBudgetRequestExpenseItems(
+  input: unknown,
+  expenseOptions?: readonly BudgetExpenseOption[],
+): ExpenseItemsParseResult {
   if (input === undefined || input === null) return { success: true, data: [] };
   if (!Array.isArray(input) || input.length > MAX_BUDGET_REQUEST_EXPENSE_ITEMS) {
     return {
@@ -172,7 +162,7 @@ export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsPars
       typeof amount !== "number" ||
       !Number.isFinite(amount) ||
       amount < 0 ||
-      amount > MAX_BUDGET_REQUEST_AMOUNT ||
+      amount > MONEY_LIMITS.maximumBaht ||
       amount !== Math.round(amount * 100) / 100
     ) {
       errors[`${prefix}.amount`] = [
@@ -221,7 +211,8 @@ export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsPars
       item.expenditureBudget &&
       item.expenseCategory &&
       item.expenseSubcategory &&
-      !isBudgetRequestExpenseCombination(item)
+      expenseOptions &&
+      !isBudgetRequestExpenseCombination(expenseOptions, item)
     ) {
       errors[prefix] = ["งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยไม่สัมพันธ์กัน"];
     } else {
@@ -230,7 +221,7 @@ export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsPars
   });
 
   const total = data.reduce((sum, item) => sum + Math.round(item.amount * 100), 0) / 100;
-  if (total > MAX_BUDGET_REQUEST_AMOUNT) {
+  if (total > MONEY_LIMITS.maximumBaht) {
     errors["proposalDetails.expenseItems"] = ["งบประมาณรวมทั้งหมดเกินวงเงินสูงสุดที่ระบบรองรับ"];
   }
   return Object.keys(errors).length > 0 ? { success: false, errors } : { success: true, data };
@@ -238,6 +229,7 @@ export function parseBudgetRequestExpenseItems(input: unknown): ExpenseItemsPars
 
 export function validateBudgetRequestExpenseItemsForSubmission(
   items: readonly BudgetRequestExpenseItem[],
+  expenseOptions?: readonly BudgetExpenseOption[],
 ): Record<string, string[]> {
   if (items.length === 0) {
     return { "proposalDetails.expenseItems": ["กรุณาเพิ่มรายละเอียดค่าใช้จ่ายอย่างน้อย 1 รายการ"] };
@@ -245,7 +237,13 @@ export function validateBudgetRequestExpenseItemsForSubmission(
   const errors: Record<string, string[]> = {};
   items.forEach((item, index) => {
     const prefix = `proposalDetails.expenseItems.${index}`;
-    if (!isBudgetRequestExpenseCombination(item)) {
+    const hasCompleteCategory = Boolean(
+      item.expenditureBudget && item.expenseCategory && item.expenseSubcategory,
+    );
+    if (
+      !hasCompleteCategory ||
+      (expenseOptions && !isBudgetRequestExpenseCombination(expenseOptions, item))
+    ) {
       errors[prefix] = ["กรุณาเลือกงบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยให้ครบ"];
     }
     if (item.amount <= 0) errors[`${prefix}.amount`] = ["กรุณาระบุจำนวนเงินมากกว่า 0 บาท"];

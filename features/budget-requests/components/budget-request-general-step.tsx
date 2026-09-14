@@ -8,6 +8,7 @@ import {
 } from "@/features/budget-requests/proposal-details";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 interface BudgetRequestGeneralStepProps extends BudgetProposalStepProps {
   errors: BudgetRequestState["errors"];
@@ -57,7 +58,7 @@ export function BudgetRequestGeneralStep({
               className={fieldClass}
               value={title}
               onChange={(event) => onTitleChange(event.target.value)}
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               required
               aria-invalid={Boolean(errors?.title?.length)}
             />
@@ -144,7 +145,7 @@ export function BudgetRequestGeneralStep({
               list="budget-project-type-options"
               value={projectType}
               onChange={(event) => onProjectTypeChange(event.target.value)}
-              maxLength={120}
+              maxLength={INPUT_LIMITS.shortText}
               required
               aria-invalid={Boolean(errors?.projectType?.length)}
             />
@@ -171,7 +172,7 @@ export function BudgetRequestGeneralStep({
               onChange={(event) => onOwnerChange(event.target.value)}
               placeholder="กรอกชื่อ-นามสกุล"
               autoComplete="off"
-              maxLength={180}
+              maxLength={INPUT_LIMITS.personName}
               required
               aria-invalid={Boolean(errors?.ownerName?.length)}
             />
@@ -184,7 +185,7 @@ export function BudgetRequestGeneralStep({
               value={details.ownerPosition}
               onChange={(event) => onDetailChange("ownerPosition", event.target.value)}
               placeholder="เช่น เจ้าหน้าที่บริหารงานทั่วไป"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "ownerPosition")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "ownerPosition")} />
@@ -222,7 +223,7 @@ export function BudgetRequestGeneralStep({
             className={areaClass}
             value={rationale}
             onChange={(event) => onRationaleChange(event.target.value)}
-            maxLength={5000}
+            maxLength={INPUT_LIMITS.longText}
             aria-invalid={Boolean(errors?.rationale?.length)}
           />
           <FieldError errors={errors?.rationale} />

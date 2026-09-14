@@ -20,6 +20,7 @@
     "test:e2e:workflow": "node scripts/run-e2e.mjs workflow",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:uat",
     "types:generate": "supabase gen types typescript --project-id noemwilgvrwpgqavtekm --schema public > types/database.generated.ts",
+    "types:generate:local": "supabase gen types typescript --local --schema public > types/database.generated.ts",
     "test:uat": "node --experimental-strip-types --test tests/*.test.mjs",
     "capture": "node scripts/capture-screenshot.mjs"
   },

@@ -1,3 +1,5 @@
+import { MONEY_LIMITS } from "@/lib/config/limits";
+
 export const BUDGET_EXPENSE_GROUPS = [
   {
     id: "operating",
@@ -39,8 +41,6 @@ export const BUDGET_EXPENSE_GROUPS = [
 export type BudgetExpenseCategoryId =
   (typeof BUDGET_EXPENSE_GROUPS)[number]["categories"][number]["id"];
 export type BudgetExpenseBreakdown = Record<BudgetExpenseCategoryId, number>;
-
-export const MAX_BUDGET_REQUEST_AMOUNT = 999_999_999_999;
 
 const categoryIds = BUDGET_EXPENSE_GROUPS.flatMap((group) =>
   group.categories.map((category) => category.id),
@@ -101,7 +101,7 @@ export function parseBudgetExpenseBreakdown(input: unknown): BudgetExpenseParseR
       (text !== "" && !/^\d+(?:\.\d{1,2})?$/.test(text)) ||
       !Number.isFinite(amount) ||
       amount < 0 ||
-      amount > MAX_BUDGET_REQUEST_AMOUNT
+      amount > MONEY_LIMITS.maximumBaht
     ) {
       errors[`expenseBreakdown.${id}`] = [
         "กรุณาระบุจำนวนเงินตั้งแต่ 0 ถึง 999,999,999,999 บาท และทศนิยมไม่เกิน 2 ตำแหน่ง",
@@ -111,7 +111,7 @@ export function parseBudgetExpenseBreakdown(input: unknown): BudgetExpenseParseR
     }
   }
   if (Object.keys(errors).length > 0) return { success: false, errors };
-  if (getBudgetExpenseTotal(breakdown) > MAX_BUDGET_REQUEST_AMOUNT) {
+  if (getBudgetExpenseTotal(breakdown) > MONEY_LIMITS.maximumBaht) {
     return {
       success: false,
       errors: { expenseBreakdown: ["วงเงินคำขอรวมต้องไม่เกิน 999,999,999,999 บาท"] },

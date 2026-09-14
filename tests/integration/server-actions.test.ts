@@ -11,6 +11,16 @@ import {
   PROJECT_CHARACTERISTICS,
 } from "@/features/projects/proposal-details";
 
+vi.mock("@/features/shared/master-data-queries", async () => {
+  const { TEST_MASTER_DATA } = await import("@/tests/fixtures/master-data");
+  return {
+    getFiscalYearMasterDataCatalogs: vi.fn(async (fiscalYearIds: readonly string[]) => ({
+      data: fiscalYearIds.map((fiscalYearId) => ({ ...TEST_MASTER_DATA, fiscalYearId })),
+      error: null,
+    })),
+  };
+});
+
 // Only the network/cache boundary is mocked; validation, authentication checks,
 // action orchestration, and error translation execute the production code.
 type QueryResponse = {
@@ -85,7 +95,7 @@ const projectInput = {
   organizationId: "20000000-0000-4000-8000-000000000001",
   fiscalYearId: yearId,
   budgetRequestId: "",
-  title: "โครงการทดสอบ",
+  title: "โครงการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ",
   projectType: "2 โครงการประจำตามภารกิจ",
   ownerName: "Test staff",
   coordinatorName: "Test staff",

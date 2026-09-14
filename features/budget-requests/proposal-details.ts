@@ -12,6 +12,7 @@ import {
   type BudgetRequestProjectMember,
 } from "@/features/budget-requests/project-members";
 import { SDG_OPTIONS } from "@/features/shared/sdgs";
+import type { BudgetExpenseOption } from "@/features/shared/master-data";
 
 export const BUDGET_PROJECT_TYPE_SUGGESTIONS = BUDGET_REQUEST_PROJECT_TYPE_OPTIONS;
 
@@ -139,7 +140,10 @@ function isIsoDate(value: string): boolean {
   return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
 }
 
-export function parseBudgetProposalDetails(input: unknown): BudgetProposalDetailsParseResult {
+export function parseBudgetProposalDetails(
+  input: unknown,
+  expenseOptions?: readonly BudgetExpenseOption[],
+): BudgetProposalDetailsParseResult {
   let value = input;
   if (typeof value === "string") {
     try {
@@ -203,7 +207,7 @@ export function parseBudgetProposalDetails(input: unknown): BudgetProposalDetail
     }
   }
 
-  const expenseItems = parseBudgetRequestExpenseItems(source.expenseItems);
+  const expenseItems = parseBudgetRequestExpenseItems(source.expenseItems, expenseOptions);
   if (!expenseItems.success) {
     Object.assign(errors, expenseItems.errors);
   } else {

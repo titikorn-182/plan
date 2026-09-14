@@ -6,12 +6,14 @@ import {
 } from "@/features/budget-requests/proposal-details";
 import { BUDGET_REQUEST_ORGANIZATIONS } from "@/features/budget-requests/organization-options";
 import { getBudgetRequestSourceOptions } from "@/features/budget-requests/source-options";
+import type { BudgetRequestSourceOptions } from "@/features/budget-requests/source-options";
 import type { BudgetRequestState } from "@/features/budget-requests/actions";
 import type {
   BudgetRequestSourceField,
   BudgetRequestSourceSection as SourceSection,
   BudgetRequestSourceValues,
 } from "@/features/budget-requests/source-fields";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 function getFieldErrors(field: BudgetRequestSourceField, errors: BudgetRequestState["errors"]) {
   const actionFields: Partial<Record<BudgetRequestSourceField["key"], string>> = {
@@ -41,11 +43,13 @@ function SourceField({
   field,
   errors,
   onChange,
+  sourceOptions,
   values,
 }: {
   field: BudgetRequestSourceField;
   errors: BudgetRequestState["errors"];
   onChange: (key: BudgetRequestSourceField["key"], value: string) => void;
+  sourceOptions: BudgetRequestSourceOptions;
   values: BudgetRequestSourceValues;
 }) {
   const label = field.label ?? field.header;
@@ -63,7 +67,11 @@ function SourceField({
   };
   const input =
     field.control === "textarea" ? (
-      <textarea className={areaClass} maxLength={field.maxLength ?? 5_000} {...common} />
+      <textarea
+        className={areaClass}
+        maxLength={field.maxLength ?? INPUT_LIMITS.longText}
+        {...common}
+      />
     ) : field.control === "date" ? (
       <input
         className={fieldClass}
@@ -107,7 +115,11 @@ function SourceField({
     ) : field.control === "source-select" ? (
       <select className={fieldClass} required={field.required} {...common}>
         <option value="">เลือก{field.header}</option>
-        {getBudgetRequestSourceOptions(field.key).map((option) => (
+        {values[field.key] &&
+        !getBudgetRequestSourceOptions(sourceOptions, field.key).includes(values[field.key]) ? (
+          <option value={values[field.key]}>ข้อมูลเดิม — {values[field.key]}</option>
+        ) : null}
+        {getBudgetRequestSourceOptions(sourceOptions, field.key).map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
@@ -125,7 +137,7 @@ function SourceField({
     ) : (
       <input
         className={fieldClass}
-        maxLength={field.maxLength ?? 300}
+        maxLength={field.maxLength ?? INPUT_LIMITS.title}
         required={field.required}
         autoComplete="off"
         {...common}
@@ -154,6 +166,7 @@ export function BudgetRequestSourceSection({
   section,
   errors,
   onChange,
+  sourceOptions,
   values,
 }: {
   children?: ReactNode;
@@ -161,6 +174,7 @@ export function BudgetRequestSourceSection({
   section: SourceSection;
   errors: BudgetRequestState["errors"];
   onChange: (key: BudgetRequestSourceField["key"], value: string) => void;
+  sourceOptions: BudgetRequestSourceOptions;
   values: BudgetRequestSourceValues;
 }) {
   return (
@@ -177,6 +191,7 @@ export function BudgetRequestSourceSection({
             field={field}
             errors={errors}
             onChange={onChange}
+            sourceOptions={sourceOptions}
             values={values}
           />
         ))}

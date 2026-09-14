@@ -8,7 +8,7 @@ import { friendlyError, invalid, uuidOrEmpty } from "@/features/shared/server-ac
 import { requireAdmin } from "@/lib/auth/viewer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 export async function updateUserAccessAction(
   previous: OperationState,
@@ -277,7 +277,11 @@ const settingsSchema = z.object({
     .max(120)
     .refine((value) => !value.includes("@"), "ระบุเฉพาะโดเมนโดยไม่ต้องใส่ @"),
   defaultFiscalYearId: uuidOrEmpty,
-  defaultQuarter: z.coerce.number().int().min(1).max(4),
+  defaultQuarter: z.coerce
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.quarterMinimum)
+    .max(VALIDATION_LIMITS.quarterMaximum),
   reminderDaysBefore: z.coerce.number().int().min(1).max(90),
 });
 

@@ -6,6 +6,7 @@ import type { BudgetExpenseFields } from "@/features/budget-requests/components/
 import { createEmptyBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import { createEmptyBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import { TEST_MASTER_DATA } from "@/tests/fixtures/master-data";
 
 const options: BudgetFormOptions = {
   organizations: [{ id: "organization-1", name: "สำนักงานเลขานุการ-งานการเงิน" }],
@@ -13,6 +14,11 @@ const options: BudgetFormOptions = {
     { id: "fiscal-2570", label: "ปีงบประมาณ 2570", budgetCycleId: "cycle-2570" },
     { id: "fiscal-2571", label: "ปีงบประมาณ 2571", budgetCycleId: "cycle-2571" },
     { id: "fiscal-2572", label: "ปีงบประมาณ 2572", budgetCycleId: "cycle-2572" },
+  ],
+  masterData: [
+    TEST_MASTER_DATA,
+    { ...TEST_MASTER_DATA, fiscalYearId: "fiscal-2571" },
+    { ...TEST_MASTER_DATA, fiscalYearId: "fiscal-2572" },
   ],
   record: null,
 };

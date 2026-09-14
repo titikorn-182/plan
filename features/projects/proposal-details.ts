@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import {
+  COLLECTION_LIMITS,
+  INPUT_LIMITS,
+  MONEY_LIMITS,
+  VALIDATION_LIMITS,
+} from "@/lib/config/limits";
 import { SDG_OPTIONS } from "@/features/shared/sdgs";
 
 export const PROJECT_CHARACTERISTICS = [
@@ -38,9 +43,6 @@ export const FISCAL_MONTHS = [
   "ก.ย.",
 ] as const;
 
-const MAX_PROJECT_EXPENSE_AMOUNT = 999_999_999_999;
-const MAX_PROJECT_EXPENSE_FACTOR = 999_999;
-
 export type ProjectExpenseCalculation = {
   rate: number;
   units: number;
@@ -54,19 +56,19 @@ export function calculateProjectExpenseAmount(item: ProjectExpenseCalculation): 
 }
 
 const text = (max: number = INPUT_LIMITS.longText) => z.string().trim().max(max);
-const expenseFactor = z.number().finite().int().min(0).max(MAX_PROJECT_EXPENSE_FACTOR);
+const expenseFactor = z.number().finite().int().min(0).max(MONEY_LIMITS.maximumExpenseFactor);
 const expenseItemSchema = z
   .object({
     category: z.enum(EXPENSE_CATEGORIES),
     description: text(INPUT_LIMITS.title),
-    rate: z.number().finite().min(0).max(MAX_PROJECT_EXPENSE_AMOUNT),
+    rate: z.number().finite().min(0).max(MONEY_LIMITS.maximumBaht),
     units: expenseFactor,
     quantity: expenseFactor,
     occurrences: expenseFactor,
-    amount: z.number().finite().min(0).max(MAX_PROJECT_EXPENSE_AMOUNT),
+    amount: z.number().finite().min(0).max(MONEY_LIMITS.maximumBaht),
   })
   .superRefine((item, context) => {
-    if (calculateProjectExpenseAmount(item) > MAX_PROJECT_EXPENSE_AMOUNT) {
+    if (calculateProjectExpenseAmount(item) > MONEY_LIMITS.maximumBaht) {
       context.addIssue({
         code: "custom",
         path: ["amount"],
@@ -85,7 +87,7 @@ const proposalSchema = z.object({
         position: text(INPUT_LIMITS.title),
       }),
     )
-    .max(50),
+    .max(COLLECTION_LIMITS.projectResponsiblePeople),
   strategies: z.array(z.enum(FACULTY_STRATEGIES)).max(FACULTY_STRATEGIES.length),
   goalIndicators: z
     .array(
@@ -97,7 +99,7 @@ const proposalSchema = z.object({
         target: text(INPUT_LIMITS.shortText),
       }),
     )
-    .max(30),
+    .max(COLLECTION_LIMITS.projectGoalIndicators),
   continuity: z.enum(["new", "continuing"]),
   previousSuccess: text(),
   efficiencyChecks: z.array(z.enum(["completed", "paid_30_days", "reported_15_days"])).max(3),
@@ -106,8 +108,18 @@ const proposalSchema = z.object({
   targetGroup: text(),
   sdgs: z.array(z.enum(SDG_OPTIONS)).max(SDG_OPTIONS.length),
   sdgAlignmentDescription: text(),
-  startWeek: z.number().int().min(1).max(4).nullable(),
-  endWeek: z.number().int().min(1).max(4).nullable(),
+  startWeek: z
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.quarterMinimum)
+    .max(VALIDATION_LIMITS.quarterMaximum)
+    .nullable(),
+  endWeek: z
+    .number()
+    .int()
+    .min(VALIDATION_LIMITS.quarterMinimum)
+    .max(VALIDATION_LIMITS.quarterMaximum)
+    .nullable(),
   actionPlan: z
     .array(
       z.object({
@@ -115,7 +127,7 @@ const proposalSchema = z.object({
         months: z.array(z.number().int().min(0).max(11)).max(12),
       }),
     )
-    .max(40),
+    .max(COLLECTION_LIMITS.projectActionPlanItems),
   location: text(INPUT_LIMITS.title),
   outputCode: text(INPUT_LIMITS.shortText),
   outputName: text(INPUT_LIMITS.title),
@@ -123,7 +135,7 @@ const proposalSchema = z.object({
   operationalPlanName: text(INPUT_LIMITS.title),
   activityCode: text(INPUT_LIMITS.shortText),
   projectActivityName: text(INPUT_LIMITS.title),
-  expenseItems: z.array(expenseItemSchema).max(100),
+  expenseItems: z.array(expenseItemSchema).max(COLLECTION_LIMITS.projectExpenseItems),
   expectedResults: text(),
   processIndicator: text(),
   outputIndicator: text(),

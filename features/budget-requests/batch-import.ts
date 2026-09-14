@@ -1,4 +1,4 @@
-import { INPUT_LIMITS } from "@/lib/config/limits";
+import { IMPORT_LIMITS, INPUT_LIMITS } from "@/lib/config/limits";
 import {
   MAX_BUDGET_REQUEST_EXPENSE_ITEMS,
   type BudgetRequestExpenseItem,
@@ -11,7 +11,7 @@ import {
   type BudgetRequestSourceValues,
 } from "@/features/budget-requests/source-fields";
 
-export const MAX_BUDGET_REQUEST_BATCH_GROUPS = 100;
+export const MAX_BUDGET_REQUEST_BATCH_GROUPS = IMPORT_LIMITS.budgetRequestGroups;
 
 export type BudgetRequestBatchGroup = {
   errors: string[];

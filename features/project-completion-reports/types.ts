@@ -1,4 +1,19 @@
-export const PROJECT_COMPLETION_STATUS_LABELS: Readonly<Record<string, string>> = {
+import type { Enums } from "@/types/database.generated";
+
+export type ProjectCompletionReportStatus = Enums<"report_status">;
+export type ProjectCompletionStatus = ProjectCompletionReportStatus | "not_started";
+export type ProjectCompletionStatusLabel =
+  | "ยังไม่เริ่ม"
+  | "ฉบับร่าง"
+  | "ส่งแล้ว"
+  | "รอตรวจรับรอง"
+  | "ต้องแก้ไข"
+  | "รับรองแล้ว"
+  | "เกินกำหนด";
+
+export const PROJECT_COMPLETION_STATUS_LABELS: Readonly<
+  Record<ProjectCompletionStatus, ProjectCompletionStatusLabel>
+> = {
   not_started: "ยังไม่เริ่ม",
   draft: "ฉบับร่าง",
   submitted: "ส่งแล้ว",
@@ -7,6 +22,10 @@ export const PROJECT_COMPLETION_STATUS_LABELS: Readonly<Record<string, string>> 
   approved: "รับรองแล้ว",
   overdue: "เกินกำหนด",
 };
+
+export function isProjectCompletionStatus(value: unknown): value is ProjectCompletionStatus {
+  return typeof value === "string" && value in PROJECT_COMPLETION_STATUS_LABELS;
+}
 
 export type ProjectCompletionReportRow = {
   projectId: string;
@@ -17,8 +36,8 @@ export type ProjectCompletionReportRow = {
   fiscalYear: number;
   endsOn: string;
   dueAt: string;
-  status: string;
-  statusLabel: string;
+  status: ProjectCompletionStatus;
+  statusLabel: ProjectCompletionStatusLabel;
   evidenceCount: number;
   daysRemaining: number;
 };
@@ -47,7 +66,7 @@ export type ProjectCompletionReportRecord = {
   fiscalYearId: string;
   endsOn: string;
   dueAt: string;
-  status: string;
+  status: ProjectCompletionReportStatus;
   actualResults: string;
   objectiveAchievement: string;
   indicatorResults: string;

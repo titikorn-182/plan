@@ -27,7 +27,9 @@ function thaiDate(value: string): string {
   }).format(new Date(`${value}T00:00:00.000Z`));
 }
 
-function statusTone(status: string): "gray" | "orange" | "red" | "green" {
+function statusTone(
+  status: import("@/features/project-completion-reports/types").ProjectCompletionStatus,
+): "gray" | "orange" | "red" | "green" {
   if (status === "approved") return "green";
   if (status === "overdue" || status === "revision_required") return "red";
   if (["submitted", "under_review"].includes(status)) return "orange";

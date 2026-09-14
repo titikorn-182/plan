@@ -1,9 +1,4 @@
-import {
-  BUDGET_REQUEST_ACTIVITY_OPTIONS,
-  BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS,
-  BUDGET_REQUEST_OUTPUT_OPTIONS,
-  type BudgetRequestCodedOption,
-} from "@/features/shared/plan-structure-options";
+import type { FiscalYearMasterData, PlanStructureOption } from "@/features/shared/master-data";
 import type { ProjectProposalDetails } from "@/features/projects/proposal-details";
 
 export type ProjectPlanStructureLevel = "output" | "operationalPlan" | "activity";
@@ -12,23 +7,25 @@ export type ProjectPlanStructureValue = "code" | "name";
 export function getProjectPlanStructureOptions(
   details: ProjectProposalDetails,
   level: ProjectPlanStructureLevel,
-): readonly BudgetRequestCodedOption[] {
-  if (level === "output") return BUDGET_REQUEST_OUTPUT_OPTIONS;
+  catalog: FiscalYearMasterData,
+): readonly PlanStructureOption[] {
+  const outputOptions = catalog.planStructures.filter((option) => option.level === "output");
+  const operationalPlanOptions = catalog.planStructures.filter(
+    (option) => option.level === "operational_plan",
+  );
+  const activityOptions = catalog.planStructures.filter((option) => option.level === "activity");
+  if (level === "output") return outputOptions;
   if (level === "operationalPlan") {
     return details.outputCode
-      ? BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS.filter((option) =>
-          option.code.startsWith(details.outputCode),
-        )
-      : BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS;
+      ? operationalPlanOptions.filter((option) => option.parentCode === details.outputCode)
+      : operationalPlanOptions;
   }
   if (details.operationalPlanCode) {
-    return BUDGET_REQUEST_ACTIVITY_OPTIONS.filter((option) =>
-      option.code.startsWith(details.operationalPlanCode),
-    );
+    return activityOptions.filter((option) => option.parentCode === details.operationalPlanCode);
   }
   return details.outputCode
-    ? BUDGET_REQUEST_ACTIVITY_OPTIONS.filter((option) => option.code.startsWith(details.outputCode))
-    : BUDGET_REQUEST_ACTIVITY_OPTIONS;
+    ? activityOptions.filter((option) => option.code.startsWith(details.outputCode))
+    : activityOptions;
 }
 
 export function applyProjectPlanStructureSelection(
@@ -36,13 +33,19 @@ export function applyProjectPlanStructureSelection(
   level: ProjectPlanStructureLevel,
   valueType: ProjectPlanStructureValue,
   value: string,
+  catalog: FiscalYearMasterData,
 ): ProjectProposalDetails {
+  const outputOptions = catalog.planStructures.filter((option) => option.level === "output");
+  const operationalPlanOptions = catalog.planStructures.filter(
+    (option) => option.level === "operational_plan",
+  );
+  const activityOptions = catalog.planStructures.filter((option) => option.level === "activity");
   const source =
     level === "output"
-      ? BUDGET_REQUEST_OUTPUT_OPTIONS
+      ? outputOptions
       : level === "operationalPlan"
-        ? BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS
-        : BUDGET_REQUEST_ACTIVITY_OPTIONS;
+        ? operationalPlanOptions
+        : activityOptions;
   const selected = source.find((option) => option[valueType] === value);
 
   if (!selected) {
@@ -84,9 +87,7 @@ export function applyProjectPlanStructureSelection(
   }
 
   if (level === "operationalPlan") {
-    const output = BUDGET_REQUEST_OUTPUT_OPTIONS.find((option) =>
-      selected.code.startsWith(option.code),
-    );
+    const output = outputOptions.find((option) => option.code === selected.parentCode);
     const keepsActivity = details.activityCode.startsWith(selected.code);
     return {
       ...details,
@@ -99,12 +100,10 @@ export function applyProjectPlanStructureSelection(
     };
   }
 
-  const operationalPlan = BUDGET_REQUEST_OPERATIONAL_PLAN_OPTIONS.find((option) =>
-    selected.code.startsWith(option.code),
+  const operationalPlan = operationalPlanOptions.find(
+    (option) => option.code === selected.parentCode,
   );
-  const output = BUDGET_REQUEST_OUTPUT_OPTIONS.find((option) =>
-    selected.code.startsWith(option.code),
-  );
+  const output = outputOptions.find((option) => option.code === operationalPlan?.parentCode);
   return {
     ...details,
     outputCode: output?.code ?? "",
@@ -114,4 +113,50 @@ export function applyProjectPlanStructureSelection(
     activityCode: selected.code,
     projectActivityName: selected.name,
   };
+}
+
+export function validateProjectPlanStructure(
+  details: ProjectProposalDetails,
+  catalog: FiscalYearMasterData,
+): Record<string, string[]> {
+  const errors: Record<string, string[]> = {};
+  const selections = [
+    ["output", "outputCode", "outputName"],
+    ["operational_plan", "operationalPlanCode", "operationalPlanName"],
+    ["activity", "activityCode", "projectActivityName"],
+  ] as const;
+
+  const selected = new Map<"output" | "operational_plan" | "activity", PlanStructureOption>();
+  for (const [level, codeKey, nameKey] of selections) {
+    const code = details[codeKey].trim();
+    const name = details[nameKey].trim();
+    if (!code && !name) continue;
+    const match = catalog.planStructures.find(
+      (option) =>
+        option.level === level &&
+        (!code || option.code === code) &&
+        (!name || option.name === name),
+    );
+    if (!match) {
+      errors[`proposalDetails.${codeKey}`] = [
+        "โครงสร้างแผนไม่ตรงกับปีงบประมาณที่เลือก กรุณาเลือกจากรายการใหม่",
+      ];
+    } else {
+      selected.set(level, match);
+    }
+  }
+  const output = selected.get("output");
+  const operationalPlan = selected.get("operational_plan");
+  const activity = selected.get("activity");
+  if (output && operationalPlan && operationalPlan.parentCode !== output.code) {
+    errors["proposalDetails.operationalPlanCode"] = [
+      "แผนปฏิบัติการไม่อยู่ภายใต้ผลผลิตที่เลือก กรุณาเลือกใหม่",
+    ];
+  }
+  if (operationalPlan && activity && activity.parentCode !== operationalPlan.code) {
+    errors["proposalDetails.activityCode"] = [
+      "กิจกรรมไม่อยู่ภายใต้แผนปฏิบัติการที่เลือก กรุณาเลือกใหม่",
+    ];
+  }
+  return errors;
 }

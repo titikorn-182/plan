@@ -9,6 +9,7 @@ import {
   type BudgetProposalStepProps,
 } from "@/features/budget-requests/components/budget-request-step-types";
 import type { BudgetExpenseCategoryId } from "@/features/budget-requests/expense-categories";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 interface BudgetRequestBudgetStepProps extends BudgetProposalStepProps {
   amount: string;
@@ -40,7 +41,7 @@ export function BudgetRequestBudgetStep({
               value={details.expenseSubcategory}
               onChange={(event) => onDetailChange("expenseSubcategory", event.target.value)}
               placeholder="เช่น ค่าใช้จ่ายอุดหนุน"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "expenseSubcategory")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "expenseSubcategory")} />
@@ -52,7 +53,7 @@ export function BudgetRequestBudgetStep({
               value={details.expenseDescription}
               onChange={(event) => onDetailChange("expenseDescription", event.target.value)}
               placeholder="อธิบายรายการหรือวัตถุประสงค์ของค่าใช้จ่าย"
-              maxLength={5000}
+              maxLength={INPUT_LIMITS.longText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "expenseDescription")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "expenseDescription")} />

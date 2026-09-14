@@ -9,6 +9,7 @@ import {
   BUDGET_FUNDING_SOURCE_SUGGESTIONS,
   BUDGET_SDG_OPTIONS,
 } from "@/features/budget-requests/proposal-details";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export function BudgetRequestStrategyStep({
   details,
@@ -34,7 +35,7 @@ export function BudgetRequestStrategyStep({
               value={details.fundingSource}
               onChange={(event) => onDetailChange("fundingSource", event.target.value)}
               placeholder="เช่น เงินรายได้"
-              maxLength={120}
+              maxLength={INPUT_LIMITS.shortText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "fundingSource")?.length)}
             />
             <datalist id="budget-funding-source-options">
@@ -78,7 +79,7 @@ export function BudgetRequestStrategyStep({
               value={details.fundingSourceDetail}
               onChange={(event) => onDetailChange("fundingSourceDetail", event.target.value)}
               placeholder="ระบุที่มาหรือเงื่อนไขของแหล่งงบประมาณ"
-              maxLength={5000}
+              maxLength={INPUT_LIMITS.longText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "fundingSourceDetail")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "fundingSourceDetail")} />
@@ -98,7 +99,7 @@ export function BudgetRequestStrategyStep({
               value={details.missionName}
               onChange={(event) => onDetailChange("missionName", event.target.value)}
               placeholder="เช่น พันธกิจที่ 3 ด้านการบริการวิชาการ"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "missionName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "missionName")} />
@@ -110,7 +111,7 @@ export function BudgetRequestStrategyStep({
               value={details.universityStrategy}
               onChange={(event) => onDetailChange("universityStrategy", event.target.value)}
               placeholder="ระบุยุทธศาสตร์ที่โครงการสนับสนุน"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "universityStrategy")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "universityStrategy")} />
@@ -122,7 +123,7 @@ export function BudgetRequestStrategyStep({
               value={details.goalName}
               onChange={(event) => onDetailChange("goalName", event.target.value)}
               placeholder="ระบุเป้าประสงค์"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "goalName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "goalName")} />
@@ -134,7 +135,7 @@ export function BudgetRequestStrategyStep({
               value={details.strategyName}
               onChange={(event) => onDetailChange("strategyName", event.target.value)}
               placeholder="ระบุกลยุทธ์ของคณะหรือมหาวิทยาลัย"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "strategyName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "strategyName")} />
@@ -147,7 +148,7 @@ export function BudgetRequestStrategyStep({
               onChange={(event) => onDetailChange("operationalPlanCode", event.target.value)}
               placeholder="รหัส 8 หลัก"
               inputMode="numeric"
-              maxLength={120}
+              maxLength={INPUT_LIMITS.shortText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "operationalPlanCode")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "operationalPlanCode")} />
@@ -159,7 +160,7 @@ export function BudgetRequestStrategyStep({
               value={details.operationalPlanName}
               onChange={(event) => onDetailChange("operationalPlanName", event.target.value)}
               placeholder="ระบุชื่อแผนปฏิบัติการ"
-              maxLength={300}
+              maxLength={INPUT_LIMITS.title}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "operationalPlanName")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "operationalPlanName")} />
@@ -172,7 +173,7 @@ export function BudgetRequestStrategyStep({
               onChange={(event) => onDetailChange("activityCode", event.target.value)}
               placeholder="รหัส 12 หลัก"
               inputMode="numeric"
-              maxLength={120}
+              maxLength={INPUT_LIMITS.shortText}
               aria-invalid={Boolean(getProposalFieldErrors(errors, "activityCode")?.length)}
             />
             <FieldError errors={getProposalFieldErrors(errors, "activityCode")} />
@@ -222,7 +223,7 @@ export function BudgetRequestStrategyStep({
             value={details.alignmentDescription}
             onChange={(event) => onDetailChange("alignmentDescription", event.target.value)}
             placeholder="อธิบายว่าโครงการสนับสนุนพันธกิจ ยุทธศาสตร์ แผนงาน และ SDGs อย่างไร"
-            maxLength={5000}
+            maxLength={INPUT_LIMITS.longText}
             aria-invalid={Boolean(getProposalFieldErrors(errors, "alignmentDescription")?.length)}
           />
           <FieldError errors={getProposalFieldErrors(errors, "alignmentDescription")} />

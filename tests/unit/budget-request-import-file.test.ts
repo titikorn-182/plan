@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { BUDGET_REQUEST_IMPORT_HEADERS } from "@/features/budget-requests/source-fields";
+import { TEST_BUDGET_SOURCE_OPTIONS, TEST_MASTER_DATA } from "@/tests/fixtures/master-data";
 
 vi.mock("client-only", () => ({}));
 
@@ -30,7 +31,11 @@ describe("budget request file import", () => {
       { type: "text/csv" },
     );
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.errors).toEqual([]);
     expect(result.records).toHaveLength(1);
@@ -61,7 +66,11 @@ describe("budget request file import", () => {
       type: "text/csv",
     });
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.records).toEqual([]);
     expect(result.errors[0]).toContain("35 คอลัมน์");
@@ -92,7 +101,11 @@ describe("budget request file import", () => {
     });
     const { parseBudgetRequestImportFile } = await import("@/features/budget-requests/import-file");
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.errors).toEqual([]);
     expect(result.records[0].values).toMatchObject({
@@ -120,7 +133,11 @@ describe("budget request file import", () => {
       { type: "text/csv" },
     );
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.errors).toEqual([]);
     expect(result.records[0].errors).toEqual(
@@ -141,7 +158,11 @@ describe("budget request file import", () => {
       { type: "text/csv" },
     );
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.records[0].errors).toContain("แถว 2: ประเภทโครงการไม่อยู่ในรายการที่กำหนด");
   });
@@ -156,7 +177,11 @@ describe("budget request file import", () => {
       { type: "text/csv" },
     );
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.records[0].errors).toContain("แถว 2: งบรายจ่ายไม่อยู่ในรายการที่กำหนด");
   });
@@ -173,7 +198,11 @@ describe("budget request file import", () => {
       { type: "text/csv" },
     );
 
-    const result = await parseBudgetRequestImportFile(file);
+    const result = await parseBudgetRequestImportFile(
+      file,
+      TEST_BUDGET_SOURCE_OPTIONS,
+      TEST_MASTER_DATA.expenseOptions,
+    );
 
     expect(result.records[0].errors).toContain(
       "แถว 2: งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยไม่สัมพันธ์กัน",

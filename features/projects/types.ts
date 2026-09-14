@@ -1,6 +1,7 @@
 import type { Enums } from "@/types/database.generated";
 import type { FiscalYearOption, OrganizationOption, SelectOption } from "@/features/shared/types";
 import type { ProjectProposalDetails } from "@/features/projects/proposal-details";
+import type { FiscalYearMasterData } from "@/features/shared/master-data";
 
 export type ProjectStatus = Enums<"project_status">;
 
@@ -42,6 +43,7 @@ export type ProjectFormRecord = {
 export type ProjectFormOptions = {
   organizations: OrganizationOption[];
   fiscalYears: FiscalYearOption[];
+  masterData: FiscalYearMasterData[];
   budgetRequests: SelectOption[];
   defaultOwnerName: string;
   record: ProjectFormRecord | null;

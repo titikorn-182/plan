@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { SearchParamValue } from "@/features/shared/pagination";
+import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 export const PROJECT_HEALTH_FILTERS = ["normal", "watch", "at_risk", "delayed"] as const;
 export const PROJECT_STATUS_FILTERS = [
@@ -22,14 +23,26 @@ export type ProjectFilters = {
 };
 
 const filterSchema = z.object({
-  search: z.string().trim().max(100).catch(""),
+  search: z.string().trim().max(INPUT_LIMITS.searchText).catch(""),
   organizationId: z.string().uuid().or(z.literal("")).catch(""),
   health: z.enum(PROJECT_HEALTH_FILTERS).or(z.literal("")).catch(""),
   status: z.enum(PROJECT_STATUS_FILTERS).or(z.literal("")).catch(""),
   minBudget: z.coerce.number().finite().min(0).nullable().catch(null),
   maxBudget: z.coerce.number().finite().min(0).nullable().catch(null),
-  minProgress: z.coerce.number().finite().min(0).max(100).nullable().catch(null),
-  maxProgress: z.coerce.number().finite().min(0).max(100).nullable().catch(null),
+  minProgress: z.coerce
+    .number()
+    .finite()
+    .min(VALIDATION_LIMITS.percentageMinimum)
+    .max(VALIDATION_LIMITS.percentageMaximum)
+    .nullable()
+    .catch(null),
+  maxProgress: z.coerce
+    .number()
+    .finite()
+    .min(VALIDATION_LIMITS.percentageMinimum)
+    .max(VALIDATION_LIMITS.percentageMaximum)
+    .nullable()
+    .catch(null),
 });
 
 function first(value: SearchParamValue): string {

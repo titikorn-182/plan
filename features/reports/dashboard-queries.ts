@@ -4,7 +4,7 @@ import { result } from "@/features/shared/query-utils";
 import type { ReportingPeriod, DataResult } from "@/features/shared/types";
 import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import type { ReportKind } from "./types";
-import type { DashboardRecord } from "./dashboard";
+import { isDashboardStatus, type DashboardRecord } from "./dashboard";
 
 // Fetch every accessible row in stable pages; never summarize a silently truncated export.
 async function allRows<T>(
@@ -64,7 +64,7 @@ export async function getDashboardRecords(
           code: row.code ?? "—",
           title: row.title ?? "—",
           group: row.unit ?? "ไม่ระบุหน่วยงาน",
-          status: row.status ?? "no_data",
+          status: isDashboardStatus(row.status) ? row.status : "no_data",
           amount: row.amount,
         })),
       };
@@ -87,7 +87,7 @@ export async function getDashboardRecords(
           code: row.code ?? "—",
           title: row.title ?? "—",
           group: row.unit ?? "ไม่ระบุหน่วยงาน",
-          status: row.status ?? "no_data",
+          status: isDashboardStatus(row.status) ? row.status : "no_data",
           amount: row.budget,
           progress: row.progress,
         })),
@@ -138,7 +138,7 @@ export async function getDashboardRecords(
         code: row.code ?? "—",
         title: row.name ?? "—",
         group: row.framework ?? "—",
-        status: row.status ?? "no_data",
+        status: isDashboardStatus(row.status) ? row.status : "no_data",
         actual: row.actual,
         target: row.target,
         unit: row.unit ?? "",

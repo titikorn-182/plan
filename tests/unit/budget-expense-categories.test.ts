@@ -3,9 +3,9 @@ import {
   BUDGET_EXPENSE_GROUPS,
   createEmptyBudgetExpenseBreakdown,
   getBudgetExpenseTotal,
-  MAX_BUDGET_REQUEST_AMOUNT,
   parseBudgetExpenseBreakdown,
 } from "@/features/budget-requests/expense-categories";
+import { MONEY_LIMITS } from "@/lib/config/limits";
 
 describe("budget expense amounts", () => {
   it("defines every requested expense group and all eleven categories", () => {
@@ -70,7 +70,7 @@ describe("budget expense amounts", () => {
     true,
     [],
     {},
-    MAX_BUDGET_REQUEST_AMOUNT + 1,
+    MONEY_LIMITS.maximumBaht + 1,
   ])("rejects invalid money %j with its category error", (invalid) => {
     expect(
       parseBudgetExpenseBreakdown({
@@ -103,7 +103,7 @@ describe("budget expense amounts", () => {
     expect(
       parseBudgetExpenseBreakdown({
         ...createEmptyBudgetExpenseBreakdown(),
-        operating_materials: MAX_BUDGET_REQUEST_AMOUNT,
+        operating_materials: MONEY_LIMITS.maximumBaht,
         capital_equipment: 0.01,
       }),
     ).toMatchObject({ success: false, errors: { expenseBreakdown: expect.any(Array) } });

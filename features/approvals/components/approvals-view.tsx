@@ -22,6 +22,7 @@ import {
   type WorkflowTask,
 } from "@/features/approvals/types";
 import type { PaginationMeta } from "@/features/shared/pagination";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const typeLabel: Record<string, string> = {
   budget_request: "คำของบ",
@@ -52,7 +53,7 @@ function DecisionForm({ task }: { task: WorkflowTask }) {
         <textarea
           className="mt-1.5 min-h-20 w-full border border-stone-300 px-3 py-2 text-xs font-normal outline-none focus:border-orange-500"
           name="comment"
-          maxLength={1000}
+          maxLength={INPUT_LIMITS.reviewComment}
           placeholder="จำเป็นเมื่อส่งกลับหรือไม่อนุมัติ"
         />
       </label>

@@ -18,6 +18,7 @@ import {
   ProposalPlan,
   ProposalResults,
 } from "@/features/projects/components/project-proposal-sections";
+import { getFiscalYearMasterData } from "@/features/shared/master-data";
 
 const SECTION_LINKS = [
   ["project-basics", "ข้อมูลโครงการ"],
@@ -56,6 +57,7 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
   });
   const editable = !record || (record.status === "proposed" && !record.pendingApproval);
   const totalBudget = sumProjectExpenses(details);
+  const masterData = getFiscalYearMasterData(options.masterData, fiscalYearId);
   const readiness = useMemo(
     () => [
       Boolean(
@@ -181,7 +183,12 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
             />
           </div>
           <div className="scroll-mt-28" id="project-budget">
-            <ProposalBudget {...shared} target={target} setTarget={setTarget} />
+            <ProposalBudget
+              {...shared}
+              target={target}
+              setTarget={setTarget}
+              masterData={masterData}
+            />
           </div>
           <div className="scroll-mt-28" id="project-results">
             <ProposalResults {...shared} />

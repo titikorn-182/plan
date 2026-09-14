@@ -10,6 +10,7 @@ import {
   parseBudgetRequestExpenseItems,
   validateBudgetRequestExpenseItemsForSubmission,
 } from "@/features/budget-requests/expense-items";
+import { TEST_MASTER_DATA } from "@/tests/fixtures/master-data";
 
 const validItem = {
   expenditureBudget: "งบดำเนินงาน",
@@ -21,9 +22,16 @@ const validItem = {
 
 describe("budget request expense items", () => {
   it("filters categories and subcategories by their parent choices", () => {
-    expect(getExpenseCategoryOptions("งบลงทุน")).toEqual(["ครุภัณฑ์", "ค่าสิ่งก่อสร้าง"]);
-    expect(getExpenseSubcategoryOptions("งบลงทุน", "ค่าสิ่งก่อสร้าง")).toEqual(["สิ่งก่อสร้าง"]);
-    expect(getExpenseSubcategoryOptions("งบดำเนินงาน", "ค่าใช้สอย")).toContain("ค่าจ้างเหมาบริการ");
+    expect(getExpenseCategoryOptions(TEST_MASTER_DATA.expenseOptions, "งบลงทุน")).toEqual([
+      "ครุภัณฑ์",
+      "ค่าสิ่งก่อสร้าง",
+    ]);
+    expect(
+      getExpenseSubcategoryOptions(TEST_MASTER_DATA.expenseOptions, "งบลงทุน", "ค่าสิ่งก่อสร้าง"),
+    ).toEqual(["สิ่งก่อสร้าง"]);
+    expect(
+      getExpenseSubcategoryOptions(TEST_MASTER_DATA.expenseOptions, "งบดำเนินงาน", "ค่าใช้สอย"),
+    ).toContain("ค่าจ้างเหมาบริการ");
   });
 
   it("adds line amounts using integer satang precision", () => {
@@ -77,9 +85,10 @@ describe("budget request expense items", () => {
       success: true,
     });
     expect(
-      validateBudgetRequestExpenseItemsForSubmission([
-        { ...validItem, expenditureBudget: "", amount: 0 },
-      ]),
+      validateBudgetRequestExpenseItemsForSubmission(
+        [{ ...validItem, expenditureBudget: "", amount: 0 }],
+        TEST_MASTER_DATA.expenseOptions,
+      ),
     ).toEqual(
       expect.objectContaining({
         "proposalDetails.expenseItems.0": expect.any(Array),
@@ -89,9 +98,10 @@ describe("budget request expense items", () => {
   });
 
   it("rejects a category combination that does not exist in the approved source data", () => {
-    const parsed = parseBudgetRequestExpenseItems([
-      { ...validItem, expenditureBudget: "งบลงทุน", expenseCategory: "ค่าใช้สอย" },
-    ]);
+    const parsed = parseBudgetRequestExpenseItems(
+      [{ ...validItem, expenditureBudget: "งบลงทุน", expenseCategory: "ค่าใช้สอย" }],
+      TEST_MASTER_DATA.expenseOptions,
+    );
     expect(parsed).toMatchObject({
       success: false,
       errors: { "proposalDetails.expenseItems.0": expect.any(Array) },
@@ -102,6 +112,7 @@ describe("budget request expense items", () => {
     const html = renderToStaticMarkup(
       createElement(BudgetRequestExpenseItems, {
         errors: undefined,
+        expenseOptions: TEST_MASTER_DATA.expenseOptions,
         items: [{ ...validItem, id: 1, amount: "1250.50" }],
         onAdd: () => undefined,
         onChange: () => undefined,

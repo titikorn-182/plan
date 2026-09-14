@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { FieldError, FieldLabel, FormActions, fieldClass } from "@/components/ui/operation-form";
 import {
   saveBudgetRequestAction,
@@ -41,6 +41,8 @@ import {
   type BudgetRequestProjectMemberDraft,
 } from "@/features/budget-requests/project-members";
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
+import { getFiscalYearMasterData } from "@/features/shared/master-data";
+import { createBudgetRequestSourceOptions } from "@/features/budget-requests/source-options";
 
 function inferOrganizationId(
   record: BudgetRequestSourceValues,
@@ -67,6 +69,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   ]);
   const [selectedSdgs, setSelectedSdgs] = useState<string[]>([]);
   const [sdgAlignment, setSdgAlignment] = useState("");
+  const masterData = getFiscalYearMasterData(options.masterData, fiscalYearId);
+  const sourceOptions = useMemo(() => createBudgetRequestSourceOptions(masterData), [masterData]);
 
   const proposalDetails = {
     ...toBudgetProposalDetails(values),
@@ -233,6 +237,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         locked={Boolean(formState.id)}
         onApplyRecord={applyImportedRecord}
         options={options}
+        expenseOptions={masterData.expenseOptions}
+        sourceOptions={sourceOptions}
       />
 
       <nav
@@ -258,6 +264,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
               section={section}
               errors={formState.errors}
               onChange={handleValueChange}
+              sourceOptions={sourceOptions}
               values={values}
               footer={
                 section.id === "approval" ? (
@@ -315,6 +322,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
               {section.id === "budget" ? (
                 <BudgetRequestExpenseItems
                   errors={formState.errors}
+                  expenseOptions={masterData.expenseOptions}
                   items={expenseItems}
                   onAdd={() => {
                     setExpenseItems((current) => [

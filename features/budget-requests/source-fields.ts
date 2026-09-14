@@ -4,6 +4,7 @@ import {
   type BudgetProposalTextField,
 } from "@/features/budget-requests/proposal-details";
 import { getBudgetRequestOrganizationSourceCode } from "@/features/budget-requests/organization-options";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export const BUDGET_REQUEST_IMPORT_COLUMNS = [
   { key: "organizationCode", header: "รหัสหน่วยงานย่อย" },
@@ -92,7 +93,11 @@ function field(
   key: BudgetRequestSourceKey,
   config: Omit<BudgetRequestSourceField, "key" | "header"> = {},
 ): BudgetRequestSourceField {
-  const maxLength = shortTextKeys.has(key) ? 120 : personNameKeys.has(key) ? 180 : 300;
+  const maxLength = shortTextKeys.has(key)
+    ? INPUT_LIMITS.shortText
+    : personNameKeys.has(key)
+      ? INPUT_LIMITS.personName
+      : INPUT_LIMITS.title;
   return { key, header: byKey.get(key) ?? key, maxLength, ...config };
 }
 
@@ -155,18 +160,22 @@ export const BUDGET_REQUEST_SOURCE_SECTIONS: readonly BudgetRequestSourceSection
     title: "เป้าหมาย เหตุผล และระยะเวลา",
     description: "เรียงจากที่มาของโครงการ เป้าหมาย ผลที่คาดหวัง กลุ่มเป้าหมาย และกรอบเวลา",
     fields: [
-      field("rationale", { control: "textarea", maxLength: 5_000 }),
+      field("rationale", { control: "textarea", maxLength: INPUT_LIMITS.longText }),
       field("objectives", {
         control: "textarea",
-        maxLength: 5_000,
+        maxLength: INPUT_LIMITS.longText,
         proposalField: "objectives",
       }),
       field("expectedBenefits", {
         control: "textarea",
-        maxLength: 5_000,
+        maxLength: INPUT_LIMITS.longText,
         proposalField: "expectedBenefits",
       }),
-      field("targetGroup", { control: "textarea", maxLength: 5_000, proposalField: "targetGroup" }),
+      field("targetGroup", {
+        control: "textarea",
+        maxLength: INPUT_LIMITS.longText,
+        proposalField: "targetGroup",
+      }),
       field("startsOn", { control: "date", proposalField: "startsOn" }),
       field("endsOn", { control: "date", proposalField: "endsOn" }),
     ],

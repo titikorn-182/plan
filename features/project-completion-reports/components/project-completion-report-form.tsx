@@ -7,6 +7,7 @@ import { saveProjectCompletionReportAction } from "@/features/project-completion
 import { daysUntil } from "@/features/project-completion-reports/deadline";
 import type { ProjectCompletionReportFormOptions } from "@/features/project-completion-reports/types";
 import type { OperationState } from "@/features/shared/action-state";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 import {
   areaClass,
   FieldError,
@@ -62,7 +63,7 @@ function ReportTextarea({
         aria-invalid={Boolean(errors?.length)}
         className={areaClass}
         defaultValue={defaultValue}
-        maxLength={5000}
+        maxLength={INPUT_LIMITS.longText}
         name={name}
         placeholder={placeholder}
         required={required}

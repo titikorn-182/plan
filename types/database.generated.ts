@@ -232,6 +232,50 @@ export type Database = {
           },
         ]
       }
+      budget_expense_master_data: {
+        Row: {
+          created_at: string
+          expense_category: string
+          expense_subcategory: string
+          expenditure_budget: string
+          fiscal_year_id: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expense_category: string
+          expense_subcategory: string
+          expenditure_budget: string
+          fiscal_year_id: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expense_category?: string
+          expense_subcategory?: string
+          expenditure_budget?: string
+          fiscal_year_id?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_expense_master_data_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_lines: {
         Row: {
           budget_request_id: string
@@ -971,6 +1015,53 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_structure_master_data: {
+        Row: {
+          code: string
+          created_at: string
+          fiscal_year_id: string
+          id: string
+          is_active: boolean
+          level: Database["public"]["Enums"]["plan_structure_level"]
+          name_th: string
+          parent_code: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          fiscal_year_id: string
+          id?: string
+          is_active?: boolean
+          level: Database["public"]["Enums"]["plan_structure_level"]
+          name_th: string
+          parent_code?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          fiscal_year_id?: string
+          id?: string
+          is_active?: boolean
+          level?: Database["public"]["Enums"]["plan_structure_level"]
+          name_th?: string
+          parent_code?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_structure_master_data_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
             referencedColumns: ["id"]
           },
         ]
@@ -1867,6 +1958,7 @@ export type Database = {
         | "verified"
         | "overdue"
         | "not_applicable"
+      plan_structure_level: "output" | "operational_plan" | "activity"
       priority_level: "medium" | "high" | "critical"
       project_status:
         | "proposed"
@@ -2043,6 +2135,7 @@ export const Constants = {
         "overdue",
         "not_applicable",
       ],
+      plan_structure_level: ["output", "operational_plan", "activity"],
       priority_level: ["medium", "high", "critical"],
       project_status: [
         "proposed",
