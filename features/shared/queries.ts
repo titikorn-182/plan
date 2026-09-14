@@ -60,7 +60,7 @@ export const getReportingContext = cache(async (): Promise<ReportingContext> => 
       .from("fiscal_years")
       .select("id,buddhist_year,label,starts_on,ends_on,status")
       .in("status", ["open", "closed"])
-      .order("buddhist_year", { ascending: false }),
+      .order("buddhist_year", { ascending: true }),
     supabase
       .from("system_settings")
       .select("default_fiscal_year_id,default_quarter")

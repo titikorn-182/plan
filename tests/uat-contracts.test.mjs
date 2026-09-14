@@ -220,6 +220,17 @@ test("fiscal-year plan and expense choices come from database master data", () =
   );
 });
 
+test("the reporting period rollout starts at fiscal year 2570 and resets legacy cookies once", () => {
+  const migration = read("supabase/migrations/202609140004_default_fiscal_year_2570.sql");
+  const preference = read("features/shared/period-preference.ts");
+  const queries = read("features/shared/queries.ts");
+
+  assert.match(migration, /fiscal_year\.buddhist_year = 2570/);
+  assert.match(migration, /default_fiscal_year_id = fiscal_year\.id/);
+  assert.match(preference, /plan-reporting-period-v2/);
+  assert.match(queries, /order\("buddhist_year", \{ ascending: true \}\)/);
+});
+
 test("evidence files bypass Server Actions and are registered by an authenticated route", () => {
   const component = read("features/evidence/components/evidence-view.tsx");
   const actions = read("features/evidence/actions.ts");

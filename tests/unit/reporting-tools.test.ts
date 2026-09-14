@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { parseDisbursementImportFile } from "@/features/disbursements/import-file";
 import { parseProjectFilters, projectFilterQuery } from "@/features/projects/filters";
-import { parseReportingPeriodPreference } from "@/features/shared/period-preference";
+import {
+  parseReportingPeriodPreference,
+  REPORTING_PERIOD_COOKIE,
+} from "@/features/shared/period-preference";
 import { createWorkbookBuffer } from "@/lib/server/workbooks";
 
 describe("reporting period preference", () => {
+  it("uses the v2 cookie so legacy fiscal-year selections reset once", () => {
+    expect(REPORTING_PERIOD_COOKIE).toBe("plan-reporting-period-v2");
+  });
+
   it("accepts only a UUID and quarter 1-4", () => {
     expect(parseReportingPeriodPreference("30000000-0000-4000-8000-000000000001:3")).toEqual({
       fiscalYearId: "30000000-0000-4000-8000-000000000001",

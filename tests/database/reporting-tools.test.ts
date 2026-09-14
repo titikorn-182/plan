@@ -60,6 +60,13 @@ describe("report schedule row-level security", () => {
 });
 
 describe("reporting period views and bulk imports", () => {
+  test("system settings default to fiscal year 2570", async () => {
+    const result = await db.query<{ buddhist_year: number }>(
+      "select fiscal_years.buddhist_year from system_settings join fiscal_years on fiscal_years.id = system_settings.default_fiscal_year_id where system_settings.singleton = true",
+    );
+    expect(result.rows).toEqual([{ buddhist_year: 2570 }]);
+  });
+
   test("register views expose fiscal period keys for server-side filtering", async () => {
     expect(
       (

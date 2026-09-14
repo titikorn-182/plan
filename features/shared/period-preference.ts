@@ -1,4 +1,5 @@
-export const REPORTING_PERIOD_COOKIE = "plan-reporting-period";
+// Increment the suffix only when every browser must discard its previous period selection once.
+export const REPORTING_PERIOD_COOKIE = "plan-reporting-period-v2";
 
 export function parseReportingPeriodPreference(value: string | undefined): {
   fiscalYearId: string;
