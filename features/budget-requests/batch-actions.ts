@@ -47,8 +47,9 @@ export type BudgetRequestBatchState = {
 };
 
 const envelopeSchema = z.object({
-  budgetCycleId: z.string().uuid(),
-  fiscalYearId: z.string().uuid(),
+  budgetCycleId: z.string().uuid("กรุณาเลือกรอบคำของบประมาณ"),
+  // Match the retained PostgreSQL fiscal-year IDs, including the original 2570 ID.
+  fiscalYearId: z.guid("กรุณาเลือกปีงบประมาณ"),
   groups: z
     .array(
       z.object({

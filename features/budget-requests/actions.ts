@@ -42,8 +42,10 @@ const schema = z.object({
     .min(5, "ชื่อกิจกรรม/โครงการต้องมีอย่างน้อย 5 ตัวอักษร")
     .max(INPUT_LIMITS.title),
   organizationId: z.string().uuid("กรุณาเลือกหน่วยงาน"),
-  fiscalYearId: z.string().uuid(),
-  budgetCycleId: z.string().uuid(),
+  // The retained 2570 reference has a PostgreSQL UUID without RFC version bits.
+  // Validate its format here; the database lookup below verifies the actual year.
+  fiscalYearId: z.guid("กรุณาเลือกปีงบประมาณ"),
+  budgetCycleId: z.string().uuid("กรุณาเลือกรอบคำของบประมาณ"),
   projectType: z.string().trim().min(2, "กรุณาเลือกประเภทคำขอ").max(INPUT_LIMITS.shortText),
   ownerName: z.string().trim().min(2, "กรุณาระบุหัวหน้าโครงการ").max(INPUT_LIMITS.personName),
   rationale: z.string().trim().max(INPUT_LIMITS.longText),

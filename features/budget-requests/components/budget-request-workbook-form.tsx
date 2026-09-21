@@ -175,7 +175,6 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
       <input type="hidden" name="version" value={formState.version ?? 1} />
       <input type="hidden" name="title" value={values.projectActivityName} />
       <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="fiscalYearId" value={fiscalYearId} />
       <input type="hidden" name="budgetCycleId" value={budgetCycleId} />
       <input type="hidden" name="projectType" value={values.projectType} />
       <input type="hidden" name="ownerName" value={values.ownerName} />
@@ -291,6 +290,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
                   <FieldLabel required>ปีงบประมาณ</FieldLabel>
                   <select
                     className={fieldClass}
+                    name="fiscalYearId"
                     value={fiscalYearId}
                     onChange={(event) => {
                       const fiscalYear = options.fiscalYears.find(

@@ -213,6 +213,90 @@ describe("project action orchestration", () => {
 });
 
 describe("budget, approval, and spending actions", () => {
+  it.each(["save", "submit"])(
+    "accepts the original fiscal-year 2570 database ID for %s",
+    async (intent) => {
+      const legacyFiscalYearId = "20000000-0000-0000-0000-000000000001";
+      response({ buddhist_year: 2570 });
+      response({ fiscal_year_id: legacyFiscalYearId });
+      if (intent === "submit") {
+        response({ name_th: "สำนักงานเลขานุการ-งานแผนและงบประมาณ" });
+      }
+      mock.client.rpc.mockResolvedValue({
+        data: { id: projectId, code: "TEST-BR1", version: 4 },
+        error: null,
+      });
+
+      const result = await saveBudgetRequestAction(
+        {},
+        form({
+          ...projectInput,
+          fiscalYearId: legacyFiscalYearId,
+          intent,
+          budgetCycleId: "40000000-0000-4000-8000-000000000001",
+          rationale: "เหตุผลทดสอบการบันทึกและส่งอนุมัติงบประมาณ",
+          amount: "1000",
+          proposalDetails: JSON.stringify(sourceProposalDetails),
+        }),
+      );
+
+      expect(result).toMatchObject({ success: true, id: projectId });
+      expect(mock.client.rpc).toHaveBeenCalledWith(
+        "save_budget_request_transaction",
+        expect.objectContaining({
+          p_fiscal_year_id: legacyFiscalYearId,
+          p_submit: intent === "submit",
+        }),
+      );
+      expect(mock.revalidate).toHaveBeenCalledWith("/budget-requests");
+    },
+  );
+  it("still rejects a mismatched cycle for the original fiscal-year ID", async () => {
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        fiscalYearId: "20000000-0000-0000-0000-000000000001",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบ",
+        amount: "1000",
+        proposalDetails: JSON.stringify(sourceProposalDetails),
+      }),
+    );
+
+    expect(result).toMatchObject({
+      success: false,
+      errors: { fiscalYearId: ["ปีงบประมาณไม่ตรงกับรอบรับคำขอ กรุณาเลือกใหม่"] },
+    });
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
+  it.each(["", "2570", "20000000-0000-0000-0000-00000000000g"])(
+    "rejects malformed fiscal-year ID %j before authentication",
+    async (fiscalYearId) => {
+      const result = await saveBudgetRequestAction(
+        {},
+        form({
+          ...projectInput,
+          fiscalYearId,
+          budgetCycleId: "40000000-0000-4000-8000-000000000001",
+          rationale: "เหตุผลทดสอบ",
+          amount: "1000",
+          proposalDetails: JSON.stringify(sourceProposalDetails),
+        }),
+      );
+
+      expect(result).toMatchObject({
+        success: false,
+        errors: { fiscalYearId: ["กรุณาเลือกปีงบประมาณ"] },
+      });
+      expect(mock.client.auth.getClaims).not.toHaveBeenCalled();
+      expect(mock.client.from).not.toHaveBeenCalled();
+      expect(mock.client.rpc).not.toHaveBeenCalled();
+    },
+  );
   it("uses the atomic budget submission RPC", async () => {
     response({ buddhist_year: 2570 });
     response({ fiscal_year_id: yearId });
