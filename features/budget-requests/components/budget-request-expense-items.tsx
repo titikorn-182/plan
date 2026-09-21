@@ -87,6 +87,12 @@ export function BudgetRequestExpenseItems({
                     required
                   >
                     <option value="">เลือกงบรายจ่าย</option>
+                    {item.expenditureBudget &&
+                    !expenditureBudgetOptions.includes(item.expenditureBudget) ? (
+                      <option value={item.expenditureBudget}>
+                        ข้อมูลเดิม — {item.expenditureBudget}
+                      </option>
+                    ) : null}
                     {expenditureBudgetOptions.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -116,6 +122,11 @@ export function BudgetRequestExpenseItems({
                         {option}
                       </option>
                     ))}
+                    {item.expenseCategory && !categories.includes(item.expenseCategory) ? (
+                      <option value={item.expenseCategory}>
+                        ข้อมูลเดิม — {item.expenseCategory}
+                      </option>
+                    ) : null}
                   </select>
                 </label>
                 <label className="lg:col-span-4">
@@ -132,6 +143,11 @@ export function BudgetRequestExpenseItems({
                     <option value="">
                       {item.expenseCategory ? "เลือกหมวดรายจ่ายย่อย" : "เลือกหมวดรายจ่ายก่อน"}
                     </option>
+                    {item.expenseSubcategory && !subcategories.includes(item.expenseSubcategory) ? (
+                      <option value={item.expenseSubcategory}>
+                        ข้อมูลเดิม — {item.expenseSubcategory}
+                      </option>
+                    ) : null}
                     {subcategories.map((option) => (
                       <option key={option} value={option}>
                         {option}

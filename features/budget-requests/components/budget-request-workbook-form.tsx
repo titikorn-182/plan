@@ -16,7 +16,6 @@ import {
 import {
   BUDGET_REQUEST_SOURCE_FIELD_COUNT,
   BUDGET_REQUEST_SOURCE_SECTIONS,
-  createEmptyBudgetRequestSourceValues,
   getBudgetRequestSourceCompletion,
   toBudgetProposalDetails,
   type BudgetRequestSourceKey,
@@ -28,6 +27,8 @@ import { BudgetRequestSourceReadiness } from "@/features/budget-requests/compone
 import { BudgetRequestExpenseItems } from "@/features/budget-requests/components/budget-request-expense-items";
 import { BudgetRequestProjectMembers } from "@/features/budget-requests/components/budget-request-project-members";
 import { BudgetRequestSdgSection } from "@/features/budget-requests/components/budget-request-sdg-section";
+import { BudgetRequestLegacyBudget } from "@/features/budget-requests/components/budget-request-legacy-budget";
+import { createBudgetRequestWorkbookState } from "@/features/budget-requests/workbook-state";
 import {
   createBudgetRequestExpenseItemFromSource,
   createEmptyBudgetRequestExpenseItem,
@@ -59,38 +60,40 @@ const EXPENSE_DETAIL_COMPLETION_TOTAL = 4;
 
 export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOptions }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const initialFiscalYear = options.fiscalYears[0];
-  const [values, setValues] = useState(createEmptyBudgetRequestSourceValues);
-  const [organizationId, setOrganizationId] = useState("");
-  const [fiscalYearId, setFiscalYearId] = useState(initialFiscalYear?.id ?? "");
-  const [budgetCycleId, setBudgetCycleId] = useState(initialFiscalYear?.budgetCycleId ?? "");
-  const nextExpenseItemId = useRef(2);
-  const [expenseItems, setExpenseItems] = useState<BudgetRequestExpenseItemDraft[]>(() => [
-    createEmptyBudgetRequestExpenseItem(1),
-  ]);
-  const nextProjectMemberId = useRef(2);
-  const [projectMembers, setProjectMembers] = useState<BudgetRequestProjectMemberDraft[]>(() => [
-    createEmptyBudgetRequestProjectMember(1),
-  ]);
-  const [selectedSdgs, setSelectedSdgs] = useState<string[]>([]);
-  const [sdgAlignment, setSdgAlignment] = useState("");
+  const record = options.record;
+  const [initialState] = useState(() => createBudgetRequestWorkbookState(options));
+  const [values, setValues] = useState(initialState.values);
+  const [organizationId, setOrganizationId] = useState(initialState.organizationId);
+  const [fiscalYearId, setFiscalYearId] = useState(initialState.fiscalYearId);
+  const [budgetCycleId, setBudgetCycleId] = useState(initialState.budgetCycleId);
+  const nextExpenseItemId = useRef(initialState.expenseItems.length + 1);
+  const [expenseItems, setExpenseItems] = useState(initialState.expenseItems);
+  const [hasLegacyBudget, setHasLegacyBudget] = useState(initialState.hasLegacyBudget);
+  const [expenseBreakdown, setExpenseBreakdown] = useState(record?.expenseBreakdown ?? null);
+  const nextProjectMemberId = useRef(initialState.projectMembers.length + 1);
+  const [projectMembers, setProjectMembers] = useState(initialState.projectMembers);
+  const [selectedSdgs, setSelectedSdgs] = useState(initialState.selectedSdgs);
+  const [sdgAlignment, setSdgAlignment] = useState(initialState.sdgAlignment);
   const masterData = getFiscalYearMasterData(options.masterData, fiscalYearId);
   const sourceOptions = useMemo(() => createBudgetRequestSourceOptions(masterData), [masterData]);
   const formSourceOptions = getBudgetPlanSourceOptions(sourceOptions, values, masterData);
 
   const proposalDetails = {
-    ...toBudgetProposalDetails(values),
+    ...toBudgetProposalDetails(values, record?.proposalDetails),
     alignmentDescription: sdgAlignment,
-    expenseItems: toBudgetRequestExpenseItems(expenseItems),
+    expenseItems: hasLegacyBudget ? [] : toBudgetRequestExpenseItems(expenseItems),
     projectMembers: toBudgetRequestProjectMembers(projectMembers),
     sdgs: selectedSdgs,
   };
-  const expenseTotal = getBudgetRequestExpenseItemsTotal(expenseItems);
+  const expenseTotal = hasLegacyBudget
+    ? (record?.amount ?? 0)
+    : getBudgetRequestExpenseItemsTotal(expenseItems);
   const amount = String(expenseTotal);
-  const [formState, action, pending] = useActionState(
-    saveBudgetRequestAction,
-    {} satisfies BudgetRequestState,
-  );
+  const [formState, action, pending] = useActionState(saveBudgetRequestAction, {
+    id: record?.id,
+    code: record?.code,
+    version: record?.version,
+  } satisfies BudgetRequestState);
   useEffect(() => {
     if (formState.success || !formState.errors) return;
     const field = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
@@ -128,6 +131,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   };
 
   const updateExpenseItem = (id: number, changes: Partial<BudgetRequestExpenseItemDraft>) => {
+    setExpenseBreakdown(null);
     setExpenseItems((current) =>
       current.map((item) => (item.id === id ? { ...item, ...changes } : item)),
     );
@@ -202,8 +206,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
       <input type="hidden" name="rationale" value={values.rationale} />
       <input type="hidden" name="amount" value={amount} />
       <input type="hidden" name="proposalDetails" value={JSON.stringify(proposalDetails)} />
-      <input type="hidden" name="expenseBreakdown" value="null" />
-      <input type="hidden" name="expenseDetailMode" value="items" />
+      <input type="hidden" name="expenseBreakdown" value={JSON.stringify(expenseBreakdown)} />
+      <input type="hidden" name="expenseDetailMode" value={hasLegacyBudget ? "legacy" : "items"} />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link
@@ -225,10 +229,12 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div className="max-w-3xl">
             <h1 className="text-xl font-extrabold tracking-[-0.025em] text-stone-950 sm:text-2xl">
-              สร้างคำของบประมาณจากข้อมูลโครงการ
+              {record ? "แก้ไขคำของบประมาณจากข้อมูลโครงการ" : "สร้างคำของบประมาณจากข้อมูลโครงการ"}
             </h1>
             <p className="mt-2 text-sm leading-6 text-stone-600">
-              รองรับไฟล์ Executive DataProject แบบ XLSX หรือ CSV และแสดงเฉพาะข้อมูลที่ยังใช้งาน
+              {record
+                ? `รหัสคำขอ ${record.code} — ตรวจสอบและแก้ไขข้อมูลเดิม ก่อนบันทึกฉบับร่างหรือส่งคำขอ`
+                : "รองรับไฟล์ Executive DataProject แบบ XLSX หรือ CSV และแสดงเฉพาะข้อมูลที่ยังใช้งาน"}
             </p>
           </div>
           <div className="flex items-center gap-3 border-t border-stone-200 pt-4 lg:border-t-0 lg:pt-0">
@@ -252,14 +258,16 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         </div>
       </header>
 
-      <BudgetRequestImportPanel
-        hasExistingValues={completion > 0}
-        locked={Boolean(formState.id)}
-        onApplyRecord={applyImportedRecord}
-        options={options}
-        expenseOptions={masterData.expenseOptions}
-        sourceOptions={sourceOptions}
-      />
+      {!record ? (
+        <BudgetRequestImportPanel
+          hasExistingValues={completion > 0}
+          locked={Boolean(formState.id)}
+          onApplyRecord={applyImportedRecord}
+          options={options}
+          expenseOptions={masterData.expenseOptions}
+          sourceOptions={sourceOptions}
+        />
+      ) : null}
 
       <nav
         className="mt-5 flex gap-px overflow-x-auto border border-stone-200 bg-stone-200 p-px xl:hidden"
@@ -341,22 +349,35 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
                 </label>
               ) : null}
               {section.id === "budget" ? (
-                <BudgetRequestExpenseItems
-                  errors={formState.errors}
-                  expenseOptions={masterData.expenseOptions}
-                  items={expenseItems}
-                  onAdd={() => {
-                    setExpenseItems((current) => [
-                      ...current,
-                      createEmptyBudgetRequestExpenseItem(nextExpenseItemId.current),
-                    ]);
-                    nextExpenseItemId.current += 1;
-                  }}
-                  onChange={updateExpenseItem}
-                  onRemove={(id) =>
-                    setExpenseItems((current) => current.filter((item) => item.id !== id))
-                  }
-                />
+                hasLegacyBudget && record ? (
+                  <BudgetRequestLegacyBudget
+                    amount={record.amount}
+                    breakdown={expenseBreakdown}
+                    onConvert={() => {
+                      setHasLegacyBudget(false);
+                      setExpenseBreakdown(null);
+                    }}
+                  />
+                ) : (
+                  <BudgetRequestExpenseItems
+                    errors={formState.errors}
+                    expenseOptions={masterData.expenseOptions}
+                    items={expenseItems}
+                    onAdd={() => {
+                      setExpenseBreakdown(null);
+                      setExpenseItems((current) => [
+                        ...current,
+                        createEmptyBudgetRequestExpenseItem(nextExpenseItemId.current),
+                      ]);
+                      nextExpenseItemId.current += 1;
+                    }}
+                    onChange={updateExpenseItem}
+                    onRemove={(id) => {
+                      setExpenseBreakdown(null);
+                      setExpenseItems((current) => current.filter((item) => item.id !== id));
+                    }}
+                  />
+                )
               ) : null}
               {section.id === "sdgs" ? (
                 <BudgetRequestSdgSection

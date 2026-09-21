@@ -97,6 +97,10 @@ function SourceField({
     ) : field.control === "organization" ? (
       <select className={fieldClass} required={field.required} {...common}>
         <option value="">เลือกรหัสหน่วยงานย่อย</option>
+        {values[field.key] &&
+        !BUDGET_ORGANIZATION_CODE_OPTIONS.some((option) => option.value === values[field.key]) ? (
+          <option value={values[field.key]}>ข้อมูลเดิม — {values[field.key]}</option>
+        ) : null}
         {BUDGET_ORGANIZATION_CODE_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
             {option.value} — {option.label}
@@ -106,6 +110,10 @@ function SourceField({
     ) : field.control === "organization-name" ? (
       <select className={fieldClass} required={field.required} {...common}>
         <option value="">เลือกชื่อหน่วยงานย่อย</option>
+        {values[field.key] &&
+        !BUDGET_REQUEST_ORGANIZATIONS.some((option) => option.name === values[field.key]) ? (
+          <option value={values[field.key]}>ข้อมูลเดิม — {values[field.key]}</option>
+        ) : null}
         {BUDGET_REQUEST_ORGANIZATIONS.map((option) => (
           <option key={option.code} value={option.name}>
             {option.name}
@@ -128,6 +136,10 @@ function SourceField({
     ) : field.control === "fund" ? (
       <select className={fieldClass} {...common}>
         <option value="">เลือกรหัสกองทุน</option>
+        {values[field.key] &&
+        !BUDGET_FUND_OPTIONS.some((option) => option.code === values[field.key]) ? (
+          <option value={values[field.key]}>ข้อมูลเดิม — {values[field.key]}</option>
+        ) : null}
         {BUDGET_FUND_OPTIONS.map((option) => (
           <option key={option.code} value={option.code}>
             กองทุน {option.code} — {option.name}

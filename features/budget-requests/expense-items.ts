@@ -104,6 +104,12 @@ export function toBudgetRequestExpenseItems(
     expenseCategory: item.expenseCategory,
     expenseSubcategory: item.expenseSubcategory,
     ...(item.subActivityName?.trim() ? { subActivityName: item.subActivityName.trim() } : {}),
+    ...(item.fundingSource?.trim() ? { fundingSource: item.fundingSource.trim() } : {}),
+    ...(item.fundingSourceDetail?.trim()
+      ? { fundingSourceDetail: item.fundingSourceDetail.trim() }
+      : {}),
+    ...(item.fundCode?.trim() ? { fundCode: item.fundCode.trim() } : {}),
+    ...(item.fundName?.trim() ? { fundName: item.fundName.trim() } : {}),
     description: item.description,
     amount: Number(item.amount || 0),
   }));

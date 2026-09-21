@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createEmptyBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import {
   BUDGET_REQUEST_IMPORT_COLUMNS,
   BUDGET_REQUEST_SOURCE_SECTIONS,
@@ -99,6 +100,29 @@ describe("budget request source fields", () => {
       isBudgetRequestOrganizationCompatible("2301", "สำนักงานเลขานุการ-งานแผนและงบประมาณ"),
     ).toBe(true);
     expect(isBudgetRequestOrganizationCompatible("2302", "ภาควิชารัฐประศาสนศาสตร์")).toBe(false);
+  });
+
+  it("updates editable source fields while retaining unseen fields from an existing proposal", () => {
+    const base = {
+      ...createEmptyBudgetProposalDetails(),
+      universityStrategy: "ยุทธศาสตร์เดิม",
+      goalName: "เป้าประสงค์เดิม",
+      successIndicators: "ตัวชี้วัดเดิม",
+      alignmentDescription: "ความสอดคล้องเดิม",
+      sdgs: ["SDG 4 การศึกษาที่มีคุณภาพ"],
+      objectives: "วัตถุประสงค์เก่า",
+    };
+    const values = createEmptyBudgetRequestSourceValues();
+    values.objectives = "วัตถุประสงค์ที่แก้ไข";
+    expect(toBudgetProposalDetails(values, base)).toMatchObject({
+      universityStrategy: base.universityStrategy,
+      goalName: base.goalName,
+      successIndicators: base.successIndicators,
+      alignmentDescription: base.alignmentDescription,
+      sdgs: base.sdgs,
+      objectives: values.objectives,
+    });
+    expect(base.objectives).toBe("วัตถุประสงค์เก่า");
   });
 
   it("orders project context before its target group and schedule", () => {

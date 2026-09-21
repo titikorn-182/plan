@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { BudgetRequestForm } from "@/features/budget-requests/components/budget-request-form";
+import { BudgetRequestWorkbookForm } from "@/features/budget-requests/components/budget-request-workbook-form";
 import { DataError } from "@/components/ui/data-state";
 import { getBudgetFormOptions } from "@/features/budget-requests/queries";
 
@@ -17,6 +17,6 @@ export default async function EditBudgetRequestPage({
   return result.error || !result.data || !editable ? (
     <DataError message={result.error ?? "คำของบประมาณนี้ไม่อยู่ในสถานะที่แก้ไขได้"} />
   ) : (
-    <BudgetRequestForm options={result.data} />
+    <BudgetRequestWorkbookForm key={id} options={result.data} />
   );
 }

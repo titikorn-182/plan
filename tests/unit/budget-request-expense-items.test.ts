@@ -8,6 +8,7 @@ import {
   getExpenseCategoryOptions,
   getExpenseSubcategoryOptions,
   parseBudgetRequestExpenseItems,
+  toBudgetRequestExpenseItems,
   validateBudgetRequestExpenseItemsForSubmission,
 } from "@/features/budget-requests/expense-items";
 import { TEST_MASTER_DATA } from "@/tests/fixtures/master-data";
@@ -95,6 +96,47 @@ describe("budget request expense items", () => {
         "proposalDetails.expenseItems.0.amount": expect.any(Array),
       }),
     );
+  });
+
+  it("serializes imported optional metadata after editing without including local row IDs", () => {
+    const [item] = toBudgetRequestExpenseItems([
+      {
+        ...validItem,
+        id: 42,
+        amount: "1250.50",
+        subActivityName: " กิจกรรมย่อย ",
+        fundingSource: " งบประมาณเงินรายได้ ",
+        fundingSourceDetail: " ค่าธรรมเนียมการศึกษา ",
+        fundCode: " 2 ",
+        fundName: " กองทุนจัดการศึกษา ",
+      },
+    ]);
+    expect(item).toEqual({
+      ...validItem,
+      subActivityName: "กิจกรรมย่อย",
+      fundingSource: "งบประมาณเงินรายได้",
+      fundingSourceDetail: "ค่าธรรมเนียมการศึกษา",
+      fundCode: "2",
+      fundName: "กองทุนจัดการศึกษา",
+    });
+    expect(item).not.toHaveProperty("id");
+  });
+
+  it("omits blank optional metadata and retains the entered amount", () => {
+    expect(
+      toBudgetRequestExpenseItems([
+        {
+          ...validItem,
+          id: 1,
+          amount: "1250.5",
+          subActivityName: " ",
+          fundingSource: " ",
+          fundingSourceDetail: "",
+          fundCode: "\t",
+          fundName: "\n",
+        },
+      ]),
+    ).toEqual([validItem]);
   });
 
   it("rejects a category combination that does not exist in the approved source data", () => {

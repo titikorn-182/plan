@@ -227,9 +227,12 @@ export function isBudgetRequestOrganizationCompatible(code: string, organization
   return getBudgetRequestOrganizationSourceCode(organizationName) === code;
 }
 
-export function toBudgetProposalDetails(values: BudgetRequestSourceValues): BudgetProposalDetails {
+export function toBudgetProposalDetails(
+  values: BudgetRequestSourceValues,
+  base: BudgetProposalDetails = createEmptyBudgetProposalDetails(),
+): BudgetProposalDetails {
   return {
-    ...createEmptyBudgetProposalDetails(),
+    ...base,
     organizationCode: values.organizationCode,
     organizationName: values.organizationName,
     fundingSource: values.fundingSource,
