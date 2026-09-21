@@ -4,6 +4,7 @@ import { BUDGET_STATUS_LABELS, isDocumentStatus } from "@/features/budget-reques
 import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-requests/types";
 import { parseBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
+import { getBudgetSubActivityNames } from "@/features/budget-requests/sub-activities";
 import type { DataResult } from "@/features/shared/types";
 import { expectedResultError, formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
@@ -38,22 +39,47 @@ export async function getBudgetRequests(
     .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
     .order("updated_at", { ascending: false })
     .range(from, to);
+  const pagination = createPagination(count, page, pageSize);
+  if (error) return result({ items: [], pagination }, error, "budget_requests.list");
+
+  const rows = (data ?? []).filter((row) =>
+    hasValues(row, ["id", "code", "title", "unit", "category", "status"]),
+  );
+  const subActivitiesById = new Map<string, string[]>();
+  if (rows.length > 0) {
+    // Fetch metadata only for visible rows, using the same authenticated RLS client.
+    const { data: details, error: detailsError } = await supabase
+      .from("budget_requests")
+      .select(
+        "id,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
+      )
+      .in(
+        "id",
+        rows.map((row) => row.id),
+      );
+    if (detailsError) {
+      return result({ items: [], pagination }, detailsError, "budget_requests.list_sub_activities");
+    }
+    for (const detail of details ?? []) {
+      subActivitiesById.set(detail.id, getBudgetSubActivityNames(detail));
+    }
+  }
+
   return result(
     {
-      items: (data ?? [])
-        .filter((row) => hasValues(row, ["id", "code", "title", "unit", "category", "status"]))
-        .map((row) => ({
-          uuid: row.id,
-          id: row.code,
-          title: row.title,
-          unit: row.unit,
-          category: row.category,
-          amount: Number(row.amount),
-          status: isDocumentStatus(row.status) ? BUDGET_STATUS_LABELS[row.status] : "ฉบับร่าง",
-          updated: formatDate(row.updated_at),
-          editable: ["draft", "revision_required"].includes(row.status),
-        })),
-      pagination: createPagination(count, page, pageSize),
+      items: rows.map((row) => ({
+        uuid: row.id,
+        id: row.code,
+        title: row.title,
+        unit: row.unit,
+        subActivityNames: subActivitiesById.get(row.id) ?? [],
+        category: row.category,
+        amount: Number(row.amount),
+        status: isDocumentStatus(row.status) ? BUDGET_STATUS_LABELS[row.status] : "ฉบับร่าง",
+        updated: formatDate(row.updated_at),
+        editable: ["draft", "revision_required"].includes(row.status),
+      })),
+      pagination,
     },
     error,
     "budget_requests.list",

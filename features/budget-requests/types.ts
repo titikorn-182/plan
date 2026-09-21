@@ -28,6 +28,7 @@ export type BudgetRequest = {
   id: string;
   title: string;
   unit: string;
+  subActivityNames: string[];
   category: string;
   amount: number;
   status: BudgetStatus;
