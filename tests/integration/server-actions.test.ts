@@ -214,6 +214,109 @@ describe("project action orchestration", () => {
 
 describe("budget, approval, and spending actions", () => {
   it.each(["save", "submit"])(
+    "rejects mismatched plan code/name on %s before database mutation",
+    async (intent) => {
+      const result = await saveBudgetRequestAction(
+        {},
+        form({
+          ...projectInput,
+          intent,
+          budgetCycleId: "40000000-0000-4000-8000-000000000001",
+          rationale: "หลักการและเหตุผลสำหรับการทดสอบคำของบประมาณ",
+          amount: "1000",
+          proposalDetails: JSON.stringify({
+            ...sourceProposalDetails,
+            outputCode: "3101",
+            outputName: "ผู้สำเร็จการศึกษาด้านสังคมศาสตร์",
+          }),
+        }),
+      );
+      expect(result.success).toBe(false);
+      expect(result.errors?.["proposalDetails.outputCode"]).toEqual(expect.any(Array));
+      expect(result.errors?.["proposalDetails.outputName"]).toEqual(expect.any(Array));
+      expect(mock.client.from).not.toHaveBeenCalled();
+      expect(mock.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+  it("rejects a mismatched parent branch when saving a draft", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "save",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบ",
+        amount: "1000",
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          outputCode: "3101",
+          operationalPlanCode: "10021023",
+        }),
+      }),
+    );
+    expect(result.errors?.["proposalDetails.operationalPlanCode"]).toEqual(expect.any(Array));
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
+  it("maps a mismatched workbook activity name to the visible title field", async () => {
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "save",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบ",
+        amount: "0",
+        expenseDetailMode: "items",
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          activityCode: "100210230001",
+        }),
+      }),
+    );
+    expect(result.errors?.title).toEqual(expect.any(Array));
+    expect(result.errors?.["proposalDetails.activityCode"]).toEqual(expect.any(Array));
+    expect(result.errors?.["proposalDetails.projectActivityName"]).toBeUndefined();
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
+  it.each([
+    {},
+    { outputName: "ผลงานการให้บริการวิชาการ" },
+    {
+      outputCode: "3101",
+      outputName: "ผลงานการให้บริการวิชาการ",
+      operationalPlanCode: "31013200",
+      operationalPlanName: "แผนการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ",
+      activityCode: "310132000001",
+    },
+  ])("accepts valid partial and paired workbook drafts: %j", async (plan) => {
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 4 },
+      error: null,
+    });
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...projectInput,
+        intent: "save",
+        budgetCycleId: "40000000-0000-4000-8000-000000000001",
+        rationale: "เหตุผลทดสอบ",
+        amount: "0",
+        expenseDetailMode: "items",
+        proposalDetails: JSON.stringify({ ...sourceProposalDetails, ...plan }),
+      }),
+    );
+    expect(result.success).toBe(true);
+    expect(mock.client.rpc).toHaveBeenCalledWith(
+      "save_budget_request_transaction",
+      expect.objectContaining({
+        p_submit: false,
+        p_proposal_details: expect.objectContaining(plan),
+      }),
+    );
+  });
+  it.each(["save", "submit"])(
     "accepts the original fiscal-year 2570 database ID for %s",
     async (intent) => {
       const legacyFiscalYearId = "20000000-0000-0000-0000-000000000001";

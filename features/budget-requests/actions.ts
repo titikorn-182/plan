@@ -31,6 +31,7 @@ import {
 } from "@/features/budget-requests/source-options";
 import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
 import { getFiscalYearMasterData } from "@/features/shared/master-data";
+import { validatePlanStructure } from "@/features/shared/plan-structure";
 
 const schema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
@@ -207,6 +208,25 @@ export async function saveBudgetRequestAction(
     };
   }
   const sourceOptions = createBudgetRequestSourceOptions(masterData);
+  const planErrors = validatePlanStructure(
+    {
+      ...proposalDetails.data,
+      projectActivityName: usesDetailedExpenseItems ? parsed.data.title : "",
+    },
+    masterData,
+  );
+  if (planErrors["proposalDetails.projectActivityName"]) {
+    planErrors.title = planErrors["proposalDetails.projectActivityName"];
+    delete planErrors["proposalDetails.projectActivityName"];
+  }
+  if (Object.keys(planErrors).length > 0) {
+    return {
+      ...previous,
+      success: false,
+      errors: planErrors,
+      message: "ยังบันทึกไม่ได้ กรุณาตรวจสอบรหัส ชื่อ และลำดับโครงสร้างแผนและกิจกรรม",
+    };
+  }
   if (parsed.data.intent === "submit") {
     const masterErrors: Record<string, string[]> = {};
     if (usesDetailedExpenseItems) {

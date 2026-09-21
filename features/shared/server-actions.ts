@@ -33,7 +33,17 @@ export function friendlyError(
     if (error.message.includes("disbursement exceeds")) {
       return "ยอดเบิกจ่ายรวมเกินวงเงินอนุมัติของโครงการ";
     }
-    return "ข้อมูลไม่ผ่านเงื่อนไขของระบบ กรุณาตรวจสอบสถานะและค่าที่กรอก";
+    if (error.message === "plan structure is not valid for the selected fiscal year") {
+      return "รหัส ชื่อ หรือลำดับโครงสร้างแผนและกิจกรรมไม่สัมพันธ์กัน กรุณาเลือกผลผลิต แผนปฏิบัติการ และกิจกรรมใหม่";
+    }
+    if (error.message === "expense category is not valid for the selected fiscal year") {
+      return "งบรายจ่าย หมวดรายจ่าย และหมวดรายจ่ายย่อยไม่สัมพันธ์กัน กรุณาเลือกรายการค่าใช้จ่ายใหม่";
+    }
+    if (error.message === "the budget cycle is not open") {
+      return "รอบรับคำของบประมาณยังไม่เปิดหรือปิดแล้ว กรุณาติดต่อผู้ดูแลระบบเพื่อตรวจสอบช่วงเวลารับคำขอ";
+    }
+    const referenceId = reportServerError(operation, error, { code: error.code });
+    return `ข้อมูลไม่ผ่านเงื่อนไขของระบบ กรุณาติดต่อผู้ดูแลระบบพร้อมรหัสอ้างอิง ${referenceId}`;
   }
   return publicFailureMessage(reportServerError(operation, error, { code: error.code }));
 }

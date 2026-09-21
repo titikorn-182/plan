@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { FieldError, FieldLabel, FormActions, fieldClass } from "@/components/ui/operation-form";
 import {
   saveBudgetRequestAction,
@@ -43,6 +43,10 @@ import {
 import type { BudgetFormOptions } from "@/features/budget-requests/types";
 import { getFiscalYearMasterData } from "@/features/shared/master-data";
 import { createBudgetRequestSourceOptions } from "@/features/budget-requests/source-options";
+import {
+  applyBudgetPlanSelection,
+  getBudgetPlanSourceOptions,
+} from "@/features/budget-requests/plan-selection";
 
 function inferOrganizationId(
   record: BudgetRequestSourceValues,
@@ -54,6 +58,7 @@ function inferOrganizationId(
 const EXPENSE_DETAIL_COMPLETION_TOTAL = 4;
 
 export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOptions }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const initialFiscalYear = options.fiscalYears[0];
   const [values, setValues] = useState(createEmptyBudgetRequestSourceValues);
   const [organizationId, setOrganizationId] = useState("");
@@ -71,6 +76,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   const [sdgAlignment, setSdgAlignment] = useState("");
   const masterData = getFiscalYearMasterData(options.masterData, fiscalYearId);
   const sourceOptions = useMemo(() => createBudgetRequestSourceOptions(masterData), [masterData]);
+  const formSourceOptions = getBudgetPlanSourceOptions(sourceOptions, values, masterData);
 
   const proposalDetails = {
     ...toBudgetProposalDetails(values),
@@ -85,6 +91,12 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
     saveBudgetRequestAction,
     {} satisfies BudgetRequestState,
   );
+  useEffect(() => {
+    if (formState.success || !formState.errors) return;
+    const field = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    field?.focus({ preventScroll: true });
+    field?.scrollIntoView({ block: "center" });
+  }, [formState]);
 
   const applyImportedRecord = (record: BudgetRequestSourceValues) => {
     const normalizedRecord = {
@@ -150,6 +162,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
       return;
     }
     setValues((current) => {
+      const planSelection = applyBudgetPlanSelection(current, key, value, masterData);
+      if (planSelection) return planSelection;
       const next = { ...current, [key]: value };
       if (key === "fundCode") {
         next.fundName =
@@ -170,7 +184,14 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
   const completionPercent = Math.round((completion / completionTotal) * 100);
 
   return (
-    <form className="budget-request-form pb-24" action={action}>
+    <form
+      ref={formRef}
+      className="budget-request-form pb-24"
+      action={action}
+      // Values are kept in React state. Native reset would clear select elements
+      // after an action returns a validation error, hiding the user's selections.
+      onReset={(event) => event.preventDefault()}
+    >
       <input type="hidden" name="budgetRequestId" value={formState.id ?? ""} />
       <input type="hidden" name="version" value={formState.version ?? 1} />
       <input type="hidden" name="title" value={values.projectActivityName} />
@@ -263,7 +284,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
               section={section}
               errors={formState.errors}
               onChange={handleValueChange}
-              sourceOptions={sourceOptions}
+              sourceOptions={formSourceOptions}
               values={values}
               footer={
                 section.id === "approval" ? (
@@ -351,6 +372,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         </div>
 
         <BudgetRequestSourceReadiness
+          masterData={masterData}
           amount={expenseTotal}
           fiscalYearId={fiscalYearId}
           organizationId={organizationId}

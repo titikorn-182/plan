@@ -130,7 +130,11 @@ export function BudgetRequestForm({ options }: { options: BudgetFormOptions }) {
   );
 
   return (
-    <form className="budget-request-form pb-24" action={action}>
+    <form
+      className="budget-request-form pb-24"
+      action={action}
+      onReset={(event) => event.preventDefault()}
+    >
       <input type="hidden" name="budgetRequestId" value={formState.id ?? ""} />
       <input type="hidden" name="version" value={formState.version ?? 1} />
       <input type="hidden" name="title" value={title} />

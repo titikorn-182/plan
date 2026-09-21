@@ -21,6 +21,64 @@ afterEach(async () => {
 });
 
 describe("fiscal-year master data", () => {
+  test.each([
+    { outputCode: "3101", outputName: "ผู้สำเร็จการศึกษาด้านสังคมศาสตร์" },
+    { outputCode: "3101", operationalPlanCode: "10021023" },
+  ])("rejects mismatched budget plan values even on draft save: %j", async (details) => {
+    await expect(
+      asUser(db, ids.staff, () =>
+        db.query(
+          `select save_budget_request_transaction(
+        $1, 1, $2, $3, $4, 'Test staff', 'คำของบประมาณทดสอบ',
+        'ดำเนินงาน', 'โครงการทดสอบ', '', 1000, null, $5::jsonb, false
+      )`,
+          [
+            ids.budget,
+            ids.year,
+            "40000000-0000-4000-8000-000000000001",
+            ids.org,
+            JSON.stringify(details),
+          ],
+        ),
+      ),
+    ).rejects.toMatchObject({
+      code: "23514",
+      message: "plan structure is not valid for the selected fiscal year",
+    });
+    const saved = await db.query("select version,status from budget_requests where id=$1", [
+      ids.budget,
+    ]);
+    expect(saved.rows).toEqual([{ version: 1, status: "draft" }]);
+  });
+  test("saves a paired hierarchy through the budget draft transaction", async () => {
+    const details = {
+      outputCode: "3101",
+      outputName: "ผลงานการให้บริการวิชาการ",
+      operationalPlanCode: "31013200",
+      operationalPlanName: "แผนการสนับสนุนส่งเสริมการดำเนินงานด้านบริการวิชาการ",
+      activityCode: "310132000001",
+    };
+    await asUser(db, ids.staff, () =>
+      db.query(
+        `select save_budget_request_transaction(
+        $1, 1, $2, $3, $4, 'Test staff', 'คำของบประมาณทดสอบ',
+        'ดำเนินงาน', 'โครงการทดสอบ', '', 1000, null, $5::jsonb, false
+      )`,
+        [
+          ids.budget,
+          ids.year,
+          "40000000-0000-4000-8000-000000000001",
+          ids.org,
+          JSON.stringify(details),
+        ],
+      ),
+    );
+    const saved = await db.query(
+      "select version,status,proposal_details from budget_requests where id=$1",
+      [ids.budget],
+    );
+    expect(saved.rows).toEqual([{ version: 2, status: "draft", proposal_details: details }]);
+  });
   test("seeds the complete plan and expense catalogs for every supported year", async () => {
     const plans = await db.query<{ buddhist_year: number; count: number }>(
       `select fiscal_year.buddhist_year, count(*)::integer as count

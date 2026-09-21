@@ -36,6 +36,7 @@ import {
 } from "@/features/shared/server-actions";
 import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-queries";
 import { getFiscalYearMasterData } from "@/features/shared/master-data";
+import { validatePlanStructure } from "@/features/shared/plan-structure";
 
 export type BudgetRequestBatchState = {
   createdCodes?: string[];
@@ -188,6 +189,10 @@ export async function saveBudgetRequestBatchAction(
     }
     if (group.id !== values.activityCode || !/^\d{12}$/.test(values.activityCode)) {
       validationErrors.push(`รหัส ${group.id}: รหัสโครงการ/กิจกรรมต้องเป็นตัวเลข 12 หลัก`);
+    }
+    const planErrors = validatePlanStructure(values, masterData);
+    for (const message of new Set(Object.values(planErrors).flat())) {
+      validationErrors.push(`รหัส ${group.id}: ${message}`);
     }
     if (values.projectActivityName.length < 5) {
       validationErrors.push(`รหัส ${group.id}: กรุณาระบุชื่อโครงการ/กิจกรรม`);

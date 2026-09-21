@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { saveBudgetRequestBatchAction } from "@/features/budget-requests/batch-actions";
-import { createEmptyBudgetRequestSourceValues } from "@/features/budget-requests/source-fields";
+import {
+  createEmptyBudgetRequestSourceValues,
+  type BudgetRequestSourceValues,
+} from "@/features/budget-requests/source-fields";
 
 vi.mock("@/features/shared/master-data-queries", async () => {
   const { TEST_MASTER_DATA } = await import("@/tests/fixtures/master-data");
@@ -47,7 +50,7 @@ vi.mock("next/cache", () => ({ revalidatePath: mock.revalidate }));
 const legacyFiscalYearId = "20000000-0000-0000-0000-000000000001";
 const organizationId = "20000000-0000-4000-8000-000000000001";
 
-function batchForm(fiscalYearId: string) {
+function batchForm(fiscalYearId: string, values: Partial<BudgetRequestSourceValues> = {}) {
   const formData = new FormData();
   formData.set(
     "batchPayload",
@@ -68,6 +71,7 @@ function batchForm(fiscalYearId: string) {
             organizationCode: "2301",
             organizationName: "สำนักงานเลขานุการ-งานแผนและงบประมาณ",
             ownerName: "หัวหน้าโครงการ ทดสอบ",
+            ...values,
           },
           expenseItems: [
             {
@@ -103,6 +107,17 @@ beforeEach(() => {
 });
 
 describe("batch budget requests with the retained fiscal-year 2570 ID", () => {
+  it.each([
+    { outputCode: "3101", outputName: "ผู้สำเร็จการศึกษาด้านสังคมศาสตร์" },
+    { outputCode: "1002", operationalPlanCode: "31013200" },
+    { projectActivityName: "โครงการผลิตบัณฑิตระดับปริญญาตรี คณะรัฐศาสตร์" },
+  ])("rejects independently valid but mismatched plan values: %j", async (values) => {
+    const result = await saveBudgetRequestBatchAction({}, batchForm(legacyFiscalYearId, values));
+    expect(result.success).toBe(false);
+    expect(result.errors?.some((error) => error.startsWith("รหัส 310132000001:"))).toBe(true);
+    expect(mock.client.from).not.toHaveBeenCalled();
+    expect(mock.chain.insert).not.toHaveBeenCalled();
+  });
   it("inserts the draft using the unchanged legacy fiscal-year ID", async () => {
     lookupResponses();
     mock.responses.push({ data: [{ code: "TEST-BR-BATCH" }], error: null });

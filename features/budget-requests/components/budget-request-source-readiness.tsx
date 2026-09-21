@@ -1,4 +1,6 @@
 import { Check, CircleAlert } from "lucide-react";
+import type { FiscalYearMasterData } from "@/features/shared/master-data";
+import { validatePlanStructure } from "@/features/shared/plan-structure";
 import {
   BUDGET_REQUEST_SOURCE_SECTIONS,
   isBudgetRequestOrganizationCompatible,
@@ -10,12 +12,14 @@ export function BudgetRequestSourceReadiness({
   fiscalYearId,
   organizationId,
   organizationName,
+  masterData,
   values,
 }: {
   amount: number;
   fiscalYearId: string;
   organizationId: string;
   organizationName: string;
+  masterData: FiscalYearMasterData;
   values: BudgetRequestSourceValues;
 }) {
   const readiness = [
@@ -27,6 +31,12 @@ export function BudgetRequestSourceReadiness({
     {
       label: "ระบุโครงการและประเภทโครงการ",
       complete: Boolean(values.projectActivityName.trim().length >= 5 && values.projectType.trim()),
+    },
+    {
+      label: "รหัสและชื่อโครงสร้างแผนตรงกัน",
+      complete:
+        Boolean(values.activityCode && values.projectActivityName) &&
+        Object.keys(validatePlanStructure(values, masterData)).length === 0,
     },
     { label: "ระบุหัวหน้าโครงการ", complete: values.ownerName.trim().length >= 2 },
     { label: "ระบุวงเงินคำขอ", complete: amount > 0 },
