@@ -33,6 +33,7 @@ test("budget draft retains entered values after errors and repeated saves withou
   const client = await signedInLocalClient("admin");
   const owner = `Budget draft E2E ${crypto.randomUUID()}`;
   const activityName = "โครงการผลิตบัณฑิตระดับปริญญาตรี คณะรัฐศาสตร์";
+  const subOrganizationName = "สำนักงานเลขานุการ-งานสารบรรณและธุรการ";
   const subActivityName = `กิจกรรมย่อย ${crypto.randomUUID()}`;
   const expenseSubActivityName = `กิจกรรมค่าใช้จ่าย ${crypto.randomUUID()}`;
   try {
@@ -49,7 +50,7 @@ test("budget draft retains entered values after errors and repeated saves withou
     const requestId = form.locator('input[name="budgetRequestId"]');
     const version = form.locator('input[name="version"]');
 
-    await form.getByLabel("ชื่อหน่วยงานย่อย").selectOption("สำนักงานเลขานุการ-งานสารบรรณและธุรการ");
+    await form.getByLabel("ชื่อหน่วยงานย่อย").selectOption(subOrganizationName);
     await expect(form.getByLabel("รหัสหน่วยงานย่อย")).toHaveValue("2301");
     await form.getByLabel("ประเภทโครงการ").selectOption("2 โครงการประจำตามภารกิจ");
     await form.getByLabel("รหัสโครงการ/กิจกรรม = กิจกรรม (12 หลัก)").selectOption("100210230001");
@@ -126,6 +127,7 @@ test("budget draft retains entered values after errors and repeated saves withou
       requested_amount: 1000,
       proposal_details: {
         organizationCode: "2301",
+        organizationName: subOrganizationName,
         outputCode: "1002",
         operationalPlanCode: "10021023",
         activityCode: "100210230001",
@@ -143,14 +145,18 @@ test("budget draft retains entered values after errors and repeated saves withou
 
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/budget-requests");
-    await expect(page.getByRole("columnheader").nth(2)).toHaveText(
+    await expect(page.getByRole("columnheader").nth(1)).toHaveText("ชื่อหน่วยงานย่อย");
+    await expect(page.getByRole("columnheader").nth(3)).toHaveText(
       "ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก",
     );
     const requestRow = page.locator("tbody tr").filter({
       has: page.locator(`a[href="/budget-requests/${savedId}/edit"]`),
     });
-    await expect(requestRow.getByRole("cell").nth(2)).toContainText(subActivityName);
-    await expect(requestRow.getByRole("cell").nth(2)).toContainText(expenseSubActivityName);
+    await expect(requestRow.getByRole("cell").nth(1)).toHaveText(subOrganizationName);
+    await expect(requestRow.getByRole("cell").nth(3)).toContainText(subActivityName);
+    await expect(requestRow.getByRole("cell").nth(3)).toContainText(expenseSubActivityName);
+    await page.getByRole("textbox", { name: "ค้นหาคำของบประมาณ" }).fill(subOrganizationName);
+    await expect(requestRow).toBeVisible();
     await page.getByRole("textbox", { name: "ค้นหาคำของบประมาณ" }).fill(expenseSubActivityName);
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await expect(requestRow).toBeVisible();
@@ -159,6 +165,8 @@ test("budget draft retains entered values after errors and repeated saves withou
     const downloadPath = await (await downloadPromise).path();
     if (!downloadPath) throw new Error("Expected a local CSV download");
     const csv = await readFile(downloadPath, "utf8");
+    expect(csv).toContain('"รหัสคำขอ","ชื่อหน่วยงานย่อย","ชื่อกิจกรรม/โครงการ"');
+    expect(csv).toContain(`"${subOrganizationName}","${activityName}"`);
     expect(csv).toContain('"หน่วยงาน","ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก","หมวดงบ"');
     expect(csv).toContain(`${subActivityName}\n${expenseSubActivityName}`);
     await testInfo.attach("budget-register-subactivities-desktop", {
@@ -172,7 +180,10 @@ test("budget draft retains entered values after errors and repeated saves withou
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
     await tableRegion.evaluate((element) => {
-      element.scrollLeft = 400;
+      const subActivityHeading = element.querySelector("th:nth-child(4)");
+      if (subActivityHeading instanceof HTMLElement) {
+        element.scrollLeft = subActivityHeading.offsetLeft;
+      }
     });
     await testInfo.attach("budget-register-subactivities-mobile", {
       body: await page.screenshot({ fullPage: true }),

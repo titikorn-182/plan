@@ -46,12 +46,13 @@ export async function getBudgetRequests(
     hasValues(row, ["id", "code", "title", "unit", "category", "status"]),
   );
   const subActivitiesById = new Map<string, string[]>();
+  const subOrganizationsById = new Map<string, string>();
   if (rows.length > 0) {
     // Fetch metadata only for visible rows, using the same authenticated RLS client.
     const { data: details, error: detailsError } = await supabase
       .from("budget_requests")
       .select(
-        "id,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
+        "id,subOrganizationName:proposal_details->organizationName,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
       )
       .in(
         "id",
@@ -62,6 +63,10 @@ export async function getBudgetRequests(
     }
     for (const detail of details ?? []) {
       subActivitiesById.set(detail.id, getBudgetSubActivityNames(detail));
+      subOrganizationsById.set(
+        detail.id,
+        typeof detail.subOrganizationName === "string" ? detail.subOrganizationName.trim() : "",
+      );
     }
   }
 
@@ -70,6 +75,7 @@ export async function getBudgetRequests(
       items: rows.map((row) => ({
         uuid: row.id,
         id: row.code,
+        subOrganizationName: subOrganizationsById.get(row.id) ?? "",
         title: row.title,
         unit: row.unit,
         subActivityNames: subActivitiesById.get(row.id) ?? [],

@@ -26,6 +26,7 @@ export function isDocumentStatus(value: unknown): value is DocumentStatus {
 export type BudgetRequest = {
   uuid: string;
   id: string;
+  subOrganizationName: string;
   title: string;
   unit: string;
   subActivityNames: string[];

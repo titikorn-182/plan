@@ -36,7 +36,13 @@ export function BudgetRequestsView({
   const rows = useMemo(
     () =>
       requests.filter((item) => {
-        const matchesQuery = [item.id, item.title, item.unit, ...item.subActivityNames]
+        const matchesQuery = [
+          item.id,
+          item.subOrganizationName,
+          item.title,
+          item.unit,
+          ...item.subActivityNames,
+        ]
           .join(" ")
           .toLocaleLowerCase("th")
           .includes(query.toLocaleLowerCase("th"));
@@ -47,6 +53,7 @@ export function BudgetRequestsView({
   function exportCsv() {
     const header = [
       "รหัสคำขอ",
+      "ชื่อหน่วยงานย่อย",
       "ชื่อกิจกรรม/โครงการ",
       "หน่วยงาน",
       "ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก",
@@ -57,6 +64,7 @@ export function BudgetRequestsView({
     ];
     const data = rows.map((item) => [
       item.id,
+      item.subOrganizationName,
       item.title,
       item.unit,
       item.subActivityNames.join("\n"),
@@ -175,10 +183,11 @@ export function BudgetRequestsView({
           aria-label="ตารางคำของบประมาณ"
           tabIndex={0}
         >
-          <table className="w-full min-w-[1200px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[1440px] border-collapse text-left text-xs">
             <thead className="bg-stone-50 text-stone-600">
               <tr className="border-b border-stone-200">
                 <th className="px-3 py-3 font-semibold">รหัสคำขอ</th>
+                <th className="w-56 px-3 py-3 font-semibold leading-5">ชื่อหน่วยงานย่อย</th>
                 <th className="px-3 py-3 font-semibold">รายการ / หน่วยงาน</th>
                 <th className="w-64 px-3 py-3 font-semibold leading-5">
                   ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก
@@ -199,6 +208,16 @@ export function BudgetRequestsView({
                   key={item.uuid}
                 >
                   <td className="px-3 py-3 font-semibold tabular-nums">{item.id}</td>
+                  <td className="min-w-56 max-w-56 px-3 py-3 leading-5 text-stone-700 [overflow-wrap:anywhere]">
+                    {item.subOrganizationName || (
+                      <>
+                        <span className="text-stone-500" aria-hidden="true">
+                          —
+                        </span>
+                        <span className="sr-only">ไม่ได้ระบุชื่อหน่วยงานย่อย</span>
+                      </>
+                    )}
+                  </td>
                   <td className="max-w-[380px] px-3 py-3">
                     <b className="block truncate text-sm">{item.title}</b>
                     <span className="mt-1 block text-[11px] text-stone-500">{item.unit}</span>

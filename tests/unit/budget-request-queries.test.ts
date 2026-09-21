@@ -10,7 +10,14 @@ type RegisterResult = {
   count: number | null;
 };
 type DetailsResult = {
-  data: { id: string; subActivityName: Json; expenseItems: Json }[] | null;
+  data:
+    | {
+        id: string;
+        subOrganizationName?: Json;
+        subActivityName: Json;
+        expenseItems: Json;
+      }[]
+    | null;
   error: QueryError | null;
 };
 
@@ -87,11 +94,13 @@ describe("budget request queries", () => {
       data: [
         {
           id: "second",
+          subOrganizationName: "สำนักงานเลขานุการ-งานโสตทัศนศึกษา",
           subActivityName: null,
           expenseItems: [{ subActivityName: "นำเข้าจากไฟล์" }],
         },
         {
           id: "first",
+          subOrganizationName: " สำนักงานเลขานุการ-งานสารบรรณและธุรการ ",
           subActivityName: "ประชุมบุคลากร",
           expenseItems: [{ subActivityName: "ประชุมบุคลากร" }, { subActivityName: "ติดตามผล" }],
         },
@@ -107,7 +116,7 @@ describe("budget request queries", () => {
     expect(mock.chain.order).toHaveBeenCalledWith("updated_at", { ascending: false });
     expect(mock.chain.range).toHaveBeenCalledWith(20, 39);
     expect(mock.details.select).toHaveBeenCalledWith(
-      "id,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
+      "id,subOrganizationName:proposal_details->organizationName,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
     );
     expect(mock.details.in).toHaveBeenCalledExactlyOnceWith("id", ["first", "second"]);
     expect(result.error).toBeNull();
@@ -118,6 +127,42 @@ describe("budget request queries", () => {
       { uuid: "second", names: ["นำเข้าจากไฟล์"] },
     ]);
     expect(result.data.pagination).toEqual({ page: 2, pageSize: 20, total: 45, totalPages: 3 });
+    expect(
+      result.data.items.map((item) => ({
+        unit: item.unit,
+        subOrganizationName: item.subOrganizationName,
+      })),
+    ).toEqual([
+      { unit: "สำนักงานเลขานุการ", subOrganizationName: "สำนักงานเลขานุการ-งานสารบรรณและธุรการ" },
+      { unit: "สำนักงานเลขานุการ", subOrganizationName: "สำนักงานเลขานุการ-งานโสตทัศนศึกษา" },
+    ]);
+  });
+
+  it.each([null, undefined, "", "   ", 123, true, {}, ["not a name"]])(
+    "does not fabricate a sub-organization for empty or invalid metadata: %j",
+    async (subOrganizationName) => {
+      mock.chain.range.mockResolvedValue({ data: [registerRow("legacy")], error: null, count: 1 });
+      mock.details.in.mockResolvedValue({
+        data: [{ id: "legacy", subOrganizationName, subActivityName: null, expenseItems: null }],
+        error: null,
+      });
+      const result = await getBudgetRequests();
+      expect(result.error).toBeNull();
+      expect(result.data.items[0]).toMatchObject({
+        subOrganizationName: "",
+        unit: "สำนักงานเลขานุการ",
+      });
+    },
+  );
+
+  it("keeps a missing metadata row's sub-organization empty instead of falling back to the owning unit", async () => {
+    mock.chain.range.mockResolvedValue({ data: [registerRow("missing")], error: null, count: 1 });
+    const result = await getBudgetRequests();
+    expect(result.error).toBeNull();
+    expect(result.data.items[0]).toMatchObject({
+      subOrganizationName: "",
+      unit: "สำนักงานเลขานุการ",
+    });
   });
 
   it("returns no names for an existing record with no sub-activity metadata", async () => {
