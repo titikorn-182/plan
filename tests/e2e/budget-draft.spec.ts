@@ -63,16 +63,18 @@ test("budget draft retains entered values after errors and repeated saves withou
     await expect(form.getByLabel("ชื่อโครงการกิจกรรม = กิจกรรม/โครงการ (12 หลัก)")).toHaveValue(
       activityName,
     );
-    await form.getByLabel("งบรายจ่าย", { exact: false }).selectOption("งบดำเนินงาน");
-    await form.getByLabel("หมวดรายจ่าย", { exact: false }).first().selectOption("ค่าตอบแทน");
-    await form.getByLabel("หมวดรายจ่ายย่อย").selectOption("ค่าตอบแทนวิทยากร");
+    // Labels wrap their select options, so match the field heading rather than
+    // another field's placeholder (e.g. "เลือกงบรายจ่ายก่อน").
+    await form.getByLabel(/^งบรายจ่าย\s*\*/).selectOption("งบดำเนินงาน");
+    await form.getByLabel(/^หมวดรายจ่าย\s*\*/).selectOption("ค่าตอบแทน");
+    await form.getByLabel(/^หมวดรายจ่ายย่อย\s*\*/).selectOption("ค่าตอบแทนวิทยากร");
     await form.getByLabel("รายละเอียดรายการค่าใช้จ่าย").fill("ค่าตอบแทนวิทยากรทดสอบ");
     await form.getByLabel("จำนวนเงิน (บาท)").fill("1000");
     await form.getByLabel("หลักการและเหตุผล").fill("เหตุผลประกอบการบันทึกฉบับร่างครั้งแรก");
 
     // One character satisfies native required validation but fails server min-length.
     // No DOM tampering or mocked Server Action is needed to exercise the real error path.
-    await form.getByLabel("หัวหน้าโครงการ", { exact: false }).first().fill("x");
+    await form.getByLabel(/^หัวหน้าโครงการ\s*\*/).fill("x");
     const invalidValues = await readVisibleFormValues(form);
     await save.click();
     await expect(status).toHaveText("กรุณาตรวจสอบข้อมูลที่ระบุ");
@@ -85,7 +87,7 @@ test("budget draft retains entered values after errors and repeated saves withou
       contentType: "image/png",
     });
 
-    await form.getByLabel("หัวหน้าโครงการ", { exact: false }).first().fill(owner);
+    await form.getByLabel(/^หัวหน้าโครงการ\s*\*/).fill(owner);
     const initialValues = await readVisibleFormValues(form);
     await save.click();
     await expect(status).toContainText("บันทึกฉบับร่าง");
