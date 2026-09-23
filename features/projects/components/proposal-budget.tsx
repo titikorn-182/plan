@@ -19,6 +19,7 @@ import type { ProjectProposalSectionProps as Props } from "./project-proposal-se
 import { removeAt, replaceAt } from "./project-proposal-section-utils";
 import { ProjectPlanStructureSelect as PlanStructureSelect } from "./project-plan-structure-select";
 import type { FiscalYearMasterData } from "@/features/shared/master-data";
+import { INPUT_LIMITS } from "@/lib/config/limits";
 
 export function ProposalBudget({
   details,
@@ -192,18 +193,20 @@ export function ProposalBudget({
                   value={item.category}
                   onChange={(e) =>
                     updateExpenseItem(index, {
-                      category: e.target.value as (typeof EXPENSE_CATEGORIES)[number],
+                      category: e.target.value,
                     })
                   }
                   aria-label={`หมวดค่าใช้จ่ายรายการที่ ${index + 1}`}
                 >
-                  {EXPENSE_CATEGORIES.map((category) => (
+                  {Array.from(new Set([...EXPENSE_CATEGORIES, item.category])).map((category) => (
                     <option key={category}>{category}</option>
                   ))}
                 </select>
-                <input
+                <textarea
                   className={fieldClass}
                   value={item.description}
+                  rows={2}
+                  maxLength={INPUT_LIMITS.longText}
                   onChange={(e) => updateExpenseItem(index, { description: e.target.value })}
                   placeholder="รายละเอียดรายการค่าใช้จ่าย"
                   aria-label={`รายละเอียดรายการค่าใช้จ่ายที่ ${index + 1}`}
@@ -216,6 +219,11 @@ export function ProposalBudget({
                   errors={errors?.[`proposalDetails.expenseItems.${index}.description`]}
                   id={`project-expense-${index}-description-error`}
                 />
+                {item.expenseSubcategory || item.subActivityName ? (
+                  <p className="mt-2 text-xs leading-5 text-stone-600">
+                    {[item.expenseSubcategory, item.subActivityName].filter(Boolean).join(" · ")}
+                  </p>
+                ) : null}
               </div>
               <label>
                 <span className="text-xs font-semibold text-stone-700 xl:sr-only">อัตรา</span>

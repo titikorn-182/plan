@@ -59,8 +59,15 @@ const text = (max: number = INPUT_LIMITS.longText) => z.string().trim().max(max)
 const expenseFactor = z.number().finite().int().min(0).max(MONEY_LIMITS.maximumExpenseFactor);
 const expenseItemSchema = z
   .object({
-    category: z.enum(EXPENSE_CATEGORIES),
-    description: text(INPUT_LIMITS.title),
+    category: text(INPUT_LIMITS.title).min(1),
+    description: text(),
+    expenditureBudget: text(INPUT_LIMITS.title).optional(),
+    expenseSubcategory: text(INPUT_LIMITS.title).optional(),
+    subActivityName: text(INPUT_LIMITS.title).optional(),
+    fundingSource: text(INPUT_LIMITS.title).optional(),
+    fundingSourceDetail: text().optional(),
+    fundCode: text(INPUT_LIMITS.shortText).optional(),
+    fundName: text(INPUT_LIMITS.title).optional(),
     rate: z.number().finite().min(0).max(MONEY_LIMITS.maximumBaht),
     units: expenseFactor,
     quantity: expenseFactor,

@@ -7,6 +7,7 @@ import {
   friendlyError,
   invalid,
   revalidateOperationPaths,
+  SESSION_EXPIRED_MESSAGE,
   sessionExpired,
   uuidOrEmpty,
 } from "@/features/shared/server-actions";
@@ -22,6 +23,32 @@ import {
   validateProjectProposalForSubmission,
 } from "@/features/projects/proposal-details";
 import type { Json } from "@/types/database.generated";
+import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
+import { getApprovedBudgetProjectSourceRow } from "@/features/projects/queries";
+import { createApprovedBudgetProjectSource } from "@/features/projects/approved-budget-source";
+
+export async function loadApprovedBudgetProjectSourceAction(
+  budgetRequestId: string,
+): Promise<ReturnType<typeof createApprovedBudgetProjectSource>> {
+  const parsed = z.string().uuid().safeParse(budgetRequestId);
+  if (!parsed.success) {
+    return { success: false, error: "กรุณาเลือกคำของบประมาณที่อนุมัติแล้วจากรายการ" };
+  }
+  const { supabase, userId } = await authenticated();
+  if (!userId) return { success: false, error: SESSION_EXPIRED_MESSAGE };
+
+  const { data, error } = await getApprovedBudgetProjectSourceRow(supabase, parsed.data);
+  if (error) {
+    return { success: false, error: friendlyError(error, "projects.approved_budget_source") };
+  }
+  if (!data) {
+    return {
+      success: false,
+      error: "ไม่พบคำของบที่อนุมัติแล้ว หรือคุณไม่มีสิทธิ์เข้าถึง กรุณาเลือกรายการใหม่",
+    };
+  }
+  return createApprovedBudgetProjectSource(data);
+}
 
 const projectSchema = z.object({
   id: uuidOrEmpty,
@@ -30,7 +57,11 @@ const projectSchema = z.object({
   organizationId: z.string().uuid("กรุณาเลือกหน่วยงาน"),
   fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
   budgetRequestId: uuidOrEmpty,
-  title: z.string().trim().min(5, "ชื่อโครงการต้องมีอย่างน้อย 5 ตัวอักษร").max(INPUT_LIMITS.title),
+  title: z
+    .string()
+    .trim()
+    .min(5, "กรุณาระบุชื่อกิจกรรมย่อยอย่างน้อย 5 ตัวอักษร")
+    .max(INPUT_LIMITS.title),
   ownerName: z.string().trim().min(2, "กรุณาระบุเจ้าของโครงการ").max(INPUT_LIMITS.personName),
   coordinatorName: z.string().trim().min(2, "กรุณาระบุผู้ประสานงาน").max(INPUT_LIMITS.personName),
   disbursementTarget: z.coerce
@@ -81,6 +112,73 @@ export async function saveProjectAction(
   }
   const { supabase, userId } = await authenticated();
   if (!userId) return sessionExpired(previous);
+
+  let sourceHasChanged = Boolean(input.budgetRequestId);
+  if (input.id && input.budgetRequestId) {
+    const { data: existing, error: existingError } = await supabase
+      .from("projects")
+      .select("budget_request_id,organization_id,fiscal_year_id")
+      .eq("id", input.id)
+      .maybeSingle();
+    if (existingError) {
+      return {
+        ...previous,
+        success: false,
+        message: friendlyError(existingError, "projects.current_budget_source"),
+      };
+    }
+    // An unchanged historical link must not prevent editing unrelated proposal
+    // fields merely because its source was subsequently archived.
+    sourceHasChanged =
+      !existing ||
+      existing.budget_request_id !== input.budgetRequestId ||
+      existing.organization_id !== input.organizationId ||
+      existing.fiscal_year_id !== input.fiscalYearId;
+  }
+  if (input.budgetRequestId && sourceHasChanged) {
+    // Re-read the source through this user's RLS session: dropdown values and
+    // previously loaded details are not proof of access or approval at save time.
+    const { data: source, error: sourceError } = await supabase
+      .from("budget_requests")
+      .select("id,organization_id,fiscal_year_id")
+      .eq("id", input.budgetRequestId)
+      .eq("status", "approved")
+      .is("archived_at", null)
+      .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
+      .maybeSingle();
+    if (sourceError) {
+      return {
+        ...previous,
+        success: false,
+        message: friendlyError(sourceError, "projects.validate_budget_source"),
+      };
+    }
+    if (!source) {
+      const message =
+        "ไม่พบคำของบที่อนุมัติแล้ว หรือคุณไม่มีสิทธิ์เข้าถึง กรุณาเลือกคำของบอ้างอิงใหม่";
+      return {
+        ...previous,
+        success: false,
+        errors: { budgetRequestId: [message] },
+        message,
+      };
+    }
+    const sourceErrors: Record<string, string[]> = {};
+    if (source.organization_id !== input.organizationId) {
+      sourceErrors.organizationId = ["หน่วยงานต้องตรงกับคำของบประมาณที่อ้างอิง"];
+    }
+    if (source.fiscal_year_id !== input.fiscalYearId) {
+      sourceErrors.fiscalYearId = ["ปีงบประมาณต้องตรงกับคำของบประมาณที่อ้างอิง"];
+    }
+    if (Object.keys(sourceErrors).length > 0) {
+      return {
+        ...previous,
+        success: false,
+        errors: sourceErrors,
+        message: "หน่วยงานหรือปีงบประมาณไม่ตรงกับคำของบอ้างอิง กรุณาเลือกคำของบใหม่",
+      };
+    }
+  }
 
   const masterDataResult = await getFiscalYearMasterDataCatalogs([input.fiscalYearId]);
   if (masterDataResult.error) {

@@ -406,41 +406,60 @@ export class ProposalPdfBuilder {
       const wrapped = columns.map((column, index) =>
         wrapText(valueOrDash(row[index]), this.regular, 8.3, column.width - padding * 2),
       );
-      const rowHeight = Math.max(24, Math.max(...wrapped.map((lines) => lines.length)) * 11 + 10);
-      if (this.y - rowHeight < 54) {
+      const lineCount = Math.max(...wrapped.map((lines) => lines.length));
+      const rowHeight = Math.max(24, lineCount * 11 + 10);
+      const fullPageBodyHeight = A4_HEIGHT - MARGIN - 31 - headerHeight - 54;
+      // Keep ordinary rows together. Imported descriptions can be longer than
+      // an entire page, so those rows continue in bounded line slices instead.
+      if (this.y - rowHeight < 54 && rowHeight <= fullPageBodyHeight) {
         this.addPage();
         drawHeader();
       }
-      let x = MARGIN;
-      columns.forEach((column, index) => {
-        this.page.drawRectangle({
-          x,
-          y: this.y - rowHeight + 4,
-          width: column.width,
-          height: rowHeight,
-          color: WHITE,
-          borderColor: RULE,
-          borderWidth: 0.5,
-        });
-        wrapped[index].forEach((line, lineIndex) => {
-          const textWidth = this.regular.widthOfTextAtSize(line, 8.3);
-          const textX =
-            column.align === "right"
-              ? x + column.width - padding - textWidth
-              : column.align === "center"
-                ? x + (column.width - textWidth) / 2
-                : x + padding;
-          this.page.drawText(line || " ", {
-            x: textX,
-            y: this.y - 11 - lineIndex * 11,
-            size: 8.3,
-            font: this.regular,
-            color: INK,
+      let offset = 0;
+      while (offset < lineCount) {
+        if (this.y - 24 < 54) {
+          this.addPage();
+          drawHeader();
+        }
+        const availableLines = Math.floor((this.y - 54 - 10) / 11);
+        const sliceLength = Math.min(availableLines, lineCount - offset);
+        const sliceHeight = Math.max(24, sliceLength * 11 + 10);
+        let x = MARGIN;
+        columns.forEach((column, index) => {
+          this.page.drawRectangle({
+            x,
+            y: this.y - sliceHeight + 4,
+            width: column.width,
+            height: sliceHeight,
+            color: WHITE,
+            borderColor: RULE,
+            borderWidth: 0.5,
           });
+          wrapped[index].slice(offset, offset + sliceLength).forEach((line, lineIndex) => {
+            const textWidth = this.regular.widthOfTextAtSize(line, 8.3);
+            const textX =
+              column.align === "right"
+                ? x + column.width - padding - textWidth
+                : column.align === "center"
+                  ? x + (column.width - textWidth) / 2
+                  : x + padding;
+            this.page.drawText(line || " ", {
+              x: textX,
+              y: this.y - 11 - lineIndex * 11,
+              size: 8.3,
+              font: this.regular,
+              color: INK,
+            });
+          });
+          x += column.width;
         });
-        x += column.width;
-      });
-      this.y -= rowHeight;
+        this.y -= sliceHeight;
+        offset += sliceLength;
+        if (offset < lineCount) {
+          this.addPage();
+          drawHeader();
+        }
+      }
     });
     this.y -= 5;
   }

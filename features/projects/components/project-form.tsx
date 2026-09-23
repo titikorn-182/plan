@@ -19,6 +19,7 @@ import {
   ProposalResults,
 } from "@/features/projects/components/project-proposal-sections";
 import { getFiscalYearMasterData } from "@/features/shared/master-data";
+import { useApprovedBudgetSource } from "@/features/projects/hooks/use-approved-budget-source";
 
 const SECTION_LINKS = [
   ["project-basics", "ข้อมูลโครงการ"],
@@ -54,6 +55,30 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
       actionPlan: [{ description: "", months: [] }],
       expenseItems: [createEmptyProjectExpenseItem()],
     };
+  });
+  const source = useApprovedBudgetSource({
+    initialBudgetRequestId: record?.budgetRequestId ?? "",
+    isExisting: Boolean(record),
+    onApply: (approved) => {
+      setOrganizationId(approved.organizationId);
+      setFiscalYearId(approved.fiscalYearId);
+      setTitle(approved.title);
+      setOwnerName(approved.ownerName);
+      setStartsOn(approved.startsOn);
+      setEndsOn(approved.endsOn);
+      setDetails({
+        ...approved.details,
+        responsiblePeople: approved.details.responsiblePeople.length
+          ? approved.details.responsiblePeople
+          : [{ name: "", position: "" }],
+        goalIndicators: approved.details.goalIndicators.length
+          ? approved.details.goalIndicators
+          : [{ goal: "", longTermIndicator: "", actionIndicator: "", unit: "", target: "" }],
+        actionPlan: approved.details.actionPlan.length
+          ? approved.details.actionPlan
+          : [{ description: "", months: [] }],
+      });
+    },
   });
   const editable = !record || (record.status === "proposed" && !record.pendingApproval);
   const totalBudget = sumProjectExpenses(details);
@@ -103,16 +128,34 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
     ],
   );
   const completed = readiness.filter(Boolean).length;
-  const shared = { details, setDetails, errors: state.errors, disabled: !editable };
+  const shared = {
+    details,
+    setDetails,
+    errors: state.errors,
+    disabled: !editable || source.loading || pending,
+  };
   const coordinatorName =
     details.responsiblePeople.find((person) => person.name.trim())?.name ?? ownerName;
 
   return (
-    <form action={action} className="budget-request-form pb-24">
+    <form
+      action={action}
+      className="budget-request-form pb-24"
+      onChangeCapture={(event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLSelectElement && target.name === "approvedBudgetSelection")) {
+          source.markModified();
+        }
+      }}
+      onSubmit={(event) => {
+        if (source.busy) event.preventDefault();
+      }}
+    >
       <input type="hidden" name="id" value={state.id ?? record?.id ?? ""} />
       <input type="hidden" name="version" value={state.version ?? record?.version ?? 1} />
       <input type="hidden" name="coordinatorName" value={coordinatorName} />
       <input type="hidden" name="proposalDetails" value={JSON.stringify(details)} />
+      <input type="hidden" name="budgetRequestId" value={source.budgetRequestId} />
       <FormTopbar backHref="/projects" backLabel="กลับทะเบียนโครงการ" state={state} />
       <FormNotice
         state={state}
@@ -168,6 +211,8 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
               setFiscalYearId={setFiscalYearId}
               setTitle={setTitle}
               setOwnerName={setOwnerName}
+              source={source}
+              disabled={!editable || pending}
             />
           </div>
           <div className="scroll-mt-28" id="project-alignment">
@@ -245,7 +290,7 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
           </div>
         </aside>
       </div>
-      {editable ? <FormActions pending={pending} backHref="/projects" /> : null}
+      {editable ? <FormActions pending={pending || source.busy} backHref="/projects" /> : null}
     </form>
   );
 }

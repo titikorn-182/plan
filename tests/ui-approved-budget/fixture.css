@@ -1,0 +1,19 @@
+:root {
+  --font-sarabun: "Sarabun", sans-serif;
+}
+
+.fixture-workspace {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.fixture-workspace .form-action-bar {
+  left: 0;
+}
+
+@media (max-width: 700px) {
+  .fixture-workspace {
+    padding: 12px;
+  }
+}

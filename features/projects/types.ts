@@ -5,6 +5,13 @@ import type { FiscalYearMasterData } from "@/features/shared/master-data";
 
 export type ProjectStatus = Enums<"project_status">;
 
+export type ApprovedBudgetRequestOption = SelectOption & {
+  code: string;
+  title: string;
+  organizationId: string;
+  fiscalYearId: string;
+};
+
 export type ProjectRow = {
   uuid: string;
   id: string;
@@ -44,7 +51,7 @@ export type ProjectFormOptions = {
   organizations: OrganizationOption[];
   fiscalYears: FiscalYearOption[];
   masterData: FiscalYearMasterData[];
-  budgetRequests: SelectOption[];
+  budgetRequests: ApprovedBudgetRequestOption[];
   defaultOwnerName: string;
   record: ProjectFormRecord | null;
 };

@@ -1,7 +1,10 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ProposalBudget } from "@/features/projects/components/project-proposal-sections";
+import {
+  ProposalBasics,
+  ProposalBudget,
+} from "@/features/projects/components/project-proposal-sections";
 import {
   PROJECT_CHARACTERISTICS,
   calculateProjectExpenseAmount,
@@ -19,6 +22,53 @@ import { SDG_OPTIONS } from "@/features/shared/sdgs";
 import { TEST_MASTER_DATA } from "@/tests/fixtures/master-data";
 
 describe("project proposal details", () => {
+  it("labels the required title as a subactivity without changing its stored field", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProposalBasics, {
+        options: {
+          organizations: [],
+          fiscalYears: [],
+          masterData: [],
+          budgetRequests: [],
+          defaultOwnerName: "",
+          record: null,
+        },
+        organizationId: "",
+        fiscalYearId: "",
+        title: "กิจกรรมทดสอบ",
+        ownerName: "",
+        setOrganizationId: () => undefined,
+        setFiscalYearId: () => undefined,
+        setTitle: () => undefined,
+        setOwnerName: () => undefined,
+        details: createEmptyProjectProposalDetails(),
+        setDetails: () => undefined,
+        errors: undefined,
+        disabled: false,
+        source: {
+          budgetRequestId: "",
+          mode: "manual",
+          replacementId: null,
+          loading: false,
+          error: "",
+          warnings: [],
+          loadedCode: "",
+          busy: false,
+          markModified: () => undefined,
+          select: () => undefined,
+          useApprovedMode: () => undefined,
+          confirm: () => undefined,
+          cancel: () => undefined,
+        },
+      }),
+    );
+    const titleField = html.match(/<label\b[^>]*>[\s\S]*?name="title"[\s\S]*?<\/label>/)?.[0];
+    expect(titleField).toContain("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก");
+    expect(titleField).toContain('name="title"');
+    expect(titleField).toContain('required=""');
+    expect(titleField).toContain('value="กิจกรรมทดสอบ"');
+  });
+
   it("upgrades an empty stored object to the current structure", () => {
     const parsed = parseProjectProposalDetails({});
     expect(parsed.success).toBe(true);

@@ -27,6 +27,22 @@ const PROJECT_HEALTH_LABELS: Record<string, ProjectRow["health"]> = {
   delayed: "ล่าช้า",
 };
 
+export async function getApprovedBudgetProjectSourceRow(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  budgetRequestId: string,
+) {
+  return supabase
+    .from("budget_requests")
+    .select(
+      "id,code,title_th,organization_id,fiscal_year_id,owner_name,rationale,project_type,requested_amount,proposal_details",
+    )
+    .eq("id", budgetRequestId)
+    .eq("status", "approved")
+    .is("archived_at", null)
+    .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
+    .maybeSingle();
+}
+
 export async function getProjects(
   page = 1,
   filters?: ProjectFilters,
@@ -137,7 +153,9 @@ export async function getProjectFormOptions(
   const [budgets, recordResult] = await Promise.all([
     supabase
       .from("budget_requests")
-      .select("id,code,title_th")
+      .select(
+        "id,code,title_th,organization_id,fiscal_year_id,sub_activity_name:proposal_details->>subActivityName",
+      )
       .eq("status", "approved")
       .is("archived_at", null)
       .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests)
@@ -194,10 +212,19 @@ export async function getProjectFormOptions(
     organizations: common.organizations,
     fiscalYears: common.fiscalYears,
     masterData: masterDataResult.data,
-    budgetRequests: (budgets.data ?? []).map((item) => ({
-      id: item.id,
-      label: `${item.code} · ${item.title_th}`,
-    })),
+    budgetRequests: (budgets.data ?? []).map((item) => {
+      const title =
+        (typeof item.sub_activity_name === "string" && item.sub_activity_name.trim()) ||
+        item.title_th;
+      return {
+        id: item.id,
+        label: `${item.code} · ${title}`,
+        code: item.code,
+        title,
+        organizationId: item.organization_id,
+        fiscalYearId: item.fiscal_year_id,
+      };
+    }),
     defaultOwnerName: viewer.fullName,
     record: row
       ? {

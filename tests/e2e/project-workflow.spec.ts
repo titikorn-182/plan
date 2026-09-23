@@ -71,7 +71,10 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
   const executive = await login(browser, "executive");
   try {
     await staff.page.goto("/projects/new");
-    await staff.page.getByLabel("ชื่อโครงการ", { exact: false }).first().fill(title);
+    await staff.page
+      .getByRole("button", { name: "กรอกเองโดยไม่อ้างอิงคำของบ", exact: true })
+      .click();
+    await staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก").fill(title);
     await staff.page.getByLabel("การพัฒนาการจัดการเรียนการสอน หรือนักศึกษา").check();
     await staff.page.getByLabel(/กลยุทธ์ที่ 1/).check();
     await staff.page.getByLabel("หลักการและเหตุผล").fill("พัฒนาการเรียนรู้ของนักศึกษา");
@@ -120,7 +123,7 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await expect(
       projectForm.getByRole("status").filter({ hasText: "บันทึกฉบับร่าง" }),
     ).toBeVisible();
-    await staff.page.getByLabel("ชื่อโครงการ", { exact: false }).first().fill(revisedTitle);
+    await staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก").fill(revisedTitle);
     await staff.page.getByRole("button", { name: "ส่งอนุมัติ", exact: true }).click();
     await expect(
       projectForm.getByRole("status").filter({ hasText: "เข้าสู่ workflow แล้ว" }),
@@ -145,7 +148,7 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     expect(notificationError).toBeNull();
     expect(notifications?.some((item) => item.title.startsWith("อนุมัติแล้ว"))).toBe(true);
     await staff.page.goto(`/projects/${project!.id}/edit`);
-    await expect(staff.page.getByLabel("ชื่อโครงการ", { exact: false }).first()).toBeDisabled();
+    await expect(staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก")).toBeDisabled();
     await expect(staff.page.getByLabel("รหัสโครงการ/กิจกรรม = กิจกรรม (12 หลัก)")).toHaveValue(
       "100210230001",
     );

@@ -134,6 +134,12 @@ beforeEach(() => {
 });
 
 describe("project action orchestration", () => {
+  it("uses the subactivity label when the title is too short", async () => {
+    const result = await saveProjectAction({}, form({ ...projectInput, title: "x" }));
+    expect(result.errors?.title).toEqual(["กรุณาระบุชื่อกิจกรรมย่อยอย่างน้อย 5 ตัวอักษร"]);
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
+
   it.each([
     { title: "x" },
     { endsOn: "2026-09-30" },
