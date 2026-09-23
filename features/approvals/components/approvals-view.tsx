@@ -35,6 +35,7 @@ const roleLabel = APPROVAL_ROLE_LABELS;
 const statusLabel = WORKFLOW_STATUS_LABELS;
 
 function entityHref(task: WorkflowTask) {
+  if (task.entityType === "budget_request") return `/budget-requests/${task.entityId}`;
   if (task.entityType === "project") return `/projects/${task.entityId}/edit`;
   if (task.entityType === "quarterly_report") return `/reports/quarterly/${task.entityId}/edit`;
   if (task.entityType === "project_completion_report")

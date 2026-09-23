@@ -155,6 +155,6 @@ describe("budget requests view", () => {
     expect(rows[0][3]).not.toContain("line-clamp");
     expect(rows[0][3]).not.toContain("กิจกรรมของคำขอที่สอง");
     expect(rows[1][3]).toContain("กิจกรรมของคำขอที่สอง");
-    expect(rows[1][8]).toContain('href="/approvals"');
+    expect(rows[1][8]).toContain('href="/budget-requests/00000000-0000-4000-8000-000000000002"');
   });
 });

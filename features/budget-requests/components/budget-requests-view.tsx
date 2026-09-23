@@ -251,9 +251,13 @@ export function BudgetRequestsView({
                   <td className="px-3 py-3">
                     <Link
                       className="grid size-8 place-items-center border border-transparent hover:border-stone-300 hover:text-[#c9440b]"
-                      href={item.editable ? `/budget-requests/${item.uuid}/edit` : "/approvals"}
-                      aria-label={item.editable ? `แก้ไข ${item.id}` : `ติดตามสถานะ ${item.id}`}
-                      title={item.editable ? "แก้ไขคำขอ" : "ติดตาม Workflow"}
+                      href={
+                        item.editable
+                          ? `/budget-requests/${item.uuid}/edit`
+                          : `/budget-requests/${item.uuid}`
+                      }
+                      aria-label={item.editable ? `แก้ไข ${item.id}` : `ดูรายละเอียด ${item.id}`}
+                      title={item.editable ? "แก้ไขคำขอ" : "ดูรายละเอียดคำขอ"}
                     >
                       <ArrowUpRight size={16} />
                     </Link>

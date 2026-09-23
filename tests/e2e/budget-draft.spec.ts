@@ -317,6 +317,51 @@ test("budget draft retains full workbook data through validation, repeated saves
       page.getByText("คำของบประมาณนี้ไม่อยู่ในสถานะที่แก้ไขได้", { exact: true }),
     ).toBeVisible();
     await expect(form).toHaveCount(0);
+
+    // Submitted requests must remain readable from the workflow even though
+    // editing is forbidden. Resolve this request by its code, not a task UUID.
+    const code = requests?.[0]?.code;
+    if (!code) throw new Error("Expected the saved budget request code");
+    await page.goto("/approvals");
+    const approvalCard = page.getByRole("article").filter({ hasText: code });
+    const detailsLink = approvalCard.getByRole("link", {
+      name: /เปิดข้อมูลประกอบ|ตรวจรายละเอียดคำขอและวงเงิน/,
+    });
+    await expect(detailsLink).toHaveAttribute("href", `/budget-requests/${savedId}`);
+    await detailsLink.click();
+    await expect(page).toHaveURL(`/budget-requests/${savedId}`);
+    const details = page.getByRole("region", { name: "รายละเอียดคำของบประมาณ", exact: true });
+    await expect(details).toBeVisible();
+    await expect(details).toContainText(code);
+    await expect(details).toContainText(activityName);
+    await expect(details).toContainText(subActivityName);
+    await expect(details).toContainText(editedRationale);
+    await expect(details).toContainText("1,250.00");
+    await expect(details.locator("form, input, select, textarea")).toHaveCount(0);
+    await expect(details.getByRole("button", { name: "อนุมัติ", exact: true })).toHaveCount(0);
+    await testInfo.attach("workflow-budget-detail-mobile", {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(details).toBeVisible();
+    await testInfo.attach("workflow-budget-detail-desktop", {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
+    await page.getByRole("link", { name: "กลับไป Workflow อนุมัติ", exact: true }).click();
+    await expect(page).toHaveURL("/approvals");
+    await expect(approvalCard).toBeVisible();
+    const { data: inspectedRequest, error: inspectionError } = await client
+      .from("budget_requests")
+      .select("status,requested_amount")
+      .eq("id", savedId)
+      .single();
+    expect(inspectionError).toBeNull();
+    expect(inspectedRequest).toEqual({ status: "submitted", requested_amount: 1250 });
   } finally {
     await client.auth.signOut();
   }

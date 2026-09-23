@@ -118,6 +118,8 @@ export function BudgetRequestImportPanel({
           {locked ? (
             <p className="mt-3 border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">
               บันทึกฉบับร่างแล้ว จึงล็อกการเปลี่ยนไฟล์และแถวเพื่อป้องกันการเขียนทับรายการเดิม
+              {/* A full reload clears the saved draft ID and locked form state on this same route. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 className="ml-1 font-bold underline underline-offset-2"
                 href="/budget-requests/new"

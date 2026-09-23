@@ -59,6 +59,10 @@ const WORKSPACE_TITLES: ReadonlyArray<{
     title: "แก้ไขคำของบประมาณ",
   },
   { matches: (pathname) => pathname === "/budget-requests/new", title: "สร้างคำของบประมาณ" },
+  {
+    matches: (pathname) => /^\/budget-requests\/[^/]+$/.test(pathname),
+    title: "รายละเอียดคำของบประมาณ",
+  },
   { matches: (pathname) => pathname === "/budget-requests", title: "คำของบประมาณประจำปี" },
   {
     matches: (pathname) => /^\/projects\/[^/]+\/edit$/.test(pathname),
