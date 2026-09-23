@@ -5,6 +5,14 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 
 describe("safe actionable constraint errors", () => {
+  it.each(["PT409", "40001"])("asks the user to reopen a conflicting record for %s", (code) => {
+    const logger = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(friendlyError({ code, message: "private stale-version details" })).toBe(
+      "ข้อมูลถูกแก้ไขหรือเปลี่ยนสถานะโดยผู้ใช้อื่น กรุณาเปิดรายการใหม่อีกครั้ง",
+    );
+    expect(logger).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["plan structure is not valid for the selected fiscal year", "โครงสร้างแผนและกิจกรรม"],
     ["expense category is not valid for the selected fiscal year", "หมวดรายจ่ายย่อย"],

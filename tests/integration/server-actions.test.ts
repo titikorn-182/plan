@@ -168,16 +168,19 @@ describe("project action orchestration", () => {
     );
     expect(mock.revalidate).toHaveBeenCalledWith("/projects");
   });
-  it("does not submit when another editor already changed the version", async () => {
+  it.each(["PT409", "40001"])("does not retry a project conflict returned as %s", async (code) => {
     response({ buddhist_year: 2570 });
     mock.client.rpc.mockResolvedValue({
       data: null,
-      error: { code: "40001", message: "stale version" },
+      error: { code, message: "stale version" },
     });
     const result = await saveProjectAction({}, form({ ...projectInput, intent: "submit" }));
     expect(result.success).toBe(false);
-    expect(result.message).toContain("ผู้ใช้อื่น");
+    expect(result.message).toBe(
+      "ข้อมูลถูกแก้ไขหรือเปลี่ยนสถานะโดยผู้ใช้อื่น กรุณาเปิดรายการใหม่อีกครั้ง",
+    );
     expect(mock.client.rpc).toHaveBeenCalledTimes(1);
+    expect(mock.revalidate).not.toHaveBeenCalled();
   });
   it("submits the saved entity and refreshes its workflow views", async () => {
     savedProject();
@@ -660,6 +663,49 @@ describe("budget expense action persistence", () => {
     amount: "1000",
     proposalDetails: JSON.stringify(sourceProposalDetails),
   };
+
+  it.each([
+    ["save", "PT409"],
+    ["submit", "PT409"],
+    ["save", "40001"],
+    ["submit", "40001"],
+  ])("returns a reload message without retrying budget %s after %s", async (intent, code) => {
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    if (intent === "submit") {
+      response({ name_th: "สำนักงานเลขานุการ-งานแผนและงบประมาณ" });
+    }
+    mock.client.rpc.mockResolvedValue({
+      data: null,
+      error: { code, message: "stale budget version" },
+    });
+
+    const result = await saveBudgetRequestAction(
+      {},
+      form({
+        ...budgetInput,
+        intent,
+        proposalDetails: JSON.stringify({
+          ...sourceProposalDetails,
+          missionName: "พันธกิจที่ 3 ด้านการบริการวิชาการ",
+          startsOn: "2026-10-01",
+          endsOn: "2027-09-30",
+        }),
+      }),
+    );
+
+    expect(result).toMatchObject({
+      success: false,
+      id: projectId,
+      version: 3,
+      message: "ข้อมูลถูกแก้ไขหรือเปลี่ยนสถานะโดยผู้ใช้อื่น กรุณาเปิดรายการใหม่อีกครั้ง",
+    });
+    expect(mock.client.rpc).toHaveBeenCalledExactlyOnceWith(
+      "save_budget_request_transaction",
+      expect.objectContaining({ p_id: projectId, p_version: 3, p_submit: intent === "submit" }),
+    );
+    expect(mock.revalidate).not.toHaveBeenCalled();
+  });
 
   it("accepts the form identifier without a named id input", async () => {
     response({ buddhist_year: 2570 });

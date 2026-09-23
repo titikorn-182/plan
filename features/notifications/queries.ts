@@ -10,6 +10,8 @@ import {
 import type { DataResult } from "@/features/shared/types";
 import { QUERY_LIMITS } from "@/lib/config/limits";
 import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/auth/viewer";
+import { getUnreadNotificationCount } from "@/lib/auth/unread-notifications";
 
 export async function getNotifications(
   page = 1,
@@ -17,14 +19,15 @@ export async function getNotifications(
   const supabase = await createClient();
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
-  const [notifications, unread] = await Promise.all([
+  const [notifications, viewer] = await Promise.all([
     supabase
       .from("notifications")
       .select("id,entity_type,entity_id,title,body,read_at,created_at", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(from, to),
-    supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+    getViewer(),
   ]);
+  const unread = await getUnreadNotificationCount(viewer.id);
   return result(
     {
       items: (notifications.data ?? []).map((row) => ({

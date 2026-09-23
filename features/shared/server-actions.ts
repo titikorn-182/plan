@@ -25,7 +25,7 @@ export function friendlyError(
   operation = "database_mutation",
 ): string {
   if (error.code === "42501") return "คุณไม่มีสิทธิ์ดำเนินการกับข้อมูลนี้";
-  if (error.code === "40001") {
+  if (error.code === "PT409" || error.code === "40001") {
     return "ข้อมูลถูกแก้ไขหรือเปลี่ยนสถานะโดยผู้ใช้อื่น กรุณาเปิดรายการใหม่อีกครั้ง";
   }
   if (error.code === "23505") return "มีรายการของรอบนี้อยู่แล้ว กรุณาเปิดรายการเดิมเพื่อแก้ไข";

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole, Viewer } from "@/lib/auth/types";
 import { isRoleAssignmentActive } from "@/lib/auth/role-validity";
+import { getUnreadNotificationCount } from "@/lib/auth/unread-notifications";
 
 const priority: AppRole[] = ["admin", "executive", "user", "staff"];
 
@@ -28,11 +29,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
       .from("user_roles")
       .select("role,active_from,active_until")
       .eq("profile_id", claims.sub),
-    supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", claims.sub)
-      .is("read_at", null),
+    getUnreadNotificationCount(claims.sub),
   ]);
 
   const roles = profile?.is_active
