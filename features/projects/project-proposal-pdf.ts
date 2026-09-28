@@ -183,5 +183,6 @@ export async function createProjectProposalPdf(data: ProjectProposalPdfData): Pr
 
   pdf.approvalSection();
   pdf.finish();
-  return document.save();
+  // FPDI's free parser requires classic cross-reference tables, not object streams.
+  return document.save({ useObjectStreams: false });
 }

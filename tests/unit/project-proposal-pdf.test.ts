@@ -59,6 +59,16 @@ describe("project proposal PDF", () => {
 
     expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
     expect(bytes.byteLength).toBeGreaterThan(10_000);
+    // Guard compatibility with FPDI's free parser: startxref must point to a
+    // classic xref table, and compressed object/xref streams must stay disabled.
+    const serialized = Buffer.from(bytes).toString("latin1");
+    expect(serialized).not.toMatch(/\/Type\s*\/ObjStm\b/);
+    expect(serialized).not.toMatch(/\/Type\s*\/XRef\b/);
+    const startXref = serialized.match(/startxref\s+(\d+)\s+%%EOF\s*$/);
+    expect(startXref).not.toBeNull();
+    const xrefOffset = Number(startXref?.[1]);
+    expect(serialized.slice(xrefOffset, xrefOffset + 5)).toMatch(/^xref\s/);
+    expect(serialized.slice(xrefOffset)).toContain("trailer");
     const parsed = await PDFDocument.load(bytes);
     expect(parsed.getPageCount()).toBeGreaterThanOrEqual(3);
     expect(parsed.getTitle()).toContain("PR2570-TEST");
