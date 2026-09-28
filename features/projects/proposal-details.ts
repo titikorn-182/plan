@@ -22,7 +22,13 @@ export const FACULTY_STRATEGIES = [
   "กลยุทธ์ที่ 5 : พัฒนาระบบบริหารจัดการในการทำงานเพื่อมุ่งสู่องค์กรสมรรถนะสูง",
 ] as const;
 
-export const EXPENSE_CATEGORIES = ["ค่าตอบแทน", "ค่าใช้สอย", "ค่าวัสดุ"] as const;
+export const EXPENSE_CATEGORIES = [
+  "ค่าตอบแทน",
+  "ค่าใช้สอย",
+  "ค่าวัสดุ",
+  "ค่าครุภัณฑ์",
+  "ค่าสาธารณูปโภค",
+] as const;
 export const EFFICIENCY_CHECKS = [
   { value: "completed", label: "ดำเนินโครงการเสร็จตามแผน" },
   { value: "paid_30_days", label: "เบิกจ่ายภายใน 30 วันหลังเสร็จสิ้นโครงการ" },

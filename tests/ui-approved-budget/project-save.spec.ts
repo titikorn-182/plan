@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { sourceA } from "./fixtures";
+import { parseProjectProposalDetails } from "../../features/projects/proposal-details";
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/*", async (route) => {
@@ -16,6 +17,39 @@ test.beforeEach(async ({ page }) => {
     .getByRole("textbox", { name: /^หลักการและเหตุผล/ })
     .fill("เหตุผลที่กรอกเพิ่มหลังเลือกคำของบ");
 });
+
+for (const category of ["ค่าครุภัณฑ์", "ค่าสาธารณูปโภค"]) {
+  test(`selects and serializes ${category} when saving a draft`, async ({ page }, info) => {
+    const select = page.getByRole("combobox", { name: "หมวดค่าใช้จ่ายรายการที่ 1", exact: true });
+    await expect(select.locator("option")).toHaveText([
+      "ค่าตอบแทน",
+      "ค่าใช้สอย",
+      "ค่าวัสดุ",
+      "ค่าครุภัณฑ์",
+      "ค่าสาธารณูปโภค",
+    ]);
+    await select.selectOption(category);
+    await expect(select).toHaveValue(category);
+    await select.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `.impeccable/review/project-expense-${category}-${info.project.name}.png`,
+    });
+    // Only isolate category serialization here; the fixture does not fill every required field.
+    await page.locator("form").evaluate((form) => {
+      if (form instanceof HTMLFormElement) form.noValidate = true;
+    });
+    await page.getByRole("button", { name: "บันทึกฉบับร่าง" }).click();
+    await expect(
+      page.getByRole("link", { name: "เปิดฉบับร่างที่บันทึกไว้เพื่อทำงานต่อ" }),
+    ).toBeVisible();
+    const saved = await page.evaluate(() => window.approvedBudgetTest.saves[0]);
+    const parsed = parseProjectProposalDetails(saved.proposalDetails);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) throw new Error("Expected saved proposal details");
+    expect(parsed.data.expenseItems[0].category).toBe(category);
+    await expect(select).toHaveValue(category);
+  });
+}
 
 for (const failure of ["returned", "thrown"] as const) {
   test(`${failure} save failure retains the complete proposal and allows retry`, async ({

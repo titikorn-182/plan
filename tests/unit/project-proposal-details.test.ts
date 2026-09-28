@@ -152,6 +152,34 @@ describe("project proposal details", () => {
     }
   });
 
+  it.each(["ค่าครุภัณฑ์", "ค่าสาธารณูปโภค", "หมวดนำเข้าเดิม"])(
+    "preserves expense category %s through serialization and parsing",
+    (category) => {
+      const parsed = parseProjectProposalDetails(
+        JSON.stringify({
+          ...createEmptyProjectProposalDetails(),
+          expenseItems: [
+            {
+              category,
+              description: "รายละเอียดค่าใช้จ่าย",
+              rate: 500,
+              units: 2,
+              quantity: 3,
+              occurrences: 1,
+              amount: 3000,
+            },
+          ],
+        }),
+      );
+      expect(parsed.success).toBe(true);
+      if (!parsed.success) throw new Error("Expected a valid expense category");
+      expect(parsed.data.expenseItems[0].category).toBe(category);
+      expect(sumProjectExpenses(parsed.data)).toBe(3000);
+      const restored = parseProjectProposalDetails(JSON.stringify(parsed.data));
+      expect(restored).toEqual(parsed);
+    },
+  );
+
   it("reports missing submission sections with field paths", () => {
     const errors = validateProjectProposalForSubmission(createEmptyProjectProposalDetails());
     expect(errors["proposalDetails.strategies"]).toBeDefined();
@@ -207,5 +235,14 @@ describe("project proposal details", () => {
     expect(html).toContain("หน่วย");
     expect(html).toContain("จำนวนเงินรวม");
     expect(html).toContain("3,000.00");
+    for (const category of [
+      "ค่าตอบแทน",
+      "ค่าใช้สอย",
+      "ค่าวัสดุ",
+      "ค่าครุภัณฑ์",
+      "ค่าสาธารณูปโภค",
+    ]) {
+      expect(html).toMatch(new RegExp(`<option[^>]*>${category}</option>`));
+    }
   });
 });
