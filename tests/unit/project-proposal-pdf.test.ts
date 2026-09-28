@@ -1,12 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { PDFDocument } from "pdf-lib";
-import { describe, expect, it } from "vitest";
+import { PDFDocument, PDFPage } from "pdf-lib";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createProjectProposalPdf } from "@/features/projects/project-proposal-pdf";
 import { createEmptyProjectProposalDetails } from "@/features/projects/proposal-details";
 
 describe("project proposal PDF", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("creates a readable multi-section PDF with Thai proposal data", async () => {
+    const drawText = vi.spyOn(PDFPage.prototype, "drawText");
     const details = createEmptyProjectProposalDetails();
     details.characteristics = ["การจัดอบรมเชิงปฏิบัติการ/จัดประชุม/อบรม/สัมมนา"];
     details.strategies = ["กลยุทธ์ที่ 4 : บริการวิชาการเพื่อสร้างความยั่งยืน"];
@@ -59,6 +62,35 @@ describe("project proposal PDF", () => {
     const parsed = await PDFDocument.load(bytes);
     expect(parsed.getPageCount()).toBeGreaterThanOrEqual(3);
     expect(parsed.getTitle()).toContain("PR2570-TEST");
+    const headings = drawText.mock.calls.map(([text]) => text);
+    const approvalIndex = headings.indexOf("10. การอนุมัติโครงการ");
+    expect(approvalIndex).toBeGreaterThan(
+      headings.indexOf("9. หัวหน้าโครงการและผู้รับผิดชอบโครงการ"),
+    );
+    const approvalPage = drawText.mock.instances[approvalIndex];
+    const approvalCalls = drawText.mock.calls
+      .map(([text, options], index) => ({ text, options, page: drawText.mock.instances[index] }))
+      .slice(approvalIndex + 1)
+      .filter(({ text }) => !text.startsWith("ระบบบริหารแผน") && !/^\d+ \/ \d+$/.test(text));
+    expect(approvalCalls.filter(({ text }) => text === "ลงชื่อ")).toHaveLength(5);
+    expect(approvalCalls.filter(({ text }) => text === "ผู้สอบทานโครงการ")).toHaveLength(2);
+    expect(approvalCalls.map(({ text }) => text)).toEqual(
+      expect.arrayContaining([
+        "หัวหน้าโครงการ",
+        "ผู้เห็นชอบโครงการ",
+        "ผู้อนุมัติโครงการ",
+        "นักวิเคราะห์นโยบายและแผนปฏิบัติการ",
+        "หัวหน้าสำนักงานเลขานุการคณะรัฐศาสตร์",
+        "รองคณบดีคณะรัฐศาสตร์",
+        "คณบดีคณะรัฐศาสตร์ ปฏิบัติการแทน",
+        "อธิการบดีมหาวิทยาลัยอุบลราชธานี",
+      ]),
+    );
+    for (const call of approvalCalls) {
+      expect(call.page).toBe(approvalPage);
+      expect(call.options?.y).toBeGreaterThanOrEqual(54);
+      expect(call.options?.x).toBeGreaterThanOrEqual(42);
+    }
     if (process.env.WRITE_PROJECT_PDF_FIXTURE === "1") {
       const outputDirectory = resolve("tmp/pdfs");
       await mkdir(outputDirectory, { recursive: true });

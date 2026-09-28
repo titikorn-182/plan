@@ -226,7 +226,8 @@ export class ProposalPdfBuilder {
   }
 
   section(title: string) {
-    this.ensureSpace(36);
+    // Reserve the heading and at least one content row together.
+    this.ensureSpace(72);
     this.y -= 8;
     this.page.drawRectangle({
       x: MARGIN,
@@ -267,7 +268,7 @@ export class ProposalPdfBuilder {
   }
 
   labeledParagraph(label: string, value: string) {
-    this.ensureSpace(26);
+    this.ensureSpace(32);
     this.page.drawText(label, {
       x: MARGIN,
       y: this.y,
@@ -336,7 +337,7 @@ export class ProposalPdfBuilder {
       });
       this.y -= rowHeight;
     }
-    this.y -= 3;
+    this.y -= 14;
   }
 
   bulletList(items: string[]) {
@@ -461,7 +462,7 @@ export class ProposalPdfBuilder {
         }
       }
     });
-    this.y -= 5;
+    this.y -= 14;
   }
 
   amountSummary(label: string, amount: number) {
@@ -483,6 +484,71 @@ export class ProposalPdfBuilder {
       color: ORANGE,
     });
     this.y -= 25;
+  }
+
+  approvalSection() {
+    // Keep the heading and all five signing areas on one page.
+    const sectionHeight = 500;
+    const columnGap = 28;
+    const columnWidth = (CONTENT_WIDTH - columnGap) / 2;
+    const rightColumnX = MARGIN + columnWidth + columnGap;
+    const rowSpacing = 112;
+    const fontSize = 9.5;
+    const lineHeight = 16;
+    this.ensureSpace(sectionHeight);
+    this.section("10. การอนุมัติโครงการ");
+    const firstBaseline = this.y - 32;
+
+    const signature = (x: number, y: number, role: string, positions: readonly string[]) => {
+      const prefix = "ลงชื่อ";
+      const prefixWidth = this.regular.widthOfTextAtSize(prefix, fontSize);
+      const roleWidth = this.regular.widthOfTextAtSize(role, fontSize);
+      this.page.drawText(prefix, { x, y, font: this.regular, size: fontSize, color: INK });
+      this.page.drawLine({
+        start: { x: x + prefixWidth + 3, y: y - 1 },
+        end: { x: x + columnWidth - roleWidth - 3, y: y - 1 },
+        thickness: 0.6,
+        dashArray: [1, 2],
+        color: MUTED,
+      });
+      this.page.drawText(role, {
+        x: x + columnWidth - roleWidth,
+        y,
+        font: this.regular,
+        size: fontSize,
+        color: INK,
+      });
+      const lines = ["(.........................................................)", ...positions];
+      let baseline = y - lineHeight;
+      for (const text of lines) {
+        for (const line of wrapText(text, this.regular, fontSize, columnWidth)) {
+          this.page.drawText(line, {
+            x: x + (columnWidth - this.regular.widthOfTextAtSize(line, fontSize)) / 2,
+            y: baseline,
+            font: this.regular,
+            size: fontSize,
+            color: INK,
+          });
+          baseline -= lineHeight;
+        }
+      }
+    };
+
+    signature(rightColumnX, firstBaseline, "หัวหน้าโครงการ", []);
+    signature(MARGIN, firstBaseline - rowSpacing, "ผู้สอบทานโครงการ", [
+      "นักวิเคราะห์นโยบายและแผนปฏิบัติการ",
+    ]);
+    signature(rightColumnX, firstBaseline - rowSpacing, "ผู้สอบทานโครงการ", [
+      "หัวหน้าสำนักงานเลขานุการคณะรัฐศาสตร์",
+    ]);
+    signature(rightColumnX, firstBaseline - rowSpacing * 2, "ผู้เห็นชอบโครงการ", [
+      "รองคณบดีคณะรัฐศาสตร์",
+    ]);
+    signature(rightColumnX, firstBaseline - rowSpacing * 3, "ผู้อนุมัติโครงการ", [
+      "คณบดีคณะรัฐศาสตร์ ปฏิบัติการแทน",
+      "อธิการบดีมหาวิทยาลัยอุบลราชธานี",
+    ]);
+    this.y = firstBaseline - rowSpacing * 3 - lineHeight * 4;
   }
 
   finish() {

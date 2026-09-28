@@ -181,6 +181,7 @@ export async function createProjectProposalPdf(data: ProjectProposalPdfData): Pr
     details.responsiblePeople.map((person) => [person.name, person.position]),
   );
 
+  pdf.approvalSection();
   pdf.finish();
   return document.save();
 }
