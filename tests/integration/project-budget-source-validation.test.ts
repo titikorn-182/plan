@@ -6,6 +6,7 @@ import {
 import { createEmptyBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import { createEmptyProjectProposalDetails } from "@/features/projects/proposal-details";
 import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
+import { sourceA } from "@/tests/ui-approved-budget/fixtures";
 
 type QueryResult = {
   data: Record<string, unknown> | null;
@@ -156,6 +157,62 @@ describe("loading an approved budget into a project", () => {
 });
 
 describe("saving a project with an approved budget reference", () => {
+  it.each([
+    "20000000-0000-0000-0000-000000000001",
+    "30000000-0000-4000-8000-000000000002",
+    "30000000-0000-4000-8000-000000000003",
+  ])("saves and submits supported fiscal-year ID %s without changing it", async (yearId) => {
+    const details = {
+      ...structuredClone(sourceA.details),
+      location: "สถานที่ทดสอบ",
+      startWeek: 1,
+      endWeek: 2,
+      processIndicator: "ดำเนินการครบตามแผน",
+      outputIndicator: "ผู้เข้าร่วม 50 คน",
+      goalIndicators: [
+        {
+          goal: "เป้าหมาย",
+          longTermIndicator: "",
+          actionIndicator: "ผู้เข้าร่วม",
+          unit: "คน",
+          target: "50",
+        },
+      ],
+      actionPlan: [{ description: "กิจกรรมที่กรอกเพิ่มเติม", months: [10] }],
+    };
+    for (const intent of ["save", "submit"]) {
+      response({ ...source, fiscal_year_id: yearId });
+      successfulSave();
+      const result = await saveProjectAction(
+        {},
+        form({
+          fiscalYearId: yearId,
+          intent,
+          proposalDetails: JSON.stringify(details),
+        }),
+      );
+      expect(result.success).toBe(true);
+      expect(mock.client.rpc).toHaveBeenLastCalledWith(
+        "save_project_transaction",
+        expect.objectContaining({
+          p_fiscal_year_id: yearId,
+          p_submit: intent === "submit",
+          p_proposal_details: details,
+        }),
+      );
+    }
+  });
+
+  it.each(["", "2570", "not-a-guid"])(
+    "rejects invalid fiscal-year value %s before querying",
+    async (yearId) => {
+      const result = await saveProjectAction({}, form({ fiscalYearId: yearId }));
+      expect(result.errors?.fiscalYearId).toBeDefined();
+      expect(mock.client.from).not.toHaveBeenCalled();
+      expect(mock.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+
   it("rejects a source that is no longer accessible or approved", async () => {
     response(null);
     expect(await saveProjectAction({}, form())).toMatchObject({

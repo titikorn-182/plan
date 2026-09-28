@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { startTransition, useActionState, useMemo, useState } from "react";
+import Link from "next/link";
 import { CalendarRange, CircleDollarSign, ClipboardCheck, FileText, UserRound } from "lucide-react";
-import { saveProjectAction } from "@/features/projects/actions";
-import type { OperationState } from "@/features/shared/action-state";
+import { saveProjectForm, type ProjectSaveState } from "@/features/projects/save-project-form";
 import { FormActions, FormNotice, FormTopbar } from "@/components/ui/operation-form";
 import type { ProjectFormOptions } from "@/features/projects/types";
 import {
@@ -31,8 +31,8 @@ const SECTION_LINKS = [
 
 export function ProjectForm({ options }: { options: ProjectFormOptions }) {
   const record = options.record;
-  const initial: OperationState = { id: record?.id, version: record?.version };
-  const [state, action, pending] = useActionState(saveProjectAction, initial);
+  const initial: ProjectSaveState = { id: record?.id, version: record?.version };
+  const [state, action, pending] = useActionState(saveProjectForm, initial);
   const [organizationId, setOrganizationId] = useState(
     record?.organizationId ?? options.organizations[0]?.id ?? "",
   );
@@ -80,7 +80,8 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
       });
     },
   });
-  const editable = !record || (record.status === "proposed" && !record.pendingApproval);
+  const editable =
+    !state.submitted && (!record || (record.status === "proposed" && !record.pendingApproval));
   const totalBudget = sumProjectExpenses(details);
   const masterData = getFiscalYearMasterData(options.masterData, fiscalYearId);
   const readiness = useMemo(
@@ -141,6 +142,9 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
     <form
       action={action}
       className="budget-request-form pb-24"
+      // React resets forms after an action resolves, including validation failures.
+      // This editor must retain both controlled values and native control state.
+      onReset={(event) => event.preventDefault()}
       onChangeCapture={(event) => {
         const target = event.target;
         if (!(target instanceof HTMLSelectElement && target.name === "approvedBudgetSelection")) {
@@ -148,7 +152,13 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
         }
       }}
       onSubmit={(event) => {
-        if (source.busy) event.preventDefault();
+        event.preventDefault();
+        if (source.busy || pending || !editable) return;
+        // Capture fields and the clicked button before pending disables controls.
+        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        const data = new FormData(event.currentTarget);
+        data.set("intent", submitter instanceof HTMLButtonElement ? submitter.value : "save");
+        startTransition(() => action(data));
       }}
     >
       <input type="hidden" name="id" value={state.id ?? record?.id ?? ""} />
@@ -165,6 +175,24 @@ export function ProjectForm({ options }: { options: ProjectFormOptions }) {
             : "ข้อเสนอนี้อยู่ระหว่างอนุมัติหรือเริ่มดำเนินงานแล้ว จึงเปิดแบบอ่านอย่างเดียว"
         }
       />
+
+      {state.success === false ? (
+        <p className="mt-2 text-sm text-stone-700">
+          ข้อมูลที่กรอกยังอยู่ในหน้านี้ กรุณาตรวจสอบข้อความแจ้งเตือนก่อนดำเนินการต่อ
+          อย่าเพิ่งรีเฟรชหรือปิดหน้านี้หากยังบันทึกไม่สำเร็จ
+        </p>
+      ) : null}
+      {state.success && state.id ? (
+        <Link
+          className="mt-3 inline-block text-sm text-sky-800 underline underline-offset-4"
+          href={`/projects/${encodeURIComponent(state.id)}/edit`}
+          prefetch={false}
+        >
+          {state.submitted
+            ? "เปิดข้อเสนอโครงการที่ส่งแล้ว"
+            : "เปิดฉบับร่างที่บันทึกไว้เพื่อทำงานต่อ"}
+        </Link>
+      ) : null}
 
       <header className="mt-5 border border-stone-200 bg-white px-5 py-5 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">

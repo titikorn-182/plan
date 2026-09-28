@@ -311,6 +311,7 @@ The dominant form is rectangular and ledger-like. Navigation rows, queue records
 - **Feedback:** required fields use visible labels; server validation returns inline `FieldError` text linked through `aria-invalid` and `aria-describedby`. Form-level save/submit results use polite live regions, while blocking page failures use alerts.
 - **Action bar:** cancel stays outlined; draft/save is neutral; submit is solid operation orange. Pending actions show a spinner and disable repeat submission. Preserve the fixed responsive offsets of 206px, 72px, and 0.
 - **Project readiness:** the side panel shows exactly three checks—owner plus coordinator, valid approved budget plus disbursement target, and a valid start/end date range—with a visible `0/3` through `3/3` count and progress track.
+- **Project save recovery:** capture the clicked save/submit intent and current values before disabling controls. Failed saves retain entered values and warn against refreshing or closing unsaved work. An uncertain network response must not trigger an automatic retry. Confirmed saves expose a link to the stored proposal; confirmed submissions make the current editor read-only. This uses the existing notice, link, and disabled-field styling, with no new visual tokens or browser-persistent copies of proposal data.
 
 ### Operational workflow surfaces
 

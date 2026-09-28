@@ -8,6 +8,7 @@ export const actionControl = {
   failNext: false,
   throwNext: false,
   holdNext: false,
+  saveFailure: "none" as "none" | "returned" | "thrown",
   release: null as (() => void) | null,
 };
 
@@ -48,5 +49,18 @@ export async function saveProjectAction(
   formData: FormData,
 ): Promise<OperationState> {
   actionControl.saves.push(Object.fromEntries(formData));
-  return { ...previous, success: true, message: "บันทึกข้อมูลในชุดทดสอบแล้ว" };
+  if (actionControl.saveFailure === "thrown") throw new Error("Simulated lost response");
+  if (actionControl.saveFailure === "returned")
+    return {
+      ...previous,
+      success: false,
+      errors: { fiscalYearId: ["ข้อผิดพลาดจำลองจากเซิร์ฟเวอร์"] },
+      message: "บันทึกไม่สำเร็จในชุดทดสอบ",
+    };
+  return {
+    success: true,
+    id: previous.id ?? "93bb7a9a-40e8-4bb1-b3fd-f604146609af",
+    version: (previous.version ?? 0) + 1,
+    message: "บันทึกข้อมูลในชุดทดสอบแล้ว",
+  };
 }

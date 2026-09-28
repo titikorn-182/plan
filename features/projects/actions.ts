@@ -55,7 +55,9 @@ const projectSchema = z.object({
   version: z.coerce.number().int().positive().default(1),
   intent: z.enum(["save", "submit"]),
   organizationId: z.string().uuid("กรุณาเลือกหน่วยงาน"),
-  fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
+  // Legacy fiscal-year IDs are PostgreSQL UUIDs without an RFC version/variant.
+  // Keep validating their GUID shape; master-data lookup and the FK verify existence.
+  fiscalYearId: z.guid("กรุณาเลือกปีงบประมาณ"),
   budgetRequestId: uuidOrEmpty,
   title: z
     .string()

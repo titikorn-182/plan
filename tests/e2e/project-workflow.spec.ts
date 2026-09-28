@@ -118,11 +118,18 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.getByLabel("ผลที่คาดว่าจะได้รับ").fill("ผู้เข้าร่วมมีทักษะเพิ่มขึ้น");
     await staff.page.getByLabel("ตัวชี้วัดระดับกระบวนการ").fill("ดำเนินงานแล้วเสร็จตามแผน");
     await staff.page.getByLabel("ตัวชี้วัดระดับผลผลิต").fill("ผู้เข้าร่วมอย่างน้อย 30 คน");
+    const draftDetails = await staff.page.locator('[name="proposalDetails"]').inputValue();
     await staff.page.getByRole("button", { name: "บันทึกฉบับร่าง", exact: true }).click();
     const projectForm = staff.page.locator(".budget-request-form");
     await expect(
       projectForm.getByRole("status").filter({ hasText: "บันทึกฉบับร่าง" }),
     ).toBeVisible();
+    await staff.page.getByRole("link", { name: "เปิดฉบับร่างที่บันทึกไว้เพื่อทำงานต่อ" }).click();
+    await expect(staff.page).toHaveURL(/\/projects\/[^/]+\/edit$/);
+    await staff.page.reload();
+    // Read the saved proposal, not the original budget source or default fields.
+    await expect(staff.page.locator('[name="proposalDetails"]')).toHaveValue(draftDetails);
+    await expect(staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก")).toHaveValue(title);
     await staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก").fill(revisedTitle);
     await staff.page.getByRole("button", { name: "ส่งอนุมัติ", exact: true }).click();
     await expect(

@@ -39,3 +39,22 @@ Finish verdict: **SHIP** for the approved-budget reuse extension, using a generi
 Final build, TypeScript, and scoped lint checks passed. Verification reported 391 unit/integration/scoped database tests, two accessibility tests, and 22/22 browser checks at desktop 1440×1000 and mobile 390×844. Source authorization and RPC behavior were verified through local PGlite/integration checks.
 
 This evidence covers the component fixture and scoped implementation, not the full production shell or a live-database browser session. No push, deployment, or production migration was performed.
+
+## Draft-save reliability — 2026-09-28
+
+Preserve this visual direction. The editor now captures fields and save/submit intent before
+pending disables controls, prevents native reset, and catches uncertain transport results without
+discarding input or automatically retrying. Failed saves explain that unsaved work remains only
+in the current page. Successful saves expose a stored-record link; successful submissions lock
+the editor. Fiscal-year validation accepts the legacy PostgreSQL GUID used by year 2570 while
+retaining authenticated source checks, master-data validation and database constraints.
+
+Scoped finish review: desktop/mobile fixture screenshots retain readable Thai feedback, wrapping,
+existing fixed actions and the incumbent visual hierarchy. No new assets or tokens were introduced.
+Verification: 523 unit/integration/scoped database tests (519 in the existing suite plus 4 new
+save-result tests), 28 browser component checks, 26 UAT checks, typecheck, scoped lint and production
+build passed. Two pre-existing unrelated dirty database test files were excluded from the suite.
+The real local-database workflow was extended to reopen/reload the saved draft and compare every
+proposal detail, but was not run because Docker is unavailable. Browser fixtures mock server
+actions and do not establish production persistence. No push, deploy, production writes or
+recovery of previously unsaved staff data was performed.
