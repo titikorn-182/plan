@@ -64,9 +64,12 @@ export async function getDashboardData(): Promise<
         .not("id", "in", RETIRED_DEMO_FILTERS.organizations)
         .order("name_th"),
       supabase
-        .from("budget_request_register")
-        .select("organization_id,unit,amount")
-        .eq("buddhist_year", reportingPeriod.buddhistYear)
+        .from("budget_requests")
+        .select(
+          "organization_id,amount:requested_amount,strategyName:proposal_details->strategyName,organizations!budget_requests_organization_id_fkey!inner(name_th),fiscal_years!budget_requests_fiscal_year_id_fkey!inner(buddhist_year)",
+        )
+        .eq("fiscal_years.buddhist_year", reportingPeriod.buddhistYear)
+        .is("archived_at", null)
         .not("id", "in", RETIRED_DEMO_FILTERS.budgetRequests),
       supabase
         .from("project_register")
@@ -221,6 +224,7 @@ export async function getDashboardData(): Promise<
       id,
       code,
       unit,
+      strategyNames: [],
       requested: 0,
       approved: 0,
       progress: 0,
@@ -243,11 +247,14 @@ export async function getDashboardData(): Promise<
   };
 
   (organizations.data ?? []).forEach((row) => ensure(row.id, row.name_th, row.code));
-  (budgets.data ?? [])
-    .filter((row) => hasValues(row, ["organization_id", "unit"]))
-    .forEach((row) => {
-      ensure(row.organization_id, row.unit).requested += Number(row.amount);
-    });
+  (budgets.data ?? []).forEach((row) => {
+    const aggregate = ensure(row.organization_id, row.organizations.name_th);
+    aggregate.requested += Number(row.amount);
+    const strategyName = typeof row.strategyName === "string" ? row.strategyName.trim() : "";
+    if (strategyName && !aggregate.strategyNames.includes(strategyName)) {
+      aggregate.strategyNames.push(strategyName);
+    }
+  });
   (projects.data ?? [])
     .filter((row) => hasValues(row, ["organization_id", "unit"]))
     .forEach((row) => {
@@ -313,6 +320,9 @@ export async function getDashboardData(): Promise<
         id: row.id,
         code: row.code,
         unit: row.unit,
+        strategyNames: row.strategyNames.sort((a, b) =>
+          a.localeCompare(b, "th", { numeric: true }),
+        ),
         requested: row.requested,
         approved: row.approved,
         progress,

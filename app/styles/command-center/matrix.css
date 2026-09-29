@@ -128,10 +128,13 @@
 }
 .cc-unit-cell em {
   margin-top: 2px;
-  color: var(--orange-600);
-  font-size: 8px;
+  color: #ad3507;
+  font-size: 10px;
   font-style: normal;
   font-weight: 700;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
 }
 
 .cc-metric-cell > div,

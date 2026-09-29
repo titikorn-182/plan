@@ -74,6 +74,7 @@ describe("dashboard and budget totals", () => {
   });
   it("weights progress by project count and spending by approved amount", () => {
     const base: CommandCenterRow = {
+      strategyNames: [],
       id: "test",
       code: "TEST",
       unit: "หน่วยงานทดสอบ",

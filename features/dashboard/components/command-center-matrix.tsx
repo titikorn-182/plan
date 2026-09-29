@@ -9,6 +9,14 @@ import type { CommandCenterRow } from "@/features/dashboard/types";
 import { formatMillionBaht, formatPercent, formatThaiInteger } from "@/features/shared/formatters";
 import { ProgressMetric, StatusDot } from "@/features/dashboard/components/status-metric";
 
+function StrategyNames({ names }: { names: string[] }) {
+  return names.length > 0 ? (
+    names.map((name) => <em key={name}>{name}</em>)
+  ) : (
+    <em>ยังไม่ระบุกลยุทธ์</em>
+  );
+}
+
 export function CommandCenterMatrix({
   allRows,
   onClearFilters,
@@ -78,7 +86,7 @@ export function CommandCenterMatrix({
                   <span>
                     {row.code} · {formatThaiInteger(row.projectCount)} โครงการ
                   </span>
-                  <em>ยุทธศาสตร์ที่ {formatThaiInteger((index % 4) + 1)}</em>
+                  <StrategyNames names={row.strategyNames} />
                 </td>
                 <td>
                   <strong>{formatMillionBaht(row.requested)}</strong>
@@ -197,6 +205,7 @@ export function CommandCenterMatrix({
               <small>
                 {row.code} · {row.projectCount} โครงการ
               </small>
+              <StrategyNames names={row.strategyNames} />
             </span>
             <StatusDot status={row.status} />
             <span className="cc-mobile-metrics">

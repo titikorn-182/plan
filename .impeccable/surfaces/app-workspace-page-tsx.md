@@ -34,3 +34,19 @@ FORM: Executive Evidence Ledger; code-led dense command desk; vivid orange/white
 VERIFICATION: current implementation is code/build verified; in-app-browser visual capture and reference-fidelity review were unavailable and remain pending; existing `.impeccable/review` rasters predate this implementation and must not be cited as current visual evidence
 
 FINISH: documentation is reconciled to the current implementation; fresh desktop and mobile visual evidence is still required before claiming visual fidelity or screenshot review
+
+## Budget strategy labels — 2026-09-29
+
+The organization matrix now displays the full `proposal_details.strategyName` values from
+accessible, non-archived budget requests in the selected fiscal year, instead of cycling
+strategy numbers by row position. Preserve all distinct selected names per organization;
+trim whitespace, sort consistently, and show “ยังไม่ระบุกลยุทธ์” for missing values.
+The authenticated query retains the register's organization/year joins, requested amounts,
+and retired-demo exclusions, without extra per-organization queries or database migrations.
+
+Desktop and mobile strategy labels wrap in the incumbent orange/white ledger, using the
+existing deep orange and 10px text. Scoped render verification uses synthetic data and
+current matrix/responsive CSS: `.impeccable/review/dashboard-strategies-desktop.png` and
+`.impeccable/review/dashboard-strategies-mobile.png`. Both show strategy 5, multiple strategies,
+and missing metadata without clipped labels. This is component-level evidence, not a
+production-session or full-shell verification. No raster assets are shipped by this change.

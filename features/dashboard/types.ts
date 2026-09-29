@@ -67,6 +67,7 @@ export type CommandCenterRow = {
   id: string;
   code: string;
   unit: string;
+  strategyNames: string[];
   requested: number;
   approved: number;
   progress: number;
