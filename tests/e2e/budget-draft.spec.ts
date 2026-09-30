@@ -222,7 +222,10 @@ test("budget draft retains full workbook data through validation, repeated saves
     // Open the real register link: edit must hydrate the same complete workbook,
     // not the old reduced form, and must update the original request in place.
     await page.setViewportSize({ width: 1440, height: 1000 });
-    await requestRow.locator(`a[href="/budget-requests/${savedId}/edit"]`).click();
+    // The status menu and the existing shortcut both lead to the editor.
+    // Exercise the new menu explicitly instead of matching both links by URL.
+    await requestRow.locator("summary").click();
+    await requestRow.getByRole("link", { name: "แก้ไข", exact: true }).click();
     await expect(page).toHaveURL(`/budget-requests/${savedId}/edit`);
     await expect(
       form.getByRole("heading", { name: "แก้ไขคำของบประมาณจากข้อมูลโครงการ", exact: true }),
