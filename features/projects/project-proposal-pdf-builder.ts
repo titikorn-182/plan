@@ -465,16 +465,22 @@ export class ProposalPdfBuilder {
     this.y -= 14;
   }
 
-  amountSummary(label: string, amount: number) {
-    this.ensureSpace(36);
+  amountSummary(label: string, amount: number, note?: string) {
     const value = `${formatMoney(amount)} บาท`;
     const valueWidth = this.bold.widthOfTextAtSize(value, 11);
-    this.page.drawText(label, {
-      x: MARGIN,
-      y: this.y - 3,
-      size: 10,
-      font: this.bold,
-      color: INK,
+    const labelLines = wrapText(label, this.bold, 10, CONTENT_WIDTH - valueWidth - 16);
+    const summaryHeight = Math.max(25, labelLines.length * 15 + 8);
+    const noteHeight = note ? wrapText(note, this.regular, 9, CONTENT_WIDTH).length * 14 + 3 : 0;
+    // Keep the total, its Thai wording and the note together across page breaks.
+    this.ensureSpace(summaryHeight + noteHeight);
+    labelLines.forEach((line, index) => {
+      this.page.drawText(line, {
+        x: MARGIN,
+        y: this.y - 3 - index * 15,
+        size: 10,
+        font: this.bold,
+        color: INK,
+      });
     });
     this.page.drawText(value, {
       x: A4_WIDTH - MARGIN - valueWidth,
@@ -483,7 +489,8 @@ export class ProposalPdfBuilder {
       font: this.bold,
       color: ORANGE,
     });
-    this.y -= 25;
+    this.y -= summaryHeight;
+    if (note) this.paragraph(note, { size: 9, lineHeight: 14 });
   }
 
   approvalSection() {

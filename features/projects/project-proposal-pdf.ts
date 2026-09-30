@@ -15,6 +15,7 @@ import {
   formatThaiDate,
 } from "@/features/projects/project-proposal-pdf-builder";
 import type { ProjectProposalPdfData } from "@/features/projects/project-proposal-pdf-data";
+import { formatThaiBahtText } from "@/features/shared/thai-baht-text";
 
 export type { ProjectProposalPdfData } from "@/features/projects/project-proposal-pdf-data";
 
@@ -165,7 +166,12 @@ export async function createProjectProposalPdf(data: ProjectProposalPdfData): Pr
       formatMoney(item.amount),
     ]),
   );
-  pdf.amountSummary("รวมรายละเอียดค่าใช้จ่าย", sumProjectExpenses(details));
+  const expenseTotal = sumProjectExpenses(details);
+  pdf.amountSummary(
+    `จำนวนเงินรวมทั้งสิ้น (${formatThaiBahtText(expenseTotal)})`,
+    expenseTotal,
+    "หมายเหตุ รายการค่าใช้จ่ายขออนุมัติถัวจ่ายทุกรายการภายใต้กรอบวงเงินรวมทั้งหมดที่ได้รับอนุมัติของโครงการ",
+  );
 
   pdf.section("9. หัวหน้าโครงการและผู้รับผิดชอบโครงการ");
   pdf.keyValueRows([
