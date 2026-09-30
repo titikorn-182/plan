@@ -23,6 +23,8 @@ function requestFixture(overrides: Partial<BudgetRequest> = {}): BudgetRequest {
     status: "รอตรวจสอบ",
     updated: "21 ก.ย. 2569",
     editable: true,
+    deletable: false,
+    version: 1,
     ...overrides,
   };
 }

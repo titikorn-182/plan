@@ -5,6 +5,7 @@ import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-request
 import { parseBudgetExpenseBreakdown } from "@/features/budget-requests/expense-categories";
 import { parseBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import { getBudgetSubActivityNames } from "@/features/budget-requests/sub-activities";
+import { isBudgetRequestArchivable } from "@/features/budget-requests/register-actions";
 import type { DataResult } from "@/features/shared/types";
 import { expectedResultError, formatDate, hasValues, result } from "@/features/shared/query-utils";
 import {
@@ -84,6 +85,8 @@ export async function getBudgetRequests(
         status: isDocumentStatus(row.status) ? BUDGET_STATUS_LABELS[row.status] : "ฉบับร่าง",
         updated: formatDate(row.updated_at),
         editable: ["draft", "revision_required"].includes(row.status),
+        deletable: isBudgetRequestArchivable(row.status),
+        version: row.version ?? 0,
       })),
       pagination,
     },

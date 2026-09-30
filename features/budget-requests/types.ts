@@ -35,6 +35,8 @@ export type BudgetRequest = {
   status: BudgetStatus;
   updated: string;
   editable: boolean;
+  deletable: boolean;
+  version: number;
 };
 
 export type BudgetFormOptions = {

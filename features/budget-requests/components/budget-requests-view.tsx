@@ -5,19 +5,12 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight, ChevronDown, Download, FilePlus2, Search } from "lucide-react";
 import type { BudgetRequest } from "@/features/budget-requests/types";
 import type { PaginationMeta } from "@/features/shared/pagination";
-import { RegisterSection, StatusPill } from "@/components/ui/module-primitives";
+import { RegisterSection } from "@/components/ui/module-primitives";
+import { BudgetRequestRowActions } from "@/features/budget-requests/components/budget-request-row-actions";
+import { BudgetRequestDeleteDialog } from "@/features/budget-requests/components/budget-request-delete-dialog";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatThaiInteger, formatThaiMoney, formatThaiNumber } from "@/features/shared/formatters";
 import { downloadCsv } from "@/lib/browser/download";
-
-const statusTone: Record<BudgetRequest["status"], "orange" | "red" | "green" | "gray"> = {
-  ฉบับร่าง: "gray",
-  รอตรวจสอบ: "orange",
-  รออนุมัติ: "orange",
-  อนุมัติแล้ว: "green",
-  ส่งกลับแก้ไข: "red",
-  ยกเลิก: "gray",
-};
 
 function csvCell(value: string | number) {
   return `"${String(value).replaceAll('"', '""')}"`;
@@ -26,12 +19,16 @@ function csvCell(value: string | number) {
 export function BudgetRequestsView({
   requests,
   pagination,
+  canDelete = false,
 }: {
   requests: BudgetRequest[];
   pagination: PaginationMeta;
+  canDelete?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ทั้งหมด");
+  const [deleteRequest, setDeleteRequest] = useState<BudgetRequest | null>(null);
+  const [notice, setNotice] = useState("");
 
   const rows = useMemo(
     () =>
@@ -104,6 +101,24 @@ export function BudgetRequestsView({
 
   return (
     <div className="space-y-5">
+      <div role="status" aria-live="polite">
+        {notice && (
+          <p className="border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            {notice}
+          </p>
+        )}
+      </div>
+      {deleteRequest && (
+        <BudgetRequestDeleteDialog
+          key={deleteRequest.uuid}
+          request={deleteRequest}
+          onClose={() => setDeleteRequest(null)}
+          onDeleted={(message) => {
+            setDeleteRequest(null);
+            setNotice(message);
+          }}
+        />
+      )}
       <section className="grid border border-stone-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
         {summary.map(([label, value, note], index) => (
           <article
@@ -245,7 +260,11 @@ export function BudgetRequestsView({
                     {formatThaiMoney(item.amount)}
                   </td>
                   <td className="px-3 py-3">
-                    <StatusPill tone={statusTone[item.status]}>{item.status}</StatusPill>
+                    <BudgetRequestRowActions
+                      request={item}
+                      canDelete={canDelete}
+                      onDelete={setDeleteRequest}
+                    />
                   </td>
                   <td className="px-3 py-3 text-stone-600">{item.updated}</td>
                   <td className="px-3 py-3">
