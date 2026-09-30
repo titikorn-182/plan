@@ -1,5 +1,63 @@
 import { expect, test } from "@playwright/test";
 
+test("staff requests revision with reason; admin reviews it in a protected dialog", async ({
+  page,
+}, testInfo) => {
+  for (const review of [false, true]) {
+    await page.goto(review ? "/?projects&review" : "/?projects&staff");
+    await page.getByLabel("จัดการโครงการ PR-TEST-003").click();
+    await page
+      .getByRole("button", { name: review ? "ส่งกลับแก้ไข" : "ขอแก้ไขหลังอนุมัติ", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("button", { name: "ยกเลิก" })).toBeFocused();
+    await dialog
+      .getByRole("button", { name: review ? "ยืนยันส่งกลับแก้ไข" : "ส่งคำขอแก้ไข", exact: true })
+      .click();
+    await expect(page.getByRole("alert")).toContainText("กรุณาระบุเหตุผล");
+    expect(await page.evaluate(() => window.revisionCalls ?? [])).toHaveLength(0);
+    await dialog
+      .getByRole("textbox")
+      .fill(
+        review
+          ? "อนุญาตให้ปรับรายละเอียดตามคำขอ กรุณาส่งอนุมัติใหม่"
+          : "ขอปรับรายละเอียดกิจกรรมและวันที่ดำเนินการ",
+      );
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await page.screenshot({
+      path: `.impeccable/review/project-revision-${review ? "admin" : "staff"}-${testInfo.project.name}.png`,
+      fullPage: true,
+    });
+    await dialog
+      .getByRole("button", { name: review ? "ยืนยันส่งกลับแก้ไข" : "ส่งคำขอแก้ไข", exact: true })
+      .click();
+    await expect(dialog.getByRole("button", { name: "กำลังบันทึก…" })).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText(
+      review ? "ส่งกลับแก้ไขแล้ว" : "ส่งคำขอแก้ไขแล้ว",
+    );
+    expect(await page.evaluate(() => window.revisionCalls)).toHaveLength(1);
+  }
+});
+
+test("pending owner cannot self-return; network failure does not discard reason or retry", async ({
+  page,
+}) => {
+  await page.goto("/?projects&staff&review");
+  await page.getByLabel("จัดการโครงการ PR-TEST-003").click();
+  await expect(page.getByRole("button", { name: "ส่งกลับแก้ไข", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "ดูผลคำขอแก้ไข" }).click();
+  await expect(page.getByRole("dialog")).toContainText("รอผู้ดูแลระบบพิจารณา");
+  await page.keyboard.press("Escape");
+  await page.goto("/?projects&staff&network");
+  await page.getByLabel("จัดการโครงการ PR-TEST-003").click();
+  await page.getByRole("button", { name: "ขอแก้ไขหลังอนุมัติ" }).click();
+  await page.getByRole("textbox").fill("เหตุผลที่ต้องเก็บไว้เมื่อเครือข่ายขัดข้อง");
+  await page.getByRole("button", { name: "ส่งคำขอแก้ไข", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("ยังยืนยันผลไม่ได้");
+  await expect(page.getByRole("textbox")).toHaveValue("เหตุผลที่ต้องเก็บไว้เมื่อเครือข่ายขัดข้อง");
+  expect(await page.evaluate(() => window.revisionCalls)).toHaveLength(1);
+});
+
 test("project actions follow health and preserve selection; confirm/cancel are safe", async ({
   page,
 }, testInfo) => {

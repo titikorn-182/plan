@@ -11,6 +11,7 @@ import { ProjectFilterToggle } from "@/features/projects/components/project-filt
 import { ProjectInspector } from "@/features/projects/components/project-inspector";
 import { ProjectsTable } from "@/features/projects/components/projects-table";
 import { ProjectDeleteDialog } from "@/features/projects/components/project-delete-dialog";
+import { ProjectRevisionDialog } from "@/features/projects/components/project-revision-dialog";
 import {
   ProjectHealthBudgetSummary,
   ProjectsSummary,
@@ -39,6 +40,7 @@ export function ProjectsView({
   const [showFilters, setShowFilters] = useState(hasProjectFilters(filters));
   const [deleteProject, setDeleteProject] = useState<ProjectRow | null>(null);
   const [notice, setNotice] = useState("");
+  const [revisionProject, setRevisionProject] = useState<ProjectRow | null>(null);
   const feedback = (
     <div role="status" aria-live="polite">
       {notice && (
@@ -99,6 +101,17 @@ export function ProjectsView({
   return (
     <div className="space-y-5">
       {feedback}
+      {revisionProject && (
+        <ProjectRevisionDialog
+          key={revisionProject.uuid}
+          project={revisionProject}
+          onClose={() => setRevisionProject(null)}
+          onSaved={(message) => {
+            setRevisionProject(null);
+            setNotice(message);
+          }}
+        />
+      )}
       {deleteProject && (
         <ProjectDeleteDialog
           key={deleteProject.uuid}
@@ -123,6 +136,7 @@ export function ProjectsView({
             selectedId={selectedId}
             onSelect={setSelectedId}
             onDelete={setDeleteProject}
+            onRevision={setRevisionProject}
           />
           <PaginationNav
             basePath="/projects"

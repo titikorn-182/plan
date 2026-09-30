@@ -11,11 +11,13 @@ export function ProjectsTable({
   selectedId,
   onSelect,
   onDelete,
+  onRevision,
 }: {
   projects: ProjectRow[];
   selectedId: string;
   onSelect: (projectId: string) => void;
   onDelete: (project: ProjectRow) => void;
+  onRevision: (project: ProjectRow) => void;
 }) {
   return (
     <div className="overflow-x-auto" role="region" aria-label="ตารางทะเบียนโครงการ" tabIndex={0}>
@@ -44,6 +46,16 @@ export function ProjectsTable({
                 <span className="mt-1 block text-[11px] text-stone-500">
                   {project.id} · {project.owner}
                 </span>
+                {project.revision?.status === "pending" && (
+                  <span className="mt-1 block text-[11px] font-semibold text-[#ad3507]">
+                    ขอแก้ไข · รอผู้ดูแลระบบพิจารณา
+                  </span>
+                )}
+                {project.revision?.status === "returned" && project.status === "proposed" && (
+                  <span className="mt-1 block text-[11px] font-semibold text-[#ad3507]">
+                    รอบแก้ไขหลังอนุมัติ
+                  </span>
+                )}
               </td>
               <td className="px-3 py-3">{project.unit}</td>
               <td className="px-3 py-3 text-right font-medium tabular-nums">
@@ -60,7 +72,7 @@ export function ProjectsTable({
                 <StatusPill tone={projectHealthTone(project.health)}>{project.health}</StatusPill>
               </td>
               <td className="px-3 py-3 align-top">
-                <ProjectRowActions project={project} onDelete={onDelete} />
+                <ProjectRowActions project={project} onDelete={onDelete} onRevision={onRevision} />
               </td>
               <td className="px-3 py-3 whitespace-nowrap">{project.due}</td>
               <td className="px-3 py-3 text-center">

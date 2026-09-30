@@ -5,6 +5,7 @@ import type { ProjectRow } from "@/features/projects/types";
 
 export function ProjectFixture() {
   const staff = new URLSearchParams(location.search).has("staff");
+  const reviewing = new URLSearchParams(location.search).has("review");
   const proposal: ProjectRow = {
     uuid: "00000000-0000-4000-8000-000000000001",
     id: "PR-TEST-001",
@@ -36,6 +37,16 @@ export function ProjectFixture() {
       uuid: "00000000-0000-4000-8000-000000000003",
       id: "PR-TEST-003",
       title: "โครงการที่อนุมัติแล้ว (ข้อมูลทดสอบ)",
+      canRequestRevision: staff && !reviewing,
+      canReviewRevision: !staff && reviewing,
+      revision: reviewing
+        ? {
+            id: "00000000-0000-4000-8000-000000000004",
+            status: "pending",
+            reason: "ขอปรับรายละเอียดกิจกรรมและวันดำเนินการ (ข้อมูลทดสอบ)",
+            decisionReason: null,
+          }
+        : undefined,
       status: "active",
       editable: false,
       deletable: false,

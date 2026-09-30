@@ -2123,6 +2123,30 @@ export type Database = {
         }
         Returns: Json
       }
+      decide_project_revision: {
+        Args: {
+          p_project_id: string
+          p_reason: string
+          p_request_id: string
+          p_return: boolean
+          p_version: number
+        }
+        Returns: string
+      }
+      get_project_revision_requests: {
+        Args: { p_project_ids: string[] }
+        Returns: {
+          decision_reason: string
+          project_id: string
+          reason: string
+          request_id: string
+          status: string
+        }[]
+      }
+      request_project_revision: {
+        Args: { p_project_id: string; p_reason: string; p_version: number }
+        Returns: string
+      }
       review_evidence: {
         Args: {
           p_attachment_id: string

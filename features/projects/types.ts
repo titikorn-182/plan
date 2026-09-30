@@ -27,6 +27,14 @@ export type ProjectRow = {
   editable: boolean;
   version?: number;
   deletable?: boolean;
+  canRequestRevision?: boolean;
+  canReviewRevision?: boolean;
+  revision?: {
+    id: string;
+    status: "pending" | "returned" | "declined";
+    reason: string;
+    decisionReason: string | null;
+  };
 };
 
 export type ProjectFormRecord = {

@@ -3,7 +3,26 @@ import type { OperationState } from "@/features/shared/action-state";
 declare global {
   interface Window {
     archiveCalls: { id: string; version: number }[];
+    revisionCalls: { projectId: string; operation: string; reason: string }[];
   }
+}
+
+export async function projectRevisionAction(input: {
+  projectId: string;
+  operation: string;
+  reason: string;
+}): Promise<OperationState> {
+  window.revisionCalls ??= [];
+  window.revisionCalls.push(input);
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (new URLSearchParams(location.search).has("network")) throw new Error("test network failure");
+  return {
+    success: true,
+    message:
+      input.operation === "request"
+        ? "ส่งคำขอแก้ไขแล้ว รอผู้ดูแลระบบพิจารณา"
+        : "ส่งกลับแก้ไขแล้ว เจ้าหน้าที่สามารถแก้ไขและส่งอนุมัติใหม่ได้",
+  };
 }
 
 export async function archiveBudgetRequestAction(input: {

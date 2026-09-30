@@ -84,6 +84,11 @@ export async function getProjects(
     ? await supabase.from("projects").select("id,version,owner_id").in("id", ids)
     : { data: [], error: null };
   const records = new Map((metadata.data ?? []).map((row) => [row.id, row]));
+  const revisions =
+    ids.length && (viewer.roles.includes("admin") || viewer.roles.includes("staff"))
+      ? await supabase.rpc("get_project_revision_requests", { p_project_ids: ids })
+      : { data: [], error: null };
+  const revisionMap = new Map((revisions.data ?? []).map((row) => [row.project_id, row]));
   return result(
     {
       items: (data ?? [])
@@ -104,34 +109,57 @@ export async function getProjects(
             return isProjectStatus(row.status);
           },
         )
-        .map((row) => ({
-          uuid: row.id,
-          id: row.code,
-          title: row.title,
-          unit: row.unit,
-          budget: Number(row.budget),
-          spent: Number(row.spent),
-          progress: Number(row.progress),
-          health: PROJECT_HEALTH_LABELS[row.health] ?? "เฝ้าระวัง",
-          owner: row.owner,
-          due: formatDate(row.due),
-          status: row.status,
-          editable:
-            row.status === "proposed" &&
-            !row.has_pending_approval &&
-            (viewer.roles.includes("admin") ||
-              viewer.roles.includes("user") ||
-              (viewer.roles.includes("staff") && records.get(row.id)?.owner_id === viewer.id)),
-          version: records.get(row.id)?.version ?? 0,
-          deletable:
-            viewer.roles.includes("admin") &&
-            row.status === "proposed" &&
-            !row.has_pending_approval &&
-            Number(row.spent) === 0,
-        })),
+        .map((row) => {
+          const revision = revisionMap.get(row.id);
+          const revisionSummary: ProjectRow["revision"] =
+            revision &&
+            (revision.status === "pending" ||
+              revision.status === "returned" ||
+              revision.status === "declined")
+              ? {
+                  id: revision.request_id,
+                  status: revision.status,
+                  reason: revision.reason,
+                  decisionReason: revision.decision_reason,
+                }
+              : undefined;
+          return {
+            uuid: row.id,
+            id: row.code,
+            title: row.title,
+            unit: row.unit,
+            budget: Number(row.budget),
+            spent: Number(row.spent),
+            progress: Number(row.progress),
+            health: PROJECT_HEALTH_LABELS[row.health] ?? "เฝ้าระวัง",
+            owner: row.owner,
+            due: formatDate(row.due),
+            status: row.status,
+            revision: revisionSummary,
+            canRequestRevision:
+              row.status === "active" &&
+              !row.has_pending_approval &&
+              viewer.roles.includes("staff") &&
+              records.get(row.id)?.owner_id === viewer.id &&
+              revision?.status !== "pending",
+            canReviewRevision: viewer.roles.includes("admin") && revision?.status === "pending",
+            editable:
+              row.status === "proposed" &&
+              !row.has_pending_approval &&
+              (viewer.roles.includes("admin") ||
+                viewer.roles.includes("user") ||
+                (viewer.roles.includes("staff") && records.get(row.id)?.owner_id === viewer.id)),
+            version: records.get(row.id)?.version ?? 0,
+            deletable:
+              viewer.roles.includes("admin") &&
+              row.status === "proposed" &&
+              !row.has_pending_approval &&
+              Number(row.spent) === 0,
+          };
+        }),
       pagination: createPagination(count, page, pageSize),
     },
-    error ?? metadata.error,
+    error ?? metadata.error ?? revisions.error,
     "projects.list",
   );
 }
