@@ -29,7 +29,23 @@ type QueryResponse = {
 };
 const mock = vi.hoisted(() => {
   const responses: QueryResponse[] = [];
-  const state = { userId: "10000000-0000-4000-8000-000000000004" as string | null };
+  const state = {
+    userId: "10000000-0000-4000-8000-000000000004" as string | null,
+    roles: ["staff"],
+    budgetStatus: "draft",
+  };
+  const currentBudget = vi.fn(async () => ({
+    data: {
+      status: state.budgetStatus,
+      owner_id: state.userId,
+      locked_at: null,
+      organization_id: "20000000-0000-4000-8000-000000000001",
+      fiscal_year_id: "30000000-0000-4000-8000-000000000001",
+      budget_cycle_id: "40000000-0000-4000-8000-000000000001",
+      requested_amount: 1000,
+    },
+    error: null,
+  }));
   const terminal = vi.fn(async () => {
     const result = responses.shift();
     if (!result) throw new Error("Unexpected database call: add an explicit test response");
@@ -38,6 +54,7 @@ const mock = vi.hoisted(() => {
   const chain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    is: vi.fn(() => ({ maybeSingle: currentBudget })),
     in: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
@@ -57,6 +74,9 @@ const mock = vi.hoisted(() => {
   return { responses, state, chain, client, revalidate: vi.fn() };
 });
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => mock.client }));
+vi.mock("@/lib/auth/viewer", () => ({
+  getViewer: async () => ({ id: mock.state.userId, roles: mock.state.roles }),
+}));
 vi.mock("next/cache", () => ({ revalidatePath: mock.revalidate }));
 
 const projectId = "50000000-0000-4000-8000-000000000001";
@@ -129,8 +149,76 @@ function savedProject() {
 beforeEach(() => {
   vi.clearAllMocks();
   mock.responses.length = 0;
+  mock.state.roles = ["staff"];
+  mock.state.budgetStatus = "draft";
   mock.state.userId = "10000000-0000-4000-8000-000000000004";
   mock.client.rpc.mockResolvedValue({ data: null, error: null });
+});
+
+describe("approved budget amendment action", () => {
+  const input = {
+    ...projectInput,
+    amount: "1000",
+    budgetCycleId: "40000000-0000-4000-8000-000000000001",
+    rationale: "เหตุผลของคำขอเดิม",
+    proposalDetails: JSON.stringify(sourceProposalDetails),
+    approvedAmount: "1500.25",
+    amendmentReason: "เพิ่มวงเงินตามมติ",
+  };
+  it.each([
+    ["admin", "draft"],
+    ["admin", "revision_required"],
+    ["staff", "approved"],
+    ["staff", "submitted"],
+    ["user", "draft"],
+    ["executive", "approved"],
+  ])("blocks %s editing %s through a direct action call", async (role, status) => {
+    mock.state.roles = [role];
+    mock.state.budgetStatus = status;
+    const result = await saveBudgetRequestAction({}, form(input));
+    expect(result.success).toBe(false);
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
+  it("uses the approved-only RPC, preserves the original requested amount and returns a fresh version", async () => {
+    mock.state.roles = ["admin"];
+    mock.state.budgetStatus = "approved";
+    response({ buddhist_year: 2570 });
+    response({ fiscal_year_id: yearId });
+    mock.client.rpc.mockResolvedValue({
+      data: { id: projectId, code: "TEST-BR1", version: 4 },
+      error: null,
+    });
+    expect(await saveBudgetRequestAction({}, form(input))).toMatchObject({
+      success: true,
+      version: 4,
+    });
+    expect(mock.client.rpc).toHaveBeenCalledExactlyOnceWith(
+      "amend_approved_budget_request",
+      expect.objectContaining({
+        p_id: projectId,
+        p_version: 3,
+        p_approved_amount: 1500.25,
+        p_reason: "เพิ่มวงเงินตามมติ",
+      }),
+    );
+    expect(mock.client.rpc).not.toHaveBeenCalledWith(
+      "amend_approved_budget_request",
+      expect.objectContaining({ p_requested_amount: expect.anything() }),
+    );
+  });
+  it.each([
+    { approvedAmount: "" },
+    { approvedAmount: "-1" },
+    { approvedAmount: "1.001" },
+    { amendmentReason: " " },
+    { amount: "900" },
+    { organizationId: "20000000-0000-4000-8000-000000000002" },
+  ])("rejects invalid or protected amendments %j", async (changes) => {
+    mock.state.roles = ["admin"];
+    mock.state.budgetStatus = "approved";
+    expect((await saveBudgetRequestAction({}, form({ ...input, ...changes }))).success).toBe(false);
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
 });
 
 describe("project action orchestration", () => {
@@ -243,7 +331,7 @@ describe("budget, approval, and spending actions", () => {
       expect(result.success).toBe(false);
       expect(result.errors?.["proposalDetails.outputCode"]).toEqual(expect.any(Array));
       expect(result.errors?.["proposalDetails.outputName"]).toEqual(expect.any(Array));
-      expect(mock.client.from).not.toHaveBeenCalled();
+      expect(mock.client.from).toHaveBeenCalledExactlyOnceWith("budget_requests");
       expect(mock.client.rpc).not.toHaveBeenCalled();
     },
   );

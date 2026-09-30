@@ -76,11 +76,13 @@ export function FormActions({
   pending,
   saveLabel = "บันทึกฉบับร่าง",
   submitLabel = "ส่งอนุมัติ",
+  showSubmit = true,
   backHref,
 }: {
   pending: boolean;
   saveLabel?: string;
   submitLabel?: string;
+  showSubmit?: boolean;
   backHref: string;
 }) {
   return (
@@ -103,16 +105,18 @@ export function FormActions({
           {pending ? <LoaderCircle className="animate-spin" size={16} /> : <Save size={16} />}
           {saveLabel}
         </button>
-        <button
-          className="inline-flex min-h-10 items-center gap-2 bg-[#cf430c] px-5 py-2 text-sm font-semibold text-white hover:bg-[#ad3507] disabled:cursor-wait disabled:opacity-60"
-          type="submit"
-          name="intent"
-          value="submit"
-          disabled={pending}
-        >
-          {pending ? <LoaderCircle className="animate-spin" size={16} /> : <Send size={16} />}
-          {submitLabel}
-        </button>
+        {showSubmit && (
+          <button
+            className="inline-flex min-h-10 items-center gap-2 bg-[#cf430c] px-5 py-2 text-sm font-semibold text-white hover:bg-[#ad3507] disabled:cursor-wait disabled:opacity-60"
+            type="submit"
+            name="intent"
+            value="submit"
+            disabled={pending}
+          >
+            {pending ? <LoaderCircle className="animate-spin" size={16} /> : <Send size={16} />}
+            {submitLabel}
+          </button>
+        )}
       </div>
     </div>
   );

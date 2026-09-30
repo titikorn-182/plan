@@ -1,7 +1,9 @@
 import { createRoot } from "react-dom/client";
+import { ApprovedEditFixture } from "./edit-fixture";
 import { BudgetRequestsView } from "@/features/budget-requests/components/budget-requests-view";
 import type { BudgetRequest } from "@/features/budget-requests/types";
 import { createPagination } from "@/features/shared/pagination";
+import { budgetRequestEditDeniedReason } from "@/features/budget-requests/edit-policy";
 import "@openfonts/sarabun_all/index.css";
 import "@/app/globals.css";
 
@@ -31,13 +33,27 @@ const requests: BudgetRequest[] = [
     deletable: false,
   },
 ];
+const staff = new URLSearchParams(location.search).has("staff");
+const viewer = { id: "owner", roles: [staff ? "staff" : "admin"] };
+const authorizedRequests = requests.map((item, index) => {
+  const denied = budgetRequestEditDeniedReason(viewer, {
+    status: index === 0 ? "draft" : "approved",
+    ownerId: "owner",
+    lockedAt: null,
+  });
+  return { ...item, editable: denied === null, editDeniedReason: denied ?? undefined };
+});
 window.archiveCalls = [];
 createRoot(document.getElementById("root")!).render(
   <main className="min-w-0 p-4" style={{ fontFamily: "Sarabun, sans-serif" }}>
-    <BudgetRequestsView
-      requests={requests}
-      pagination={createPagination(2, 1, 20)}
-      canDelete={!new URLSearchParams(location.search).has("staff")}
-    />
+    {new URLSearchParams(location.search).has("edit") ? (
+      <ApprovedEditFixture />
+    ) : (
+      <BudgetRequestsView
+        requests={authorizedRequests}
+        pagination={createPagination(2, 1, 20)}
+        canDelete={!staff}
+      />
+    )}
   </main>,
 );

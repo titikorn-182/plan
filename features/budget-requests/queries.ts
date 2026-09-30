@@ -1,4 +1,6 @@
 import "server-only";
+import { getViewer } from "@/lib/auth/viewer";
+import { budgetRequestEditDeniedReason } from "./edit-policy";
 
 import { BUDGET_STATUS_LABELS, isDocumentStatus } from "@/features/budget-requests/types";
 import type { BudgetFormOptions, BudgetRequest } from "@/features/budget-requests/types";
@@ -30,7 +32,11 @@ import { getFiscalYearMasterDataCatalogs } from "@/features/shared/master-data-q
 export async function getBudgetRequests(
   page = 1,
 ): Promise<DataResult<PaginatedData<BudgetRequest>>> {
-  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
+  const [supabase, period, viewer] = await Promise.all([
+    createClient(),
+    getReportingPeriod(),
+    getViewer(),
+  ]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   const { data, error, count } = await supabase
@@ -48,12 +54,14 @@ export async function getBudgetRequests(
   );
   const subActivitiesById = new Map<string, string[]>();
   const subOrganizationsById = new Map<string, string>();
+  const editReasons = new Map<string, string | null>();
+  const approvedAmounts = new Map<string, number>();
   if (rows.length > 0) {
     // Fetch metadata only for visible rows, using the same authenticated RLS client.
     const { data: details, error: detailsError } = await supabase
       .from("budget_requests")
       .select(
-        "id,subOrganizationName:proposal_details->organizationName,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
+        "id,owner_id,locked_at,status,approved_amount,subOrganizationName:proposal_details->organizationName,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
       )
       .in(
         "id",
@@ -63,6 +71,17 @@ export async function getBudgetRequests(
       return result({ items: [], pagination }, detailsError, "budget_requests.list_sub_activities");
     }
     for (const detail of details ?? []) {
+      editReasons.set(
+        detail.id,
+        budgetRequestEditDeniedReason(viewer, {
+          status: detail.status,
+          ownerId: detail.owner_id,
+          lockedAt: detail.locked_at,
+        }),
+      );
+      if (detail.status === "approved" && detail.approved_amount !== null) {
+        approvedAmounts.set(detail.id, Number(detail.approved_amount));
+      }
       subActivitiesById.set(detail.id, getBudgetSubActivityNames(detail));
       subOrganizationsById.set(
         detail.id,
@@ -81,10 +100,11 @@ export async function getBudgetRequests(
         unit: row.unit,
         subActivityNames: subActivitiesById.get(row.id) ?? [],
         category: row.category,
-        amount: Number(row.amount),
+        amount: approvedAmounts.get(row.id) ?? Number(row.amount),
         status: isDocumentStatus(row.status) ? BUDGET_STATUS_LABELS[row.status] : "ฉบับร่าง",
         updated: formatDate(row.updated_at),
-        editable: ["draft", "revision_required"].includes(row.status),
+        editable: editReasons.has(row.id) && editReasons.get(row.id) === null,
+        editDeniedReason: editReasons.get(row.id) ?? undefined,
         deletable: isBudgetRequestArchivable(row.status),
         version: row.version ?? 0,
       })),
@@ -118,7 +138,7 @@ export async function getBudgetFormOptions(
       ? supabase
           .from("budget_requests")
           .select(
-            "id,code,version,title_th,organization_id,project_type,owner_name,rationale,requested_amount,expense_breakdown,proposal_details,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label,buddhist_year),organizations!budget_requests_organization_id_fkey(name_th)",
+            "id,code,version,title_th,organization_id,project_type,owner_name,owner_id,locked_at,rationale,requested_amount,approved_amount,expense_breakdown,proposal_details,status,fiscal_year_id,budget_cycle_id,fiscal_years!budget_requests_fiscal_year_id_fkey(label,buddhist_year),organizations!budget_requests_organization_id_fkey(name_th)",
           )
           .eq("id", budgetRequestId)
           .is("archived_at", null)
@@ -246,6 +266,9 @@ export async function getBudgetFormOptions(
           ownerName: recordRow.owner_name,
           rationale: recordRow.rationale,
           amount: Number(recordRow.requested_amount),
+          approvedAmount: recordRow.approved_amount,
+          ownerId: recordRow.owner_id,
+          lockedAt: recordRow.locked_at,
           expenseBreakdown: expenseBreakdown.data,
           proposalDetails: proposalDetails.data,
           status: recordRow.status,

@@ -41,6 +41,9 @@ const mock = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => mock.client }));
+vi.mock("@/lib/auth/viewer", () => ({
+  getViewer: async () => ({ id: "owner", roles: ["staff"] }),
+}));
 vi.mock("@/features/shared/queries", () => ({
   getReportingPeriod: async () => ({ buddhistYear: 2570, quarter: 1 }),
 }));
@@ -116,7 +119,7 @@ describe("budget request queries", () => {
     expect(mock.chain.order).toHaveBeenCalledWith("updated_at", { ascending: false });
     expect(mock.chain.range).toHaveBeenCalledWith(20, 39);
     expect(mock.details.select).toHaveBeenCalledWith(
-      "id,subOrganizationName:proposal_details->organizationName,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
+      "id,owner_id,locked_at,status,approved_amount,subOrganizationName:proposal_details->organizationName,subActivityName:proposal_details->subActivityName,expenseItems:proposal_details->expenseItems",
     );
     expect(mock.details.in).toHaveBeenCalledExactlyOnceWith("id", ["first", "second"]);
     expect(result.error).toBeNull();

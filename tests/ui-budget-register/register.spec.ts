@@ -6,16 +6,57 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+test("approved editor keeps requested amount and context, supports amended amounts and preserves errors", async ({
+  page,
+}) => {
+  await page.goto("/?edit&save-error");
+  await expect(page.getByLabel("ปีงบประมาณ", { exact: false }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "ส่งคำขอ", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "บันทึกฉบับร่าง", exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("ชื่อหน่วยงานย่อย")).toBeDisabled();
+  await expect(page.getByLabel("ชื่อหน่วยงานย่อย")).toHaveValue(
+    "สำนักงานเลขานุการ-งานแผนและงบประมาณ",
+  );
+  const amount = page.getByLabel("วงเงินอนุมัติ (บาท)");
+  await expect(amount).toHaveValue("9000");
+  await amount.fill("12000.25");
+  await page.getByLabel("เหตุผลการแก้ไข").fill("ปรับเพิ่มตามมติทดสอบ");
+  await page.getByRole("button", { name: "บันทึกการแก้ไข", exact: true }).click();
+  await expect(page.getByRole("status").first()).toContainText("ข้อมูลถูกแก้ไขโดยผู้ใช้อื่น");
+  await expect(amount).toHaveValue("12000.25");
+  await expect(page.getByLabel("ชื่อหน่วยงานย่อย")).toHaveValue(
+    "สำนักงานเลขานุการ-งานแผนและงบประมาณ",
+  );
+  await expect(page.getByLabel("รหัสหน่วยงานย่อย")).toHaveValue("2301");
+  await expect(page.getByLabel("ประเภทโครงการ", { exact: false })).toHaveValue(
+    "2 โครงการประจำตามภารกิจ",
+  );
+  await expect(page.getByLabel("เหตุผลการแก้ไข")).toHaveValue("ปรับเพิ่มตามมติทดสอบ");
+  await expect(page.locator('input[name="amount"]')).toHaveValue("10000");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goto("/?edit");
+  await page.getByLabel("วงเงินอนุมัติ (บาท)").fill("7000");
+  await page.getByLabel("เหตุผลการแก้ไข").fill("ปรับลดตามมติทดสอบ");
+  await page.getByRole("button", { name: "บันทึกการแก้ไข", exact: true }).click();
+  await expect(page.getByRole("status").first()).toContainText("คงสถานะอนุมัติแล้ว");
+  await expect(page.locator('input[name="version"]')).toHaveValue("4");
+});
+
 test("status actions, safe confirmation, pending and confirmed success", async ({ page }, info) => {
   await page.goto("/");
   const menu = page.getByLabel("สถานะและเมนู BR-TEST-001");
   await menu.focus();
   await page.keyboard.press("Enter");
   const row = page.locator("tr").filter({ hasText: "BR-TEST-001" });
-  await expect(row.getByRole("link", { name: "แก้ไข", exact: true })).toHaveAttribute(
-    "href",
-    /\/00000000-0000-4000-8000-000000000001\/edit$/,
-  );
+  await expect(row.getByRole("button", { name: "แก้ไข", exact: true })).toBeDisabled();
+  await expect(row).toContainText("ผู้ดูแลระบบแก้ไขได้เฉพาะคำขอที่อนุมัติแล้ว");
+  await page.getByLabel("สถานะและเมนู BR-TEST-002").click();
+  await expect(
+    page
+      .locator("tr")
+      .filter({ hasText: "BR-TEST-002" })
+      .getByRole("link", { name: "แก้ไข", exact: true }),
+  ).toHaveAttribute("href", /000000000002\/edit$/);
   await page.screenshot({
     path: `test-results/ui-budget-register-${info.project.name}-menu.png`,
     fullPage: true,
@@ -46,6 +87,10 @@ test("restricts approved records and non-admin deletion", async ({ page }) => {
   await page.goto("/?staff");
   await page.getByLabel("สถานะและเมนู BR-TEST-001").click();
   const draft = page.locator("tr").filter({ hasText: "BR-TEST-001" });
+  await expect(draft.getByRole("link", { name: "แก้ไข", exact: true })).toHaveAttribute(
+    "href",
+    /000000000001\/edit$/,
+  );
   await expect(draft.getByRole("button", { name: "ลบ", exact: true })).toBeDisabled();
   await expect(draft).toContainText("ลบได้เฉพาะผู้ดูแลระบบ");
   await page.getByLabel("สถานะและเมนู BR-TEST-002").click();

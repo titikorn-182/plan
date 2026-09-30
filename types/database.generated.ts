@@ -362,6 +362,8 @@ export type Database = {
       }
       budget_requests: {
         Row: {
+          amendment_reason: string | null
+          approved_amount: number | null
           archived_at: string | null
           budget_cycle_id: string
           category: string
@@ -392,6 +394,8 @@ export type Database = {
           version: number
         }
         Insert: {
+          amendment_reason?: string | null
+          approved_amount?: number | null
           archived_at?: string | null
           budget_cycle_id: string
           category: string
@@ -422,6 +426,8 @@ export type Database = {
           version?: number
         }
         Update: {
+          amendment_reason?: string | null
+          approved_amount?: number | null
           archived_at?: string | null
           budget_cycle_id?: string
           category?: string
@@ -2101,6 +2107,21 @@ export type Database = {
           users_without_roles: number
           users_without_scopes: number
         }[]
+      }
+      amend_approved_budget_request: {
+        Args: {
+          p_approved_amount: number
+          p_category: string
+          p_id: string
+          p_owner_name: string
+          p_project_type: string
+          p_proposal_details: Json
+          p_rationale: string
+          p_reason: string
+          p_title_th: string
+          p_version: number
+        }
+        Returns: Json
       }
       review_evidence: {
         Args: {

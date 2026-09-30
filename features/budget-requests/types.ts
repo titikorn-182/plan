@@ -35,6 +35,7 @@ export type BudgetRequest = {
   status: BudgetStatus;
   updated: string;
   editable: boolean;
+  editDeniedReason?: string;
   deletable: boolean;
   version: number;
 };
@@ -65,6 +66,9 @@ export type BudgetFormRecord = {
   rationale: string;
   amount: number;
   expenseBreakdown: BudgetExpenseBreakdown | null;
+  approvedAmount?: number | null;
+  ownerId?: string | null;
+  lockedAt?: string | null;
   proposalDetails: BudgetProposalDetails;
   status: DocumentStatus;
 };

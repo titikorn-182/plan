@@ -40,6 +40,7 @@ function getFieldErrors(field: BudgetRequestSourceField, errors: BudgetRequestSt
 }
 
 function SourceField({
+  disabled = false,
   field,
   errors,
   onChange,
@@ -47,6 +48,7 @@ function SourceField({
   values,
 }: {
   field: BudgetRequestSourceField;
+  disabled?: boolean;
   errors: BudgetRequestState["errors"];
   onChange: (key: BudgetRequestSourceField["key"], value: string) => void;
   sourceOptions: BudgetRequestSourceOptions;
@@ -57,6 +59,7 @@ function SourceField({
   const id = `budget-source-${field.key}`;
   const describedBy = field.help || fieldErrors?.length ? `${id}-description` : undefined;
   const common = {
+    disabled,
     id,
     value: values[field.key],
     onChange: (
@@ -173,6 +176,7 @@ function SourceField({
 }
 
 export function BudgetRequestSourceSection({
+  lockedOrganization = false,
   children,
   footer,
   section,
@@ -182,6 +186,7 @@ export function BudgetRequestSourceSection({
   values,
 }: {
   children?: ReactNode;
+  lockedOrganization?: boolean;
   footer?: ReactNode;
   section: SourceSection;
   errors: BudgetRequestState["errors"];
@@ -201,6 +206,9 @@ export function BudgetRequestSourceSection({
           <SourceField
             key={field.key}
             field={field}
+            disabled={
+              lockedOrganization && ["organizationCode", "organizationName"].includes(field.key)
+            }
             errors={errors}
             onChange={onChange}
             sourceOptions={sourceOptions}

@@ -6,6 +6,14 @@ export function BudgetRequestDetailExpenses({ record }: { record: BudgetRequestD
   const { proposalDetails: details, expenseBreakdown, expenseLines } = record;
   return (
     <div className="space-y-5">
+      {record.status === "approved" && (
+        <p className="flex flex-wrap items-baseline justify-between gap-3 border-b border-stone-200 pb-4">
+          <span className="font-semibold">วงเงินอนุมัติปัจจุบัน</span>
+          <strong className="text-xl tabular-nums">
+            {formatThaiMoney(record.approvedAmount ?? record.amount)} บาท
+          </strong>
+        </p>
+      )}
       <p className="flex flex-wrap items-baseline justify-between gap-3 border-b border-stone-200 pb-4">
         <span className="font-semibold">วงเงินคำขอรวมทั้งหมด</span>
         <strong className="text-xl tabular-nums">{formatThaiMoney(record.amount)} บาท</strong>

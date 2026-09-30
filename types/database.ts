@@ -121,6 +121,10 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
       };
     };
     Functions: PublicSchema["Functions"] & {
+      amend_approved_budget_request: {
+        Args: PublicSchema["Functions"]["amend_approved_budget_request"]["Args"];
+        Returns: { id: string; code: string; version: number };
+      };
       save_budget_request_transaction: {
         Args: {
           p_id: string | null;

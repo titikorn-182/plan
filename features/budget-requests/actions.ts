@@ -1,6 +1,8 @@
 "use server";
 
 import { z } from "zod";
+import { getViewer } from "@/lib/auth/viewer";
+import { budgetRequestEditDeniedReason } from "./edit-policy";
 import { INPUT_LIMITS, MONEY_LIMITS } from "@/lib/config/limits";
 import {
   authenticated,
@@ -182,6 +184,76 @@ export async function saveBudgetRequestAction(
 
   const { supabase, userId } = await authenticated();
   if (!userId) return sessionExpired(previous);
+  let amendingApproved = false;
+  let approvedAmount = 0;
+  let amendmentReason = "";
+  if (parsed.data.id) {
+    const [viewer, current] = await Promise.all([
+      getViewer(),
+      supabase
+        .from("budget_requests")
+        .select(
+          "status,owner_id,locked_at,fiscal_year_id,budget_cycle_id,organization_id,requested_amount",
+        )
+        .eq("id", parsed.data.id)
+        .is("archived_at", null)
+        .maybeSingle(),
+    ]);
+    if (current.error || !current.data) {
+      return {
+        ...previous,
+        success: false,
+        message: "ไม่พบคำขอหรือไม่มีสิทธิ์เข้าถึง กรุณาเปิดรายการใหม่",
+      };
+    }
+    const row = current.data;
+    const denied = budgetRequestEditDeniedReason(viewer, {
+      status: row.status,
+      ownerId: row.owner_id,
+      lockedAt: row.locked_at,
+    });
+    if (denied) return { ...previous, success: false, message: denied };
+    amendingApproved = row.status === "approved";
+    if (amendingApproved) {
+      if (
+        parsed.data.intent !== "save" ||
+        parsed.data.fiscalYearId !== row.fiscal_year_id ||
+        parsed.data.budgetCycleId !== row.budget_cycle_id ||
+        parsed.data.organizationId !== row.organization_id ||
+        parsed.data.amount !== Number(row.requested_amount)
+      ) {
+        return {
+          ...previous,
+          success: false,
+          message: "คำขอที่อนุมัติแล้วต้องคงปี หน่วยงาน และยอดคำขอเดิม และไม่ส่งอนุมัติซ้ำ",
+        };
+      }
+      const amendment = z
+        .object({
+          approvedAmount: z
+            .string()
+            .trim()
+            .min(1, "กรุณาระบุวงเงินอนุมัติ")
+            .transform(Number)
+            .pipe(z.number().finite().min(0).max(MONEY_LIMITS.maximumBaht).multipleOf(0.01)),
+          amendmentReason: z
+            .string()
+            .trim()
+            .min(1, "กรุณาระบุเหตุผลการแก้ไข")
+            .max(INPUT_LIMITS.reviewComment),
+        })
+        .safeParse(Object.fromEntries(formData));
+      if (!amendment.success)
+        return {
+          ...previous,
+          success: false,
+          message: "กรุณาตรวจสอบวงเงินอนุมัติและเหตุผล",
+          errors: amendment.error.flatten().fieldErrors,
+        };
+      approvedAmount = amendment.data.approvedAmount;
+      amendmentReason = amendment.data.amendmentReason;
+    }
+  }
 
   const masterDataResult = await getFiscalYearMasterDataCatalogs([parsed.data.fiscalYearId]);
   if (masterDataResult.error) {
@@ -326,29 +398,46 @@ export async function saveBudgetRequestAction(
     }
   }
 
-  const { data, error } = await supabase.rpc("save_budget_request_transaction", {
-    // PostgreSQL accepts NULL here to create a row, but generated RPC argument
-    // types cannot express nullable SQL function parameters.
-    p_id: (parsed.data.id || null) as string,
-    p_version: parsed.data.version,
-    p_fiscal_year_id: parsed.data.fiscalYearId,
-    p_budget_cycle_id: parsed.data.budgetCycleId,
-    p_organization_id: parsed.data.organizationId,
-    p_owner_name: parsed.data.ownerName,
-    p_title_th: parsed.data.title,
-    p_category: parsed.data.projectType.includes("ครุภัณฑ์")
-      ? "ครุภัณฑ์"
-      : parsed.data.projectType.includes("ก่อสร้าง")
-        ? "สิ่งก่อสร้าง"
-        : "ดำเนินงาน",
-    p_project_type: parsed.data.projectType,
-    p_rationale: parsed.data.rationale,
-    p_requested_amount: parsed.data.amount,
-    p_expense_breakdown: expenseBreakdown.data,
-    p_proposal_details: proposalDetails.data,
-    p_submit: parsed.data.intent === "submit",
-    ...(parsed.data.intent === "submit" ? { p_comment: "ส่งคำของบประมาณเพื่อพิจารณา" } : {}),
-  });
+  const { data, error } = amendingApproved
+    ? await supabase.rpc("amend_approved_budget_request", {
+        p_id: parsed.data.id!,
+        p_version: parsed.data.version,
+        p_title_th: parsed.data.title,
+        p_owner_name: parsed.data.ownerName,
+        p_project_type: parsed.data.projectType,
+        p_category: parsed.data.projectType.includes("ครุภัณฑ์")
+          ? "ครุภัณฑ์"
+          : parsed.data.projectType.includes("ก่อสร้าง")
+            ? "สิ่งก่อสร้าง"
+            : "ดำเนินงาน",
+        p_rationale: parsed.data.rationale,
+        p_proposal_details: proposalDetails.data,
+        p_approved_amount: approvedAmount,
+        p_reason: amendmentReason,
+      })
+    : await supabase.rpc("save_budget_request_transaction", {
+        // PostgreSQL accepts NULL here to create a row, but generated RPC argument
+        // types cannot express nullable SQL function parameters.
+        p_id: (parsed.data.id || null) as string,
+        p_version: parsed.data.version,
+        p_fiscal_year_id: parsed.data.fiscalYearId,
+        p_budget_cycle_id: parsed.data.budgetCycleId,
+        p_organization_id: parsed.data.organizationId,
+        p_owner_name: parsed.data.ownerName,
+        p_title_th: parsed.data.title,
+        p_category: parsed.data.projectType.includes("ครุภัณฑ์")
+          ? "ครุภัณฑ์"
+          : parsed.data.projectType.includes("ก่อสร้าง")
+            ? "สิ่งก่อสร้าง"
+            : "ดำเนินงาน",
+        p_project_type: parsed.data.projectType,
+        p_rationale: parsed.data.rationale,
+        p_requested_amount: parsed.data.amount,
+        p_expense_breakdown: expenseBreakdown.data,
+        p_proposal_details: proposalDetails.data,
+        p_submit: parsed.data.intent === "submit",
+        ...(parsed.data.intent === "submit" ? { p_comment: "ส่งคำของบประมาณเพื่อพิจารณา" } : {}),
+      });
   if (error) {
     const denied =
       error.code === "42501" ? "คุณไม่มีสิทธิ์บันทึกคำขอสำหรับหน่วยงานหรือสถานะนี้" : null;
@@ -371,12 +460,17 @@ export async function saveBudgetRequestAction(
   revalidateOperationPaths(
     "/",
     "/budget-requests",
+    ...(parsed.data.id
+      ? [`/budget-requests/${parsed.data.id}`, `/budget-requests/${parsed.data.id}/edit`]
+      : []),
+    ...(amendingApproved ? ["/projects/new", "/approvals", "/admin"] : []),
     ...(parsed.data.intent === "submit" ? ["/approvals", "/notifications"] : []),
   );
   return {
     success: true,
-    message:
-      parsed.data.intent === "submit"
+    message: amendingApproved
+      ? `บันทึกการแก้ไข ${data.code} แล้ว โดยคงสถานะอนุมัติแล้วและวงเงินโครงการเดิม`
+      : parsed.data.intent === "submit"
         ? `ส่งคำขอ ${data.code} เข้าสู่กระบวนการตรวจสอบแล้ว`
         : `บันทึกฉบับร่าง ${data.code} แล้ว`,
     id: data.id,

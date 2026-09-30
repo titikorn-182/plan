@@ -1,6 +1,8 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { MONEY_LIMITS, INPUT_LIMITS } from "@/lib/config/limits";
+import { formatThaiMoney } from "@/features/shared/formatters";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { FieldError, FieldLabel, FormActions, fieldClass } from "@/components/ui/operation-form";
@@ -60,7 +62,20 @@ const EXPENSE_DETAIL_COMPLETION_TOTAL = 4;
 
 export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOptions }) {
   const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const form = formRef.current;
+    // React may reset action forms while its delegated event system is disabled
+    // during a commit. A native listener also protects controlled/disabled selects.
+    const preserveValues = (event: Event) => event.preventDefault();
+    form?.addEventListener("reset", preserveValues);
+    return () => form?.removeEventListener("reset", preserveValues);
+  }, []);
   const record = options.record;
+  const approvedEdit = record?.status === "approved";
+  const [approvedAmount, setApprovedAmount] = useState(
+    String(record?.approvedAmount ?? record?.amount ?? 0),
+  );
+  const [amendmentReason, setAmendmentReason] = useState("");
   const [initialState] = useState(() => createBudgetRequestWorkbookState(options));
   const [values, setValues] = useState(initialState.values);
   const [organizationId, setOrganizationId] = useState(initialState.organizationId);
@@ -201,6 +216,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
       <input type="hidden" name="title" value={values.projectActivityName} />
       <input type="hidden" name="organizationId" value={organizationId} />
       <input type="hidden" name="budgetCycleId" value={budgetCycleId} />
+      {approvedEdit && <input type="hidden" name="fiscalYearId" value={fiscalYearId} />}
       <input type="hidden" name="projectType" value={values.projectType} />
       <input type="hidden" name="ownerName" value={values.ownerName} />
       <input type="hidden" name="rationale" value={values.rationale} />
@@ -221,7 +237,10 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
           role="status"
           aria-live="polite"
         >
-          {formState.message ?? "บันทึกฉบับร่างได้ทุกเมื่อ และส่งคำขอเมื่อข้อมูลสำคัญครบ"}
+          {formState.message ??
+            (approvedEdit
+              ? "แก้ไขโดยคงสถานะอนุมัติแล้ว ไม่ส่งอนุมัติซ้ำ"
+              : "บันทึกฉบับร่างได้ทุกเมื่อ และส่งคำขอเมื่อข้อมูลสำคัญครบ")}
         </p>
       </div>
 
@@ -233,7 +252,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
             </h1>
             <p className="mt-2 text-sm leading-6 text-stone-600">
               {record
-                ? `รหัสคำขอ ${record.code} — ตรวจสอบและแก้ไขข้อมูลเดิม ก่อนบันทึกฉบับร่างหรือส่งคำขอ`
+                ? `รหัสคำขอ ${record.code} — ${approvedEdit ? "แก้ไขรายละเอียดและวงเงินอนุมัติโดยผู้ดูแลระบบ" : "ตรวจสอบและแก้ไขข้อมูลเดิม ก่อนบันทึกฉบับร่างหรือส่งคำขอ"}`
                 : "รองรับไฟล์ Executive DataProject แบบ XLSX หรือ CSV และแสดงเฉพาะข้อมูลที่ยังใช้งาน"}
             </p>
           </div>
@@ -257,6 +276,59 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
           </div>
         </div>
       </header>
+
+      {approvedEdit && record && (
+        <section
+          className="mt-5 border border-stone-200 bg-white p-5 sm:p-6"
+          aria-labelledby="amendment-title"
+        >
+          <h2 id="amendment-title" className="text-base font-bold">
+            แก้ไขวงเงินอนุมัติ
+          </h2>
+          <p className="mt-2 text-sm text-stone-700">
+            ยอดคำขอเดิม {formatThaiMoney(record.amount)} บาท — คงปีงบประมาณ หน่วยงาน
+            และรายการค่าใช้จ่ายเดิมไว้
+          </p>
+          <p className="mt-1 text-sm text-stone-600">
+            วงเงินโครงการที่อ้างอิงอยู่แล้วไม่เปลี่ยนอัตโนมัติ ระบบเก็บผู้แก้ไข เวลา เหตุผล
+            และยอดก่อน–หลังในประวัติ
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label>
+              <FieldLabel required>วงเงินอนุมัติ (บาท)</FieldLabel>
+              <input
+                className={fieldClass}
+                name="approvedAmount"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max={MONEY_LIMITS.maximumBaht}
+                step="0.01"
+                required
+                value={approvedAmount}
+                onChange={(event) => setApprovedAmount(event.target.value)}
+                aria-invalid={Boolean(formState.errors?.approvedAmount?.length)}
+                aria-describedby="approved-amount-error"
+              />
+              <FieldError id="approved-amount-error" errors={formState.errors?.approvedAmount} />
+            </label>
+            <label>
+              <FieldLabel required>เหตุผลการแก้ไข</FieldLabel>
+              <input
+                className={fieldClass}
+                name="amendmentReason"
+                required
+                maxLength={INPUT_LIMITS.reviewComment}
+                value={amendmentReason}
+                onChange={(event) => setAmendmentReason(event.target.value)}
+                aria-invalid={Boolean(formState.errors?.amendmentReason?.length)}
+                aria-describedby="amendment-reason-error"
+              />
+              <FieldError id="amendment-reason-error" errors={formState.errors?.amendmentReason} />
+            </label>
+          </div>
+        </section>
+      )}
 
       {!record ? (
         <BudgetRequestImportPanel
@@ -290,6 +362,7 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
             <BudgetRequestSourceSection
               key={section.id}
               section={section}
+              lockedOrganization={approvedEdit}
               errors={formState.errors}
               onChange={handleValueChange}
               sourceOptions={formSourceOptions}
@@ -319,7 +392,8 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
                   <FieldLabel required>ปีงบประมาณ</FieldLabel>
                   <select
                     className={fieldClass}
-                    name="fiscalYearId"
+                    name={approvedEdit ? undefined : "fiscalYearId"}
+                    disabled={approvedEdit}
                     value={fiscalYearId}
                     onChange={(event) => {
                       const fiscalYear = options.fiscalYears.find(
@@ -349,35 +423,43 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
                 </label>
               ) : null}
               {section.id === "budget" ? (
-                hasLegacyBudget && record ? (
-                  <BudgetRequestLegacyBudget
-                    amount={record.amount}
-                    breakdown={expenseBreakdown}
-                    onConvert={() => {
-                      setHasLegacyBudget(false);
-                      setExpenseBreakdown(null);
-                    }}
-                  />
-                ) : (
-                  <BudgetRequestExpenseItems
-                    errors={formState.errors}
-                    expenseOptions={masterData.expenseOptions}
-                    items={expenseItems}
-                    onAdd={() => {
-                      setExpenseBreakdown(null);
-                      setExpenseItems((current) => [
-                        ...current,
-                        createEmptyBudgetRequestExpenseItem(nextExpenseItemId.current),
-                      ]);
-                      nextExpenseItemId.current += 1;
-                    }}
-                    onChange={updateExpenseItem}
-                    onRemove={(id) => {
-                      setExpenseBreakdown(null);
-                      setExpenseItems((current) => current.filter((item) => item.id !== id));
-                    }}
-                  />
-                )
+                <fieldset disabled={approvedEdit} className="min-w-0 md:col-span-2">
+                  {approvedEdit && (
+                    <p className="mb-3 text-sm text-stone-600">
+                      รายการค่าใช้จ่ายตามคำขอเดิม (อ่านอย่างเดียว) —
+                      ปรับยอดที่ช่องวงเงินอนุมัติด้านบน
+                    </p>
+                  )}
+                  {hasLegacyBudget && record ? (
+                    <BudgetRequestLegacyBudget
+                      amount={record.amount}
+                      breakdown={expenseBreakdown}
+                      onConvert={() => {
+                        setHasLegacyBudget(false);
+                        setExpenseBreakdown(null);
+                      }}
+                    />
+                  ) : (
+                    <BudgetRequestExpenseItems
+                      errors={formState.errors}
+                      expenseOptions={masterData.expenseOptions}
+                      items={expenseItems}
+                      onAdd={() => {
+                        setExpenseBreakdown(null);
+                        setExpenseItems((current) => [
+                          ...current,
+                          createEmptyBudgetRequestExpenseItem(nextExpenseItemId.current),
+                        ]);
+                        nextExpenseItemId.current += 1;
+                      }}
+                      onChange={updateExpenseItem}
+                      onRemove={(id) => {
+                        setExpenseBreakdown(null);
+                        setExpenseItems((current) => current.filter((item) => item.id !== id));
+                      }}
+                    />
+                  )}
+                </fieldset>
               ) : null}
               {section.id === "sdgs" ? (
                 <BudgetRequestSdgSection
@@ -405,7 +487,13 @@ export function BudgetRequestWorkbookForm({ options }: { options: BudgetFormOpti
         />
       </div>
 
-      <FormActions pending={pending} backHref="/budget-requests" submitLabel="ส่งคำขอ" />
+      <FormActions
+        pending={pending}
+        backHref="/budget-requests"
+        submitLabel="ส่งคำขอ"
+        showSubmit={!approvedEdit}
+        saveLabel={approvedEdit ? "บันทึกการแก้ไข" : "บันทึกฉบับร่าง"}
+      />
     </form>
   );
 }

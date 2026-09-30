@@ -192,6 +192,9 @@ export function BudgetRequestsView({
           </Link>
         </div>
 
+        <p className="px-4 pb-3 text-xs text-stone-600">
+          รายการที่อนุมัติแล้วแสดงวงเงินอนุมัติล่าสุด ส่วนยอดคำขอเดิมดูได้ในรายละเอียด
+        </p>
         <div
           className="relative overflow-x-auto"
           role="region"

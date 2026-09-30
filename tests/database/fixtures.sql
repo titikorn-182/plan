@@ -38,6 +38,12 @@ select id, case when email = 'outside@example.test'
 from public.profiles where email like '%@example.test';
 update public.profiles set is_active = false where email = 'inactive@example.test';
 
+-- Workbook E2E uses the staff role, whose edit rights are draft/revision only.
+insert into public.user_organization_scopes (profile_id, organization_id)
+select '10000000-0000-4000-8000-000000000004'::uuid, id
+from public.organizations where code = 'SEC-ADMIN'
+on conflict do nothing;
+
 insert into public.fiscal_years (id, buddhist_year, label, starts_on, ends_on) values
   ('30000000-0000-4000-8000-000000000001', 2570, 'ปีทดสอบ 2570', '2026-10-01', '2027-09-30')
 on conflict (id) do update set label = excluded.label;

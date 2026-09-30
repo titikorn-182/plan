@@ -19,6 +19,7 @@ type DetailRow = Pick<
   | "owner_name"
   | "rationale"
   | "requested_amount"
+  | "approved_amount"
   | "expense_breakdown"
   | "proposal_details"
   | "status"
@@ -75,6 +76,7 @@ function detailRow(): DetailRow {
     owner_name: "หัวหน้าโครงการ",
     rationale: "หลักการและเหตุผลของคำขอ",
     requested_amount: 1234.5,
+    approved_amount: null,
     expense_breakdown: null,
     proposal_details: {
       ...createEmptyBudgetProposalDetails(),
@@ -143,7 +145,7 @@ describe("read-only budget request detail", () => {
       expenseLines: [],
       proposalDetails: { subActivityName: "กิจกรรมต้นฉบับ" },
     });
-    expect(response.data).not.toHaveProperty("approvedAmount");
+    expect(response.data?.approvedAmount).toBeNull();
   });
 
   it("retains a closed historical year and obsolete categories without loading editor master data", async () => {

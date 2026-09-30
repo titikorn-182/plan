@@ -28,9 +28,8 @@ test("budget draft retains full workbook data through validation, repeated saves
 }, testInfo) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  // The local staff fixture only owns TEST-A, which is not a workbook organization.
-  // Use the ordinary admin login and RLS API for the seeded SEC-ADMIN organization.
-  const client = await signedInLocalClient("admin");
+  // Disposable staff fixture includes SEC-ADMIN; admins cannot edit drafts.
+  const client = await signedInLocalClient("staff");
   const owner = `Budget draft E2E ${crypto.randomUUID()}`;
   const activityName = "โครงการผลิตบัณฑิตระดับปริญญาตรี คณะรัฐศาสตร์";
   const subOrganizationName = "สำนักงานเลขานุการ-งานสารบรรณและธุรการ";
@@ -38,7 +37,7 @@ test("budget draft retains full workbook data through validation, repeated saves
   const expenseSubActivityName = `กิจกรรมค่าใช้จ่าย ${crypto.randomUUID()}`;
   try {
     await page.goto("/login");
-    await page.getByLabel("อีเมลสถาบัน").fill("admin@example.test");
+    await page.getByLabel("อีเมลสถาบัน").fill("staff@example.test");
     await page.locator("#login-password").fill(TEST_PASSWORD);
     await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
     await expect(page).toHaveURL("/");
@@ -325,6 +324,13 @@ test("budget draft retains full workbook data through validation, repeated saves
     // editing is forbidden. Resolve this request by its code, not a task UUID.
     const code = requests?.[0]?.code;
     if (!code) throw new Error("Expected the saved budget request code");
+    // Inspect the workflow as admin after the staff has submitted the request.
+    await page.getByRole("button", { name: "ออกจากระบบ" }).click();
+    await page.goto("/login");
+    await page.getByLabel("อีเมลสถาบัน").fill("admin@example.test");
+    await page.locator("#login-password").fill(TEST_PASSWORD);
+    await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
+    await expect(page).toHaveURL("/");
     await page.goto("/approvals");
     const approvalCard = page.getByRole("article").filter({ hasText: code });
     const detailsLink = approvalCard.getByRole("link", {

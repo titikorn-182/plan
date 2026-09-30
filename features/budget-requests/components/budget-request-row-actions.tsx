@@ -59,7 +59,7 @@ export function BudgetRequestRowActions({
               <Pencil size={15} aria-hidden="true" /> แก้ไข
             </button>
             <p className="text-[11px] leading-5 text-stone-600">
-              แก้ไขได้เฉพาะฉบับร่างหรือส่งกลับแก้ไข
+              {request.editDeniedReason ?? "คำขอนี้ไม่อยู่ในสถานะที่คุณแก้ไขได้"}
             </p>
           </div>
         )}

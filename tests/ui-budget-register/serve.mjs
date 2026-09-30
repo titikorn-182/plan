@@ -15,6 +15,8 @@ export default async function setup() {
     resolve: {
       dedupe: ["react", "react-dom"],
       alias: [
+        { find: "@/features/budget-requests/actions", replacement: fixture("mock-save.ts") },
+        { find: "@/features/budget-requests/batch-actions", replacement: fixture("mock-save.ts") },
         {
           find: "@/features/budget-requests/archive-action",
           replacement: fixture("mock-action.ts"),

@@ -32,7 +32,7 @@ export async function getBudgetRequestDetail(
   const { data: row, error } = await supabase
     .from("budget_requests")
     .select(
-      "id,code,version,title_th,organization_id,fiscal_year_id,budget_cycle_id,project_type,owner_name,rationale,requested_amount,expense_breakdown,proposal_details,status,updated_at,submitted_at,organizations!budget_requests_organization_id_fkey(name_th),fiscal_years!budget_requests_fiscal_year_id_fkey(label)",
+      "id,code,version,title_th,organization_id,fiscal_year_id,budget_cycle_id,project_type,owner_name,rationale,requested_amount,approved_amount,expense_breakdown,proposal_details,status,updated_at,submitted_at,organizations!budget_requests_organization_id_fkey(name_th),fiscal_years!budget_requests_fiscal_year_id_fkey(label)",
     )
     .eq("id", id)
     .is("archived_at", null)
@@ -51,6 +51,7 @@ export async function getBudgetRequestDetail(
     !expenseBreakdown.success ||
     !isDocumentStatus(row.status) ||
     !isNonnegativeNumber(row.requested_amount) ||
+    (row.approved_amount != null && !isNonnegativeNumber(row.approved_amount)) ||
     !organization?.name_th ||
     !fiscalYear?.label
   ) {
@@ -112,6 +113,7 @@ export async function getBudgetRequestDetail(
     ownerName: row.owner_name,
     rationale: row.rationale,
     amount: row.requested_amount,
+    approvedAmount: row.approved_amount,
     expenseBreakdown: expenseBreakdown.data,
     proposalDetails: proposalDetails.data,
     status: row.status,
