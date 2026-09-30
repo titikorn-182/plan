@@ -5,6 +5,7 @@ import { formatThaiNumber } from "@/features/shared/formatters";
 import type { ProjectRow } from "@/features/projects/types";
 import { projectHealthTone, projectProgressTone } from "./project-view-utils";
 import { ProjectRowActions } from "./project-row-actions";
+import { ProjectApprovalStatus } from "./project-approval-status";
 
 export function ProjectsTable({
   projects,
@@ -46,6 +47,7 @@ export function ProjectsTable({
                 <span className="mt-1 block text-[11px] text-stone-500">
                   {project.id} · {project.owner}
                 </span>
+                <ProjectApprovalStatus project={project} />
                 {project.revision?.status === "pending" && (
                   <span className="mt-1 block text-[11px] font-semibold text-[#ad3507]">
                     ขอแก้ไข · รอผู้ดูแลระบบพิจารณา

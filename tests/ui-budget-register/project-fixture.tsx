@@ -18,6 +18,7 @@ export function ProjectFixture() {
     health: "ปกติ",
     due: "30 ก.ย. 2570",
     status: "proposed",
+    approvalState: "awaiting_submission",
     editable: true,
     deletable: !staff,
     version: 3,
@@ -29,6 +30,7 @@ export function ProjectFixture() {
       uuid: "00000000-0000-4000-8000-000000000002",
       id: "PR-TEST-002",
       title: "โครงการที่อยู่ระหว่างอนุมัติ (ข้อมูลทดสอบ)",
+      approvalState: "unit_review",
       editable: false,
       deletable: false,
     },
@@ -48,14 +50,26 @@ export function ProjectFixture() {
           }
         : undefined,
       status: "active",
+      approvalState: "approved",
       editable: false,
       deletable: false,
     },
   ];
+  if (new URLSearchParams(location.search).has("approval-states")) {
+    projects.push({
+      ...proposal,
+      uuid: "00000000-0000-4000-8000-000000000005",
+      id: "PR-TEST-005",
+      title: "โครงการรอผู้บริหารอนุมัติ (ข้อมูลทดสอบ)",
+      approvalState: "executive_review",
+      editable: false,
+      deletable: false,
+    });
+  }
   return (
     <ProjectsView
       projects={projects}
-      pagination={createPagination(3, 1, 20)}
+      pagination={createPagination(projects.length, 1, 20)}
       filters={parseProjectFilters({})}
       organizations={[]}
     />

@@ -12,6 +12,8 @@ import { StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiNumber } from "@/features/shared/formatters";
 import type { ProjectRow } from "@/features/projects/types";
 import { projectHealthTone } from "./project-view-utils";
+import { ProjectApprovalStatus } from "./project-approval-status";
+import { projectApprovalPresentation } from "../approval-state";
 
 export function ProjectInspector({ project }: { project: ProjectRow }) {
   return (
@@ -25,6 +27,10 @@ export function ProjectInspector({ project }: { project: ProjectRow }) {
         </div>
         <h2 className="mt-3 text-lg font-bold leading-snug">{project.title}</h2>
         <p className="mt-1 text-xs text-stone-500">{project.unit}</p>
+        <ProjectApprovalStatus project={project} />
+        <p className="mt-2 text-xs leading-5 text-stone-600">
+          {projectApprovalPresentation(project).help}
+        </p>
       </header>
       <div className="grid grid-cols-2 border-b border-stone-200">
         <div className="border-r border-stone-200 p-4">
@@ -82,7 +88,7 @@ export function ProjectInspector({ project }: { project: ProjectRow }) {
               className={project.health === "ปกติ" ? "text-emerald-600" : "text-red-600"}
               size={17}
             />
-            <span className="flex-1">สถานะติดตาม</span>
+            <span className="flex-1">สุขภาพโครงการ</span>
             <b>{project.health}</b>
           </li>
         </ul>

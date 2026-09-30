@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronDown, Pencil, Trash2, RotateCcw } from "lucide-react";
 import type { ProjectRow } from "@/features/projects/types";
+import { projectRevisionUnavailableReason } from "../approval-state";
 
 export function ProjectRowActions({
   project,
@@ -31,7 +32,7 @@ export function ProjectRowActions({
         จัดการ <ChevronDown size={14} aria-hidden="true" />
       </summary>
       <div className="mt-1 w-44 border border-stone-300 bg-white p-1">
-        {(project.canRequestRevision || project.canReviewRevision || project.revision) && (
+        {project.canRequestRevision || project.canReviewRevision || project.revision ? (
           <div className="border-b border-stone-200 pb-1">
             <button
               type="button"
@@ -50,6 +51,23 @@ export function ProjectRowActions({
                 รอผู้ดูแลระบบพิจารณาคำขอแก้ไข
               </p>
             )}
+          </div>
+        ) : (
+          <div className="border-b border-stone-200 px-2 pb-2">
+            <button
+              type="button"
+              disabled
+              aria-describedby={`revision-help-${project.uuid}`}
+              className="flex min-h-11 items-center gap-2 text-left text-sm text-stone-500"
+            >
+              <RotateCcw size={15} aria-hidden="true" /> ขอแก้ไขหลังอนุมัติ
+            </button>
+            <p
+              id={`revision-help-${project.uuid}`}
+              className="text-[11px] leading-5 text-stone-600"
+            >
+              {projectRevisionUnavailableReason(project)}
+            </p>
           </div>
         )}
         {project.editable ? (

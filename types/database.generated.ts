@@ -2133,6 +2133,13 @@ export type Database = {
         }
         Returns: string
       }
+      get_project_approval_states: {
+        Args: { p_project_ids: string[] }
+        Returns: {
+          approval_state: string
+          project_id: string
+        }[]
+      }
       get_project_revision_requests: {
         Args: { p_project_ids: string[] }
         Returns: {

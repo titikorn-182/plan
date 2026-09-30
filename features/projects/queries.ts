@@ -13,6 +13,7 @@ import { getOrganizationsAndYears, getReportingPeriod } from "@/features/shared/
 import { RETIRED_DEMO_FILTERS } from "@/features/shared/retired-demo-data";
 import { getViewer } from "@/lib/auth/viewer";
 import { QUERY_LIMITS } from "@/lib/config/limits";
+import { parseProjectApprovalState } from "./approval-state";
 import { createClient } from "@/lib/supabase/server";
 import {
   createEmptyProjectProposalDetails,
@@ -80,15 +81,22 @@ export async function getProjects(
     .order("updated_at", { ascending: false })
     .range(from, to);
   const ids = (data ?? []).flatMap((row) => (row.id ? [row.id] : []));
-  const metadata = ids.length
-    ? await supabase.from("projects").select("id,version,owner_id").in("id", ids)
-    : { data: [], error: null };
-  const records = new Map((metadata.data ?? []).map((row) => [row.id, row]));
-  const revisions =
+  const [metadata, revisions, approvals] = await Promise.all([
+    ids.length
+      ? supabase.from("projects").select("id,version,owner_id").in("id", ids)
+      : { data: [], error: null },
     ids.length && (viewer.roles.includes("admin") || viewer.roles.includes("staff"))
-      ? await supabase.rpc("get_project_revision_requests", { p_project_ids: ids })
-      : { data: [], error: null };
+      ? supabase.rpc("get_project_revision_requests", { p_project_ids: ids })
+      : { data: [], error: null },
+    ids.length
+      ? supabase.rpc("get_project_approval_states", { p_project_ids: ids })
+      : { data: [], error: null },
+  ]);
+  const records = new Map((metadata.data ?? []).map((row) => [row.id, row]));
   const revisionMap = new Map((revisions.data ?? []).map((row) => [row.project_id, row]));
+  const approvalMap = new Map(
+    (approvals.data ?? []).map((row) => [row.project_id, row.approval_state]),
+  );
   return result(
     {
       items: (data ?? [])
@@ -135,6 +143,7 @@ export async function getProjects(
             owner: row.owner,
             due: formatDate(row.due),
             status: row.status,
+            approvalState: parseProjectApprovalState(approvalMap.get(row.id)),
             revision: revisionSummary,
             canRequestRevision:
               row.status === "active" &&
@@ -159,7 +168,7 @@ export async function getProjects(
         }),
       pagination: createPagination(count, page, pageSize),
     },
-    error ?? metadata.error ?? revisions.error,
+    error ?? metadata.error ?? revisions.error ?? approvals.error,
     "projects.list",
   );
 }

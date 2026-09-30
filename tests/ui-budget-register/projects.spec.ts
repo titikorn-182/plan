@@ -1,5 +1,43 @@
 import { expect, test } from "@playwright/test";
 
+test("approval status is separate from health and unavailable requests explain next steps", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/?projects&staff&approval-states");
+  const region = page.getByRole("region", { name: "ตารางทะเบียนโครงการ" });
+  const pendingRow = region.getByRole("row").filter({ hasText: "PR-TEST-002" });
+  const approvedRow = region.getByRole("row").filter({ hasText: "PR-TEST-003" });
+  await expect(pendingRow).toContainText("สถานะการอนุมัติ:");
+  await expect(pendingRow).toContainText("รอตรวจระดับหน่วยงาน");
+  await expect(pendingRow).toContainText("ปกติ");
+  await expect(approvedRow).toContainText("อนุมัติแล้ว");
+  await expect(approvedRow).toContainText("ปกติ");
+  await expect(region.getByRole("row").filter({ hasText: "PR-TEST-005" })).toContainText(
+    "รอผู้บริหารอนุมัติ",
+  );
+  await pendingRow.getByText("โครงการที่อยู่ระหว่างอนุมัติ (ข้อมูลทดสอบ)", { exact: true }).click();
+  await expect(page.getByRole("complementary")).toContainText("รอตรวจระดับหน่วยงาน");
+  await pendingRow.getByLabel("จัดการโครงการ PR-TEST-002").click();
+  await expect(
+    pendingRow.getByRole("button", { name: "ขอแก้ไขหลังอนุมัติ", exact: true }),
+  ).toBeDisabled();
+  await expect(pendingRow).toContainText("ติดต่อผู้ตรวจเพื่อส่งกลับแก้ไข");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.screenshot({
+    path: `.impeccable/review/project-approval-status-${testInfo.project.name}.png`,
+    fullPage: true,
+  });
+  await pendingRow.getByLabel("จัดการโครงการ PR-TEST-002").press("Escape");
+  await approvedRow.getByLabel("จัดการโครงการ PR-TEST-003").click();
+  await expect(
+    approvedRow.getByRole("button", { name: "ขอแก้ไขหลังอนุมัติ", exact: true }),
+  ).toBeEnabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => window.innerWidth),
+  );
+  expect(await page.evaluate(() => window.revisionCalls ?? [])).toHaveLength(0);
+});
+
 test("staff requests revision with reason; admin reviews it in a protected dialog", async ({
   page,
 }, testInfo) => {

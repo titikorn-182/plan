@@ -2,6 +2,7 @@ import type { Enums } from "@/types/database.generated";
 import type { FiscalYearOption, OrganizationOption, SelectOption } from "@/features/shared/types";
 import type { ProjectProposalDetails } from "@/features/projects/proposal-details";
 import type { FiscalYearMasterData } from "@/features/shared/master-data";
+import type { ProjectApprovalState } from "./approval-state";
 
 export type ProjectStatus = Enums<"project_status">;
 
@@ -24,6 +25,7 @@ export type ProjectRow = {
   owner: string;
   due: string;
   status: ProjectStatus;
+  approvalState?: ProjectApprovalState;
   editable: boolean;
   version?: number;
   deletable?: boolean;
