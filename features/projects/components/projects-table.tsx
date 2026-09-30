@@ -4,18 +4,21 @@ import { ProgressBar, StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiNumber } from "@/features/shared/formatters";
 import type { ProjectRow } from "@/features/projects/types";
 import { projectHealthTone, projectProgressTone } from "./project-view-utils";
+import { ProjectRowActions } from "./project-row-actions";
 
 export function ProjectsTable({
   projects,
   selectedId,
   onSelect,
+  onDelete,
 }: {
   projects: ProjectRow[];
   selectedId: string;
   onSelect: (projectId: string) => void;
+  onDelete: (project: ProjectRow) => void;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="region" aria-label="ตารางทะเบียนโครงการ" tabIndex={0}>
       <table className="w-full min-w-[980px] text-left text-xs">
         <thead className="bg-stone-50 text-stone-600">
           <tr className="border-b border-stone-200">
@@ -24,6 +27,7 @@ export function ProjectsTable({
             <th className="px-3 py-3 text-right">งบอนุมัติ</th>
             <th className="px-3 py-3">ความก้าวหน้า</th>
             <th className="px-3 py-3">สุขภาพโครงการ</th>
+            <th className="px-3 py-3">จัดการ</th>
             <th className="px-3 py-3">สิ้นสุด</th>
             <th className="px-3 py-3 text-center">ข้อเสนอ</th>
           </tr>
@@ -54,6 +58,9 @@ export function ProjectsTable({
               </td>
               <td className="px-3 py-3">
                 <StatusPill tone={projectHealthTone(project.health)}>{project.health}</StatusPill>
+              </td>
+              <td className="px-3 py-3 align-top">
+                <ProjectRowActions project={project} onDelete={onDelete} />
               </td>
               <td className="px-3 py-3 whitespace-nowrap">{project.due}</td>
               <td className="px-3 py-3 text-center">

@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: ".",
-  testMatch: "register.spec.ts",
+  testMatch: ["register.spec.ts", "projects.spec.ts"],
   workers: 1,
   retries: 0,
   timeout: 30_000,

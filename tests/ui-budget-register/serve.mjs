@@ -7,6 +7,7 @@ export default async function setup() {
   const server = await createServer({
     configFile: false,
     envDir: false,
+    cacheDir: "node_modules/.vite-budget-register",
     root,
     optimizeDeps: {
       entries: [fixture("fixture.tsx")],
@@ -15,6 +16,7 @@ export default async function setup() {
     resolve: {
       dedupe: ["react", "react-dom"],
       alias: [
+        { find: "@/features/projects/archive-action", replacement: fixture("mock-action.ts") },
         { find: "@/features/budget-requests/actions", replacement: fixture("mock-save.ts") },
         { find: "@/features/budget-requests/batch-actions", replacement: fixture("mock-save.ts") },
         {

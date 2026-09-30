@@ -10,6 +10,7 @@ import { ProjectFilterPanel } from "@/features/projects/components/project-filte
 import { ProjectFilterToggle } from "@/features/projects/components/project-filter-toggle";
 import { ProjectInspector } from "@/features/projects/components/project-inspector";
 import { ProjectsTable } from "@/features/projects/components/projects-table";
+import { ProjectDeleteDialog } from "@/features/projects/components/project-delete-dialog";
 import {
   ProjectHealthBudgetSummary,
   ProjectsSummary,
@@ -36,6 +37,17 @@ export function ProjectsView({
 }) {
   const [selectedId, setSelectedId] = useState(projects[0]?.id ?? "");
   const [showFilters, setShowFilters] = useState(hasProjectFilters(filters));
+  const [deleteProject, setDeleteProject] = useState<ProjectRow | null>(null);
+  const [notice, setNotice] = useState("");
+  const feedback = (
+    <div role="status" aria-live="polite">
+      {notice && (
+        <p className="border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          {notice}
+        </p>
+      )}
+    </div>
+  );
   const selected = projects.find((project) => project.id === selectedId) ?? projects[0];
   const createProjectLink = (
     <Link
@@ -59,6 +71,7 @@ export function ProjectsView({
   if (!selected) {
     return (
       <div className="space-y-4">
+        {feedback}
         <div className="flex flex-wrap items-center justify-between gap-3 border border-stone-200 bg-white p-4">
           {filterToggle}
           {createProjectLink}
@@ -85,15 +98,32 @@ export function ProjectsView({
 
   return (
     <div className="space-y-5">
+      {feedback}
+      {deleteProject && (
+        <ProjectDeleteDialog
+          key={deleteProject.uuid}
+          request={deleteProject}
+          onClose={() => setDeleteProject(null)}
+          onDeleted={(message) => {
+            setDeleteProject(null);
+            setNotice(message);
+          }}
+        />
+      )}
       <ProjectsSummary
         projects={projects}
         total={pagination.total}
         createAction={createProjectLink}
       />
       {filterPanel}
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
         <RegisterSection title="ทะเบียนโครงการ" aside={filterToggle}>
-          <ProjectsTable projects={projects} selectedId={selectedId} onSelect={setSelectedId} />
+          <ProjectsTable
+            projects={projects}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onDelete={setDeleteProject}
+          />
           <PaginationNav
             basePath="/projects"
             pagination={pagination}

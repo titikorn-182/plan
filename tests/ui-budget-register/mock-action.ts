@@ -19,3 +19,11 @@ export async function archiveBudgetRequestAction(input: {
     return { success: false, message: "รายการถูกเปลี่ยนสถานะแล้ว กรุณาเปิดทะเบียนใหม่" };
   return { success: true, message: "ย้ายคำขอ BR-TEST-001 ไปถังขยะแล้ว ผู้ดูแลระบบสามารถกู้คืนได้" };
 }
+
+export async function archiveProjectAction(input: {
+  id: string;
+  version: number;
+}): Promise<OperationState> {
+  const result = await archiveBudgetRequestAction(input);
+  return { ...result, message: result.message?.replace("คำขอ BR-TEST-001", "โครงการ PR-TEST-001") };
+}

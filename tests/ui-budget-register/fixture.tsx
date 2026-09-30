@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { ApprovedEditFixture } from "./edit-fixture";
+import { ProjectFixture } from "./project-fixture";
 import { BudgetRequestsView } from "@/features/budget-requests/components/budget-requests-view";
 import type { BudgetRequest } from "@/features/budget-requests/types";
 import { createPagination } from "@/features/shared/pagination";
@@ -46,7 +47,7 @@ const authorizedRequests = requests.map((item, index) => {
 window.archiveCalls = [];
 createRoot(document.getElementById("root")!).render(
   <main className="min-w-0 p-4" style={{ fontFamily: "Sarabun, sans-serif" }}>
-    {new URLSearchParams(location.search).has("edit") ? (
+    {new URLSearchParams(location.search).has("projects") ? <ProjectFixture /> : new URLSearchParams(location.search).has("edit") ? (
       <ApprovedEditFixture />
     ) : (
       <BudgetRequestsView

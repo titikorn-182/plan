@@ -47,7 +47,11 @@ export async function getProjects(
   page = 1,
   filters?: ProjectFilters,
 ): Promise<DataResult<PaginatedData<ProjectRow>>> {
-  const [supabase, period] = await Promise.all([createClient(), getReportingPeriod()]);
+  const [supabase, period, viewer] = await Promise.all([
+    createClient(),
+    getReportingPeriod(),
+    getViewer(),
+  ]);
   const pageSize = QUERY_LIMITS.defaultPageSize;
   const [from, to] = getPaginationRange(page, pageSize);
   let query = supabase.from("project_register").select("*", { count: "exact" });
@@ -75,6 +79,11 @@ export async function getProjects(
   const { data, error, count } = await query
     .order("updated_at", { ascending: false })
     .range(from, to);
+  const ids = (data ?? []).flatMap((row) => (row.id ? [row.id] : []));
+  const metadata = ids.length
+    ? await supabase.from("projects").select("id,version,owner_id").in("id", ids)
+    : { data: [], error: null };
+  const records = new Map((metadata.data ?? []).map((row) => [row.id, row]));
   return result(
     {
       items: (data ?? [])
@@ -107,11 +116,22 @@ export async function getProjects(
           owner: row.owner,
           due: formatDate(row.due),
           status: row.status,
-          editable: row.status === "proposed" && !row.has_pending_approval,
+          editable:
+            row.status === "proposed" &&
+            !row.has_pending_approval &&
+            (viewer.roles.includes("admin") ||
+              viewer.roles.includes("user") ||
+              (viewer.roles.includes("staff") && records.get(row.id)?.owner_id === viewer.id)),
+          version: records.get(row.id)?.version ?? 0,
+          deletable:
+            viewer.roles.includes("admin") &&
+            row.status === "proposed" &&
+            !row.has_pending_approval &&
+            Number(row.spent) === 0,
         })),
       pagination: createPagination(count, page, pageSize),
     },
-    error,
+    error ?? metadata.error,
     "projects.list",
   );
 }
@@ -168,6 +188,7 @@ export async function getProjectFormOptions(
             "id,version,code,organization_id,fiscal_year_id,budget_request_id,title_th,project_type,owner_name,coordinator_name,approved_budget,disbursement_target,starts_on,ends_on,status,proposal_details",
           )
           .eq("id", projectId)
+          .is("archived_at", null)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);

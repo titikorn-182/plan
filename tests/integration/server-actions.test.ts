@@ -139,6 +139,12 @@ function response(data: QueryResponse["data"], error: QueryResponse["error"] = n
   mock.responses.push({ data, error });
 }
 function savedProject() {
+  response({
+    budget_request_id: null,
+    organization_id: projectInput.organizationId,
+    fiscal_year_id: yearId,
+    archived_at: null,
+  });
   response({ buddhist_year: 2570 });
   mock.client.rpc.mockResolvedValue({
     data: { id: projectId, code: "TEST-P1", version: 4 },
@@ -222,6 +228,11 @@ describe("approved budget amendment action", () => {
 });
 
 describe("project action orchestration", () => {
+  it("rejects an archived project before saving", async () => {
+    response({ archived_at: "2026-09-30T00:00:00Z" });
+    expect((await saveProjectAction({}, form(projectInput))).message).toContain("ถังขยะ");
+    expect(mock.client.rpc).not.toHaveBeenCalled();
+  });
   it("uses the subactivity label when the title is too short", async () => {
     const result = await saveProjectAction({}, form({ ...projectInput, title: "x" }));
     expect(result.errors?.title).toEqual(["กรุณาระบุชื่อกิจกรรมย่อยอย่างน้อย 5 ตัวอักษร"]);
@@ -263,6 +274,12 @@ describe("project action orchestration", () => {
     expect(mock.revalidate).toHaveBeenCalledWith("/projects");
   });
   it.each(["PT409", "40001"])("does not retry a project conflict returned as %s", async (code) => {
+    response({
+      budget_request_id: null,
+      organization_id: projectInput.organizationId,
+      fiscal_year_id: yearId,
+      archived_at: null,
+    });
     response({ buddhist_year: 2570 });
     mock.client.rpc.mockResolvedValue({
       data: null,

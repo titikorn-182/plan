@@ -116,10 +116,10 @@ export async function saveProjectAction(
   if (!userId) return sessionExpired(previous);
 
   let sourceHasChanged = Boolean(input.budgetRequestId);
-  if (input.id && input.budgetRequestId) {
+  if (input.id) {
     const { data: existing, error: existingError } = await supabase
       .from("projects")
-      .select("budget_request_id,organization_id,fiscal_year_id")
+      .select("budget_request_id,organization_id,fiscal_year_id,archived_at")
       .eq("id", input.id)
       .maybeSingle();
     if (existingError) {
@@ -127,6 +127,13 @@ export async function saveProjectAction(
         ...previous,
         success: false,
         message: friendlyError(existingError, "projects.current_budget_source"),
+      };
+    }
+    if (!existing || existing.archived_at) {
+      return {
+        ...previous,
+        success: false,
+        message: "ไม่พบโครงการที่แก้ไขได้ หรือโครงการถูกย้ายไปถังขยะแล้ว กรุณาเปิดทะเบียนใหม่",
       };
     }
     // An unchanged historical link must not prevent editing unrelated proposal

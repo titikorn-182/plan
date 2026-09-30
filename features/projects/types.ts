@@ -25,6 +25,8 @@ export type ProjectRow = {
   due: string;
   status: ProjectStatus;
   editable: boolean;
+  version?: number;
+  deletable?: boolean;
 };
 
 export type ProjectFormRecord = {
