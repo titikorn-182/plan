@@ -99,6 +99,10 @@ const WORKSPACE_TITLES: ReadonlyArray<{
   { matches: (pathname) => pathname === "/disbursements", title: "ติดตามการเบิกจ่ายงบประมาณ" },
   { matches: (pathname) => /^\/kpi\/[^/]+\/edit$/.test(pathname), title: "กรอกและรับรองผล KPI" },
   { matches: (pathname) => pathname === "/kpi", title: "KPI Dashboard — EdPEx & AUN-QA" },
+  {
+    matches: (pathname) => pathname === "/evidence/budget-adjustment",
+    title: "ขออนุมัติปรับงบประมาณ",
+  },
   { matches: (pathname) => pathname === "/evidence", title: "หลักฐานและเอกสาร" },
   { matches: (pathname) => pathname === "/approvals", title: "Workflow อนุมัติ" },
   { matches: (pathname) => pathname === "/notifications", title: "การแจ้งเตือน" },

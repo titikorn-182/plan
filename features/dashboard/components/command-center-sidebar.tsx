@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EvidenceNavigation } from "@/components/layout/evidence-navigation";
 import { getCurrentNavigationHref, getVisibleNavigation } from "@/components/layout/navigation";
 import type { Viewer } from "@/lib/auth/types";
 import {
@@ -18,19 +19,23 @@ export function CommandCenterSidebar({ pathname, viewer }: { pathname: string; v
         <small>PLAN MANAGEMENT</small>
       </Link>
       <nav className="cc-nav">
-        {visibleNavigation.map(({ label, icon: Icon, href }) => (
-          <Link
-            className={`cc-nav-link ${currentHref === href ? "active" : ""}`}
-            href={href}
-            key={href}
-            aria-label={label}
-            title={label}
-            aria-current={currentHref === href ? "page" : undefined}
-          >
-            <Icon size={18} strokeWidth={1.9} />
-            <span>{label}</span>
-          </Link>
-        ))}
+        {visibleNavigation.map(({ label, icon: Icon, href }) =>
+          href === "/evidence" ? (
+            <EvidenceNavigation key={href} pathname={pathname} />
+          ) : (
+            <Link
+              className={`cc-nav-link ${currentHref === href ? "active" : ""}`}
+              href={href}
+              key={href}
+              aria-label={label}
+              title={label}
+              aria-current={currentHref === href ? "page" : undefined}
+            >
+              <Icon size={18} strokeWidth={1.9} />
+              <span>{label}</span>
+            </Link>
+          ),
+        )}
       </nav>
       <section className="cc-legend" aria-label="คำอธิบายสถานะ">
         <h2>สถานะ:</h2>

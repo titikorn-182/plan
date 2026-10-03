@@ -85,7 +85,7 @@ function splitLongToken(token: string, font: PDFFont, size: number, width: numbe
   return lines;
 }
 
-function wrapText(text: string, font: PDFFont, size: number, width: number): string[] {
+export function wrapText(text: string, font: PDFFont, size: number, width: number): string[] {
   const paragraphs = String(text).replace(/\r/g, "").split("\n");
   const lines: string[] = [];
   for (const paragraph of paragraphs) {

@@ -10,6 +10,7 @@ import {
   getVisibleNavigation,
 } from "@/components/layout/navigation";
 import { WorkspaceMenu } from "@/components/layout/workspace-menu";
+import { EvidenceNavigation } from "@/components/layout/evidence-navigation";
 import { PeriodSelector } from "@/components/layout/period-selector";
 import { APP_ROLE_LABELS, type Viewer } from "@/lib/auth/types";
 import type { FiscalYearOption, ReportingPeriod } from "@/features/shared/types";
@@ -42,6 +43,7 @@ export function WorkspaceShell({
         </Link>
         <nav>
           {visibleNavItems.map(({ label, href, icon: Icon }) => {
+            if (href === "/evidence") return <EvidenceNavigation key={href} pathname={pathname} />;
             const active = currentHref === href;
             return (
               <Link

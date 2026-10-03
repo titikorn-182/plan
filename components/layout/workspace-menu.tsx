@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { getCurrentNavigationHref, getVisibleNavigation } from "@/components/layout/navigation";
 import type { AppRole } from "@/lib/auth/types";
+import { evidenceLinks } from "@/components/layout/evidence-navigation";
 
 export function WorkspaceMenu({
   pathname,
@@ -14,7 +15,9 @@ export function WorkspaceMenu({
   roles: readonly AppRole[];
 }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
-  const items = getVisibleNavigation(roles);
+  const items = getVisibleNavigation(roles).flatMap((item) =>
+    item.href === "/evidence" ? evidenceLinks.map((child) => ({ ...item, ...child })) : [item],
+  );
   const currentHref = getCurrentNavigationHref(pathname, items);
 
   function closeMenu() {
