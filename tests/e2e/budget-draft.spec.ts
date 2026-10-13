@@ -330,7 +330,9 @@ test("budget draft retains full workbook data through validation, repeated saves
     if (!code) throw new Error("Expected the saved budget request code");
     // Inspect the workflow as admin after the staff has submitted the request.
     await page.getByRole("button", { name: "ออกจากระบบ" }).click();
-    await page.goto("/login");
+    // Sign-out posts to /auth/signout and redirects here after clearing cookies.
+    // A competing goto can interrupt that navigation before the session is gone.
+    await expect(page).toHaveURL("/login");
     await page.getByLabel("อีเมลสถาบัน").fill("admin@example.test");
     await page.locator("#login-password").fill(TEST_PASSWORD);
     await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
