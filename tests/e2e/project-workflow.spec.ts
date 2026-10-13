@@ -19,6 +19,10 @@ async function approve(page: Page, title: string) {
   const card = page
     .getByRole("article")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
+  // Report missing/out-of-scope work directly instead of waiting until the
+  // whole test times out while clicking a button that is not in the inbox.
+  await expect(card).toBeVisible();
+  await expect(card.getByRole("button", { name: "อนุมัติ", exact: true })).toBeEnabled();
   await card.getByRole("button", { name: "อนุมัติ", exact: true }).click();
   await expect(card.getByRole("button", { name: "อนุมัติ", exact: true })).toHaveCount(0);
 }
@@ -34,7 +38,8 @@ test("Admin can reach every module through the complete menu", async ({ browser 
       ["เบิกจ่ายงบประมาณ", "/disbursements"],
       ["รายงานรายไตรมาส", "/reports/quarterly"],
       ["KPI และคุณภาพ", "/kpi"],
-      ["หลักฐานและเอกสาร", "/evidence"],
+      ["ทะเบียนหลักฐานและเอกสาร", "/evidence"],
+      ["ขออนุมัติปรับงบประมาณ", "/evidence/budget-adjustment"],
       ["Workflow อนุมัติ", "/approvals"],
       ["การแจ้งเตือน", "/notifications"],
       ["กำกับและตั้งค่าระบบ", "/admin"],
@@ -66,6 +71,7 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
 }) => {
   const title = `โครงการ E2E ${crypto.randomUUID()}`;
   const revisedTitle = `${title} ฉบับแก้ไข`;
+  const organizationId = "20000000-0000-4000-8000-000000000001";
   const staff = await login(browser, "staff");
   const user = await login(browser, "user");
   const executive = await login(browser, "executive");
@@ -75,6 +81,10 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
       .getByRole("button", { name: "กรอกเองโดยไม่อ้างอิงคำของบ", exact: true })
       .click();
     await staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก").fill(title);
+    // TEST-A is shared by staff, reviewer and executive in fixtures.sql.
+    // Staff also has SEC-ADMIN for the workbook test; the first option is not
+    // necessarily in the other actors' scope. Do not broaden their RLS scopes.
+    await staff.page.getByLabel("หน่วยงานเจ้าของโครงการ").selectOption(organizationId);
     await staff.page.getByLabel("การพัฒนาการจัดการเรียนการสอน หรือนักศึกษา").check();
     await staff.page.getByLabel(/กลยุทธ์ที่ 1/).check();
     await staff.page.getByLabel("หลักการและเหตุผล").fill("พัฒนาการเรียนรู้ของนักศึกษา");
@@ -129,6 +139,7 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     await staff.page.reload();
     // Read the saved proposal, not the original budget source or default fields.
     await expect(staff.page.locator('[name="proposalDetails"]')).toHaveValue(draftDetails);
+    await expect(staff.page.getByLabel("หน่วยงานเจ้าของโครงการ")).toHaveValue(organizationId);
     await expect(staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก")).toHaveValue(title);
     await staff.page.getByLabel("ชื่อกิจกรรมย่อยภายใต้โครงการ 12 หลัก").fill(revisedTitle);
     await staff.page.getByRole("button", { name: "ส่งอนุมัติ", exact: true }).click();
@@ -143,11 +154,12 @@ test("staff creates, edits, submits; user reviews; executive approves; staff is 
     const client = await signedInLocalClient("staff");
     const { data: project, error } = await client
       .from("projects")
-      .select("id,status,title_th")
+      .select("id,status,title_th,organization_id")
       .eq("title_th", revisedTitle)
       .single();
     expect(error).toBeNull();
     expect(project?.status).toBe("active");
+    expect(project?.organization_id).toBe(organizationId);
     const { data: notifications, error: notificationError } = await client
       .from("notifications")
       .select("title")

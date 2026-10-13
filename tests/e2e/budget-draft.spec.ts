@@ -297,7 +297,9 @@ test("budget draft retains full workbook data through validation, repeated saves
     // Revalidation may immediately replace the edit form with its read-only guard.
     await expect(
       page
-        .getByText(/เข้าสู่กระบวนการตรวจสอบแล้ว|คำของบประมาณนี้ไม่อยู่ในสถานะที่แก้ไขได้/)
+        .getByText(
+          /เข้าสู่กระบวนการตรวจสอบแล้ว|เจ้าหน้าที่แก้ไขได้เฉพาะฉบับร่างหรือส่งกลับแก้ไขที่ไม่ถูกล็อก/,
+        )
         .first(),
     ).toBeVisible();
     const { data: submittedRequests, error: submitError } = await client
@@ -316,7 +318,9 @@ test("budget draft retains full workbook data through validation, repeated saves
     ]);
     await page.reload();
     await expect(
-      page.getByText("คำของบประมาณนี้ไม่อยู่ในสถานะที่แก้ไขได้", { exact: true }),
+      page.getByText("เจ้าหน้าที่แก้ไขได้เฉพาะฉบับร่างหรือส่งกลับแก้ไขที่ไม่ถูกล็อก", {
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(form).toHaveCount(0);
 
