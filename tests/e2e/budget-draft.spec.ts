@@ -332,7 +332,10 @@ test("budget draft retains full workbook data through validation, repeated saves
     await page.getByRole("button", { name: "ออกจากระบบ" }).click();
     // Sign-out posts to /auth/signout and redirects here after clearing cookies.
     // A competing goto can interrupt that navigation before the session is gone.
-    await expect(page).toHaveURL("/login");
+    // Next's local server may use localhost for this absolute redirect. Wait for
+    // either loopback URL, then return to the configured origin before logging in.
+    await expect(page).toHaveURL(/^http:\/\/(?:127\.0\.0\.1|localhost):3206\/login$/);
+    await page.goto("/login");
     await page.getByLabel("อีเมลสถาบัน").fill("admin@example.test");
     await page.locator("#login-password").fill(TEST_PASSWORD);
     await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
