@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, type ChangeEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, FileDown, LoaderCircle, Upload } from "lucide-react";
 import {
@@ -88,12 +87,13 @@ export function DisbursementImportPanel({
             onChange={handleFile}
           />
         </label>
-        <Link
+        <a
           className="inline-flex min-h-12 items-center justify-center gap-2 border border-stone-300 bg-white px-4 text-xs font-semibold"
           href="/api/disbursements/template"
+          download
         >
           <FileDown size={16} /> ดาวน์โหลดแม่แบบ
-        </Link>
+        </a>
       </div>
 
       <p

@@ -1,6 +1,5 @@
 import { createProjectProposalPdf } from "@/features/projects/project-proposal-pdf";
-import { resolveProjectProposalPdfData } from "@/features/projects/project-proposal-pdf-data";
-import { getProjectFormOptions } from "@/features/projects/queries";
+import { getProjectProposalPdfData } from "@/features/projects/project-proposal-pdf-query";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -15,17 +14,12 @@ export async function GET(_request: Request, context: RouteContext<"/api/project
   if (!claims?.claims?.sub) return new Response("Unauthorized", { status: 401 });
 
   const { id } = await context.params;
-  const result = await getProjectFormOptions(id);
-  const options = result.data;
-  const record = options?.record;
-  if (result.error || !options || !record)
-    return new Response("Project not found", { status: 404 });
-
-  const pdfData = resolveProjectProposalPdfData(options);
-  if (!pdfData) return new Response("Project not found", { status: 404 });
+  const result = await getProjectProposalPdfData(supabase, id);
+  const pdfData = result.data;
+  if (result.error || !pdfData) return new Response("Project not found", { status: 404 });
 
   const pdf = await createProjectProposalPdf(pdfData);
-  const filename = `project-proposal-${safeFileName(record.code)}.pdf`;
+  const filename = `project-proposal-${safeFileName(pdfData.code)}.pdf`;
   return new Response(Uint8Array.from(pdf).buffer, {
     headers: {
       "Cache-Control": "private, no-store",

@@ -103,12 +103,13 @@ export function DisbursementsView({
         title="ทะเบียนการเบิกจ่ายรายไตรมาส"
         aside={
           <div className="flex gap-2">
-            <Link
+            <a
               className="inline-flex items-center gap-2 border border-stone-300 px-3 py-2 text-xs font-semibold"
               href="/api/disbursements/export"
+              download
             >
               <Download size={15} /> ส่งออก
-            </Link>
+            </a>
             <button
               className="inline-flex items-center gap-2 border border-stone-300 px-3 py-2 text-xs font-semibold"
               type="button"

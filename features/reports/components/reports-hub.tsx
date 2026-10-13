@@ -90,16 +90,18 @@ export function ReportsHub({
                   <Link
                     className="inline-flex min-h-10 items-center justify-center gap-2 border border-stone-300 px-3 text-xs font-semibold hover:border-[#d8470c] hover:text-[#b53807]"
                     href={`/reports/print/${report.kind}`}
+                    prefetch={false}
                     target="_blank"
                   >
                     <Printer size={15} /> PDF
                   </Link>
-                  <Link
+                  <a
                     className="inline-flex min-h-10 items-center justify-center gap-2 bg-[#cf430c] px-3 text-xs font-semibold text-white hover:bg-[#ad3507]"
                     href={`/api/reports/${report.kind}`}
+                    download
                   >
                     <Download size={15} /> XLSX
-                  </Link>
+                  </a>
                 </span>
               </article>
             );

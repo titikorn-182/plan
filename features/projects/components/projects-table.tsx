@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Download } from "lucide-react";
 import { ProgressBar, StatusPill } from "@/components/ui/module-primitives";
 import { formatThaiNumber } from "@/features/shared/formatters";
@@ -78,7 +77,7 @@ export function ProjectsTable({
               </td>
               <td className="px-3 py-3 whitespace-nowrap">{project.due}</td>
               <td className="px-3 py-3 text-center">
-                <Link
+                <a
                   aria-label={`ดาวน์โหลด PDF ข้อเสนอโครงการ ${project.id}`}
                   className="inline-flex min-h-10 items-center gap-1.5 border border-orange-300 bg-white px-3 font-semibold text-[#b53807] hover:border-orange-500 hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
                   download
@@ -86,7 +85,7 @@ export function ProjectsTable({
                   onClick={(event) => event.stopPropagation()}
                 >
                   <Download aria-hidden="true" size={15} /> PDF
-                </Link>
+                </a>
               </td>
             </tr>
           ))}

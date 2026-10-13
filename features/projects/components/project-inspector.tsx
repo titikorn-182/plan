@@ -94,7 +94,7 @@ export function ProjectInspector({ project }: { project: ProjectRow }) {
         </ul>
       </section>
       <div className="grid gap-px bg-stone-200">
-        <Link
+        <a
           className="flex min-h-12 w-full items-center justify-between bg-[#cf430c] px-5 py-3 text-sm font-bold text-white hover:bg-[#ad3507] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-white"
           download
           href={`/api/projects/${project.uuid}/proposal`}
@@ -103,7 +103,7 @@ export function ProjectInspector({ project }: { project: ProjectRow }) {
             <Download aria-hidden="true" size={17} /> ดาวน์โหลด PDF ข้อเสนอโครงการ
           </span>
           <ChevronRight aria-hidden="true" size={17} />
-        </Link>
+        </a>
         <Link
           className="flex min-h-12 w-full items-center justify-between bg-white px-5 py-3 text-sm font-bold text-[#b53807] hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-orange-600"
           href={project.editable ? `/projects/${project.uuid}/edit` : "/evidence"}
