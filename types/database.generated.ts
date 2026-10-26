@@ -2083,7 +2083,13 @@ export type Database = {
     }
     Functions: {
       act_on_approval_task: {
-        Args: { p_comment?: string; p_decision: string; p_task_id: string }
+        Args: {
+          p_approved_amount?: number
+          p_comment?: string
+          p_decision: string
+          p_expected_budget_version?: number
+          p_task_id: string
+        }
         Returns: boolean
       }
       admin_restore_record: {

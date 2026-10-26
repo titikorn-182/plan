@@ -12,6 +12,8 @@ export default defineConfig([
     ".agents/**",
     "playwright-report/**",
     "test-results/**",
+    // Downloaded CI traces and local diagnostic artifacts are generated files.
+    "tmp/**",
     "coverage/**",
   ]),
 ]);

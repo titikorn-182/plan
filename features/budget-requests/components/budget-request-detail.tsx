@@ -36,7 +36,13 @@ function fieldValue(record: BudgetRequestDetail, key: BudgetRequestSourceKey): s
   }
 }
 
-export function BudgetRequestDetailView({ record }: { record: BudgetRequestDetail }) {
+export function BudgetRequestDetailView({
+  record,
+  showDecision = false,
+}: {
+  record: BudgetRequestDetail;
+  showDecision?: boolean;
+}) {
   const details = record.proposalDetails;
   const statusTone =
     record.status === "approved"
@@ -92,8 +98,15 @@ export function BudgetRequestDetailView({ record }: { record: BudgetRequestDetai
           ))}
         </dl>
         <p className="mt-5 border-t border-stone-200 pt-4 text-sm leading-6 text-stone-600">
-          แสดงข้อมูลที่บันทึกไว้แบบอ่านอย่างเดียว การเปิดหน้านี้ไม่เปลี่ยนข้อมูลหรือสถานะคำขอ
-          กรุณากลับไป Workflow เพื่อพิจารณาอนุมัติ
+          รายละเอียดส่วนนี้แสดงข้อมูลคำขอต้นฉบับที่บันทึกไว้
+          {showDecision && (
+            <a
+              href="#budget-decision-title"
+              className="ml-2 inline-block min-h-11 py-2 font-semibold text-sky-800 underline underline-offset-4"
+            >
+              ไปยังส่วนพิจารณาคำขอ
+            </a>
+          )}
         </p>
       </section>
       {BUDGET_REQUEST_SOURCE_SECTIONS.map((section) => (

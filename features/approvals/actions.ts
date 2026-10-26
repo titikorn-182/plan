@@ -1,6 +1,6 @@
 "use server";
 
-import { z } from "zod";
+import { approvalSchema } from "@/features/approvals/validation";
 import type { OperationState } from "@/features/shared/action-state";
 import {
   authenticated,
@@ -9,7 +9,6 @@ import {
   revalidateOperationPaths,
   sessionExpired,
 } from "@/features/shared/server-actions";
-import { INPUT_LIMITS } from "@/lib/config/limits";
 
 const entityPath: Readonly<Record<string, string>> = {
   budget_request: "/budget-requests",
@@ -19,23 +18,21 @@ const entityPath: Readonly<Record<string, string>> = {
   kpi_result: "/kpi",
 };
 
-const approvalSchema = z.object({
-  taskId: z.string().uuid(),
-  decision: z.enum(["approved", "revision_required", "rejected"]),
-  comment: z.string().trim().max(INPUT_LIMITS.reviewComment),
-});
-
 export async function actOnApprovalAction(
   previous: OperationState,
   formData: FormData,
 ): Promise<OperationState> {
-  const parsed = approvalSchema.safeParse(Object.fromEntries(formData));
+  const input = Object.fromEntries(formData);
+  // A return/rejection must remain possible even if an unfinished amount edit is invalid.
+  if (input.decision !== "approved") delete input.approvedAmount;
+  const parsed = approvalSchema.safeParse(input);
   if (!parsed.success) return invalid(previous, parsed.error);
   if (parsed.data.decision !== "approved" && parsed.data.comment.length < 5) {
     return {
       ...previous,
       success: false,
       message: "การส่งกลับหรือไม่อนุมัติต้องระบุเหตุผลอย่างน้อย 5 ตัวอักษร",
+      errors: { comment: ["กรุณาระบุเหตุผลอย่างน้อย 5 ตัวอักษร"] },
     };
   }
 
@@ -43,7 +40,7 @@ export async function actOnApprovalAction(
   if (!userId) return sessionExpired(previous);
   const { data: task, error: taskError } = await supabase
     .from("approval_tasks")
-    .select("entity_type")
+    .select("entity_type, entity_id")
     .eq("id", parsed.data.taskId)
     .maybeSingle();
   if (taskError) {
@@ -54,16 +51,42 @@ export async function actOnApprovalAction(
     };
   }
   if (!task) return { ...previous, success: false, message: "ไม่พบงานอนุมัติหรือคุณไม่มีสิทธิ์" };
+  const isBudget = task.entity_type === "budget_request";
+  if (isBudget && !parsed.data.expectedBudgetVersion) {
+    return {
+      success: false,
+      message: "กรุณาเปิดรายละเอียดคำของบจากงานอนุมัติใหม่ เพื่อตรวจสอบข้อมูลล่าสุดก่อนตัดสินใจ",
+    };
+  }
   const { error } = await supabase.rpc("act_on_approval_task", {
     p_task_id: parsed.data.taskId,
     p_decision: parsed.data.decision,
     p_comment: parsed.data.comment || undefined,
+    p_expected_budget_version: isBudget ? parsed.data.expectedBudgetVersion : undefined,
+    p_approved_amount: parsed.data.approvedAmount,
   });
-  if (error) return { ...previous, success: false, message: friendlyError(error) };
+  if (error) {
+    if (error.code === "23514" && error.message === "budget amount adjustment requires a reason") {
+      return {
+        success: false,
+        message: "กรุณาระบุเหตุผลการเพิ่มหรือลดวงเงินอย่างน้อย 5 ตัวอักษร",
+        errors: { comment: ["ระบุเหตุผลการปรับวงเงินอย่างน้อย 5 ตัวอักษร"] },
+      };
+    }
+    if (error.code === "23514" && error.message === "approved budget amount is invalid") {
+      return {
+        success: false,
+        message: "วงเงินไม่ถูกต้อง กรุณาระบุจำนวนตั้งแต่ 0 บาท และทศนิยมไม่เกิน 2 ตำแหน่ง",
+        errors: { approvedAmount: ["กรุณาตรวจสอบวงเงินที่พิจารณาอนุมัติ"] },
+      };
+    }
+    return { success: false, message: friendlyError(error, "approvals.decide") };
+  }
 
   revalidateOperationPaths(
     "/",
     "/approvals",
+    ...(isBudget ? [`/budget-requests/${task.entity_id}`, "/projects/new"] : []),
     "/notifications",
     entityPath[task.entity_type] ?? "/approvals",
   );
