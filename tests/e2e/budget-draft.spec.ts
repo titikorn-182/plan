@@ -380,6 +380,32 @@ test("budget draft retains full workbook data through validation, repeated saves
       .single();
     expect(inspectionError).toBeNull();
     expect(inspectedRequest).toEqual({ status: "submitted", requested_amount: 1250 });
+
+    // Exercise the real Next Server Action and Supabase transaction in CI.
+    await detailsLink.click();
+    const decision = page.getByRole("form", { name: "พิจารณาคำของบประมาณ" });
+    await expect(decision.locator('[name="approvedAmount"]')).toHaveCount(0);
+    await decision.getByRole("button", { name: "ผ่านการตรวจสอบและส่งต่อ", exact: true }).click();
+    await expect(decision.getByLabel("วงเงินที่พิจารณาอนุมัติ (บาท)")).toBeVisible();
+    await decision.getByLabel("วงเงินที่พิจารณาอนุมัติ (บาท)").fill("1000.25");
+    await decision.getByRole("button", { name: "อนุมัติวงเงิน", exact: true }).click();
+    await expect(decision.getByRole("status")).toContainText("ระบุเหตุผล");
+    await expect(decision.getByLabel("วงเงินที่พิจารณาอนุมัติ (บาท)")).toHaveValue("1000.25");
+    await decision.getByLabel("เหตุผล / ความเห็นประกอบ").fill("ปรับลดตามมติการพิจารณางบประมาณ");
+    await decision.getByRole("button", { name: "อนุมัติวงเงิน", exact: true }).click();
+    await expect(decision).toHaveCount(0);
+    const { data: approvedRequest, error: approvalError } = await client
+      .from("budget_requests")
+      .select("status,requested_amount,approved_amount,proposal_details")
+      .eq("id", savedId)
+      .single();
+    expect(approvalError).toBeNull();
+    expect(approvedRequest).toMatchObject({
+      status: "approved",
+      requested_amount: 1250,
+      approved_amount: 1000.25,
+    });
+    expect(approvedRequest?.proposal_details).toEqual(submittedRequests?.[0]?.proposal_details);
   } finally {
     await client.auth.signOut();
   }

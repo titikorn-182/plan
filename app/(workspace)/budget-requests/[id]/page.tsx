@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BudgetRequestDetailView } from "@/features/budget-requests/components/budget-request-detail";
 import { getBudgetRequestDetail } from "@/features/budget-requests/detail-query";
+import { getBudgetDecisionTask } from "@/features/approvals/budget-decision-query";
+import { BudgetDecisionForm } from "@/features/approvals/components/budget-decision-form";
 
 export default async function BudgetRequestDetailPage({
   params,
@@ -28,5 +30,26 @@ export default async function BudgetRequestDetailPage({
       </section>
     );
   }
-  return <BudgetRequestDetailView record={result.data} />;
+  const record = result.data;
+  const decision = ["submitted", "under_review", "pending_approval"].includes(record.status)
+    ? await getBudgetDecisionTask(record.id, record.organizationId)
+    : { data: null, error: null };
+  return (
+    <div className="space-y-5">
+      <BudgetRequestDetailView record={record} showDecision={decision.data?.canAct} />
+      {decision.error && (
+        <p role="alert" className="border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+          {decision.error}
+        </p>
+      )}
+      {decision.data && (
+        <BudgetDecisionForm
+          key={`${decision.data.id}:${record.version}`}
+          task={decision.data}
+          version={record.version}
+          requestedAmount={record.amount}
+        />
+      )}
+    </div>
+  );
 }

@@ -202,11 +202,14 @@ export function ApprovalsView({
                 className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-sky-800 hover:underline"
                 href={entityHref(task)}
               >
-                เปิดข้อมูลประกอบ <ArrowUpRight size={14} />
+                {task.entityType === "budget_request"
+                  ? "ตรวจรายละเอียดคำขอและวงเงิน"
+                  : "เปิดข้อมูลประกอบ"}{" "}
+                <ArrowUpRight size={14} />
               </Link>
-              {task.canAct ? (
+              {task.canAct && task.entityType !== "budget_request" ? (
                 <DecisionForm task={task} />
-              ) : task.status === "pending" ? (
+              ) : task.status === "pending" && !task.canAct ? (
                 <p className="mt-3 border-t border-stone-200 pt-3 text-[11px] text-stone-500">
                   รายการนี้แสดงเพื่อการติดตาม ผู้รับมอบหมายเป็นผู้ตัดสินใจ
                 </p>

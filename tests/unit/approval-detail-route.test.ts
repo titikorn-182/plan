@@ -6,6 +6,7 @@ import { getWorkspaceTitle } from "@/components/layout/navigation";
 import { ApprovalsView } from "@/features/approvals/components/approvals-view";
 import type { WorkflowTask } from "@/features/approvals/types";
 import { getBudgetRequestDetail } from "@/features/budget-requests/detail-query";
+import { getBudgetDecisionTask } from "@/features/approvals/budget-decision-query";
 import type { BudgetRequestDetail } from "@/features/budget-requests/detail-types";
 import { createEmptyBudgetProposalDetails } from "@/features/budget-requests/proposal-details";
 import type { DocumentStatus } from "@/features/budget-requests/types";
@@ -14,6 +15,10 @@ vi.mock("@/features/budget-requests/detail-query", () => ({
   getBudgetRequestDetail: vi.fn(),
 }));
 vi.mock("@/features/approvals/actions", () => ({ actOnApprovalAction: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("@/features/approvals/budget-decision-query", () => ({
+  getBudgetDecisionTask: vi.fn(async () => ({ data: null, error: null })),
+}));
 
 const budgetId = "6b3272c9-a347-4acd-98a3-62226b31f687";
 const taskId = "68d73c16-43d5-4cb8-85c0-0a97d1246a77";
@@ -59,6 +64,18 @@ beforeEach(() => {
 });
 
 describe("workflow budget detail route", () => {
+  it("renders the decision form using the exact version of the displayed budget", async () => {
+    vi.mocked(getBudgetDecisionTask).mockResolvedValueOnce({
+      data: { id: taskId, requiredRole: "executive", canAct: true },
+      error: null,
+    });
+    const html = renderToStaticMarkup(
+      await BudgetRequestDetailPage({ params: Promise.resolve({ id: budgetId }) }),
+    );
+    expect(getBudgetDecisionTask).toHaveBeenCalledWith(budgetId, record.organizationId);
+    expect(html).toContain('name="expectedBudgetVersion" value="3"');
+    expect(html).toContain('name="approvedAmount"');
+  });
   it.each([
     ["/budget-requests", "คำของบประมาณประจำปี"],
     ["/budget-requests/new", "สร้างคำของบประมาณ"],
