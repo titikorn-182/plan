@@ -55,6 +55,8 @@ jobs:
       - run: npm run test:e2e:workflow
       - name: Verify budget decision form with disposable PostgreSQL fixtures
         run: npx playwright test --config tests/ui-budget-decision/playwright.config.ts
+      - name: Verify disbursement form with disposable PostgreSQL fixtures
+        run: npx playwright test --config tests/ui-disbursement/playwright.config.ts
       - name: Browser report (test data only)
         if: always()
         uses: actions/upload-artifact@v4
