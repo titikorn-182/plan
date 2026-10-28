@@ -15,22 +15,28 @@ import { INPUT_LIMITS, VALIDATION_LIMITS } from "@/lib/config/limits";
 
 const disbursementSchema = z.object({
   projectId: z.string().uuid("กรุณาเลือกโครงการ"),
-  fiscalYearId: z.string().uuid("กรุณาเลือกปีงบประมาณ"),
+  // Retained fiscal-year IDs are valid PostgreSQL UUIDs without RFC version bits.
+  // The selected project's year is still checked below, using the caller's RLS.
+  fiscalYearId: z.guid("ปีงบประมาณของโครงการไม่ถูกต้อง กรุณาเลือกโครงการใหม่หรือแจ้งผู้ดูแลระบบ"),
   quarter: z.coerce
     .number()
-    .int()
-    .min(VALIDATION_LIMITS.quarterMinimum)
-    .max(VALIDATION_LIMITS.quarterMaximum),
+    .int("กรุณาเลือกไตรมาส 1–4")
+    .min(VALIDATION_LIMITS.quarterMinimum, "กรุณาเลือกไตรมาส 1–4")
+    .max(VALIDATION_LIMITS.quarterMaximum, "กรุณาเลือกไตรมาส 1–4"),
   amount: z.coerce.number().finite().positive("ยอดเบิกจ่ายต้องมากกว่า 0"),
   disbursedOn: z.string().date("กรุณาระบุวันที่เบิกจ่าย"),
-  referenceNo: z.string().trim().max(INPUT_LIMITS.shortText),
-  status: z.enum(["recorded", "reconciled", "pending_docs", "delayed"]),
+  referenceNo: z.string().trim().max(INPUT_LIMITS.shortText, "เลขที่เอกสารยาวเกินกำหนด"),
+  status: z.enum(["recorded", "reconciled", "pending_docs", "delayed"], {
+    error: "กรุณาเลือกสถานะเอกสาร",
+  }),
 });
 
 export async function saveDisbursementAction(
   previous: OperationState,
   formData: FormData,
 ): Promise<OperationState> {
+  // Do not retain errors from an earlier attempt when a different check fails.
+  previous = { ...previous, errors: undefined, success: false };
   const parsed = disbursementSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(previous, parsed.error);
   const input = parsed.data;
@@ -53,7 +59,12 @@ export async function saveDisbursementAction(
     return { ...previous, success: false, message: "ไม่พบโครงการหรือคุณไม่มีสิทธิ์เข้าถึง" };
   }
   if (project.fiscal_year_id !== input.fiscalYearId) {
-    return { ...previous, success: false, message: "ปีงบประมาณไม่ตรงกับโครงการ" };
+    return {
+      ...previous,
+      success: false,
+      errors: { fiscalYearId: ["ปีงบประมาณไม่ตรงกับโครงการ กรุณาเลือกโครงการใหม่"] },
+      message: "ปีงบประมาณไม่ตรงกับโครงการ",
+    };
   }
 
   const remaining = remainingBudget(

@@ -764,6 +764,103 @@ describe("budget, approval, and spending actions", () => {
     expect(result.success).toBe(amount === "300");
     expect(mock.chain.insert).toHaveBeenCalledTimes(amount === "300" ? 1 : 0);
   });
+  it.each([yearId, "20000000-0000-0000-0000-000000000001"])(
+    "records a disbursement using the project's PostgreSQL fiscal-year ID %s",
+    async (fiscalYearId) => {
+      response({
+        organization_id: projectInput.organizationId,
+        fiscal_year_id: fiscalYearId,
+        approved_budget: 100000,
+        disbursed_amount: 0,
+      });
+      response({ id: projectId, version: 1 });
+      const result = await saveDisbursementAction(
+        {},
+        form({
+          projectId,
+          fiscalYearId,
+          quarter: "1",
+          amount: "21475",
+          disbursedOn: "2026-10-14",
+          referenceNo: "อว 0604.19/07242",
+          status: "recorded",
+        }),
+      );
+      expect(result.success).toBe(true);
+      expect(mock.chain.insert).toHaveBeenCalledExactlyOnceWith({
+        project_id: projectId,
+        organization_id: projectInput.organizationId,
+        fiscal_year_id: fiscalYearId,
+        quarter: 1,
+        amount: 21475,
+        disbursed_on: "2026-10-14",
+        reference_no: "อว 0604.19/07242",
+        status: "recorded",
+        created_by: mock.state.userId,
+        updated_by: mock.state.userId,
+      });
+    },
+  );
+});
+
+describe("disbursement fiscal-year and access guards", () => {
+  const input = {
+    projectId,
+    fiscalYearId: "20000000-0000-0000-0000-000000000001",
+    quarter: "1",
+    amount: "21475",
+    disbursedOn: "2026-10-14",
+    referenceNo: "อว 0604.19/07242",
+    status: "recorded",
+  };
+
+  it.each(["", "not-a-uuid", "20000000-0000-0000-0000"])(
+    "rejects malformed fiscal-year IDs without accessing the database: %s",
+    async (fiscalYearId) => {
+      const result = await saveDisbursementAction({}, form({ ...input, fiscalYearId }));
+      expect(result.success).toBe(false);
+      expect(result.errors?.fiscalYearId).toEqual([
+        "ปีงบประมาณของโครงการไม่ถูกต้อง กรุณาเลือกโครงการใหม่หรือแจ้งผู้ดูแลระบบ",
+      ]);
+      expect(mock.client.from).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects a valid ID that does not belong to the selected project", async () => {
+    response({
+      organization_id: projectInput.organizationId,
+      fiscal_year_id: yearId,
+      approved_budget: 100000,
+      disbursed_amount: 0,
+    });
+    const result = await saveDisbursementAction({}, form(input));
+    expect(result.success).toBe(false);
+    expect(result.errors?.fiscalYearId).toEqual([
+      "ปีงบประมาณไม่ตรงกับโครงการ กรุณาเลือกโครงการใหม่",
+    ]);
+    expect(mock.chain.insert).not.toHaveBeenCalled();
+  });
+
+  it("requires a current session and clears errors from the previous attempt", async () => {
+    mock.state.userId = null;
+    const result = await saveDisbursementAction(
+      { errors: { amount: ["previous error"] } },
+      form(input),
+    );
+    expect(result).toMatchObject({ success: false, message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" });
+    expect(result.errors).toBeUndefined();
+    expect(mock.client.from).not.toHaveBeenCalled();
+  });
+
+  it("does not insert a disbursement for a project hidden by RLS", async () => {
+    response(null, { code: "42501", message: "permission denied" });
+    const result = await saveDisbursementAction({}, form(input));
+    expect(result).toMatchObject({
+      success: false,
+      message: "คุณไม่มีสิทธิ์ดำเนินการกับข้อมูลนี้",
+    });
+    expect(mock.chain.insert).not.toHaveBeenCalled();
+  });
 });
 
 describe("budget expense action persistence", () => {
